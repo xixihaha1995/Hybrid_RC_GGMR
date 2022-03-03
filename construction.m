@@ -102,7 +102,7 @@ cp_e3=840;          % !- Specific Heat {J/kg-K}
 % the
 
 Re = (l_e1/k_e1 +l_e2/k_e2+l_e3/k_e3)/Aew;
-Ce = (d_e1*cp_e1*l_e1 + d_e2*cp_e2*l_e2 +d_e3*cp_e3*l_e3)*Aew;
+Ce = (d_e1*cp_e1*l_e1 + d_e2*cp_e2*l_e2 +d_e3*cp_e3*l_e3)*Aew
 
 % % ===== Interior walls ========
 % % The layers from outside to inside are indicated below:
@@ -205,7 +205,7 @@ Riair_f = 2.2;          % m2K/W Internal air thermal resistance.
 cpair = 1006;           % J/kg-K Specific heat
 dair = 1.292498;           % kg/m3 Density
 vair = 129.6;         % m3 Volumne
-Cair = dair*cpair*vair; % J/K Thermal capacitance of the zone air.
+Cair = dair*cpair*vair% J/K Thermal capacitance of the zone air.
 
 Rim_1=Re; % internal mass
 Rim_2=Re; % internal mass
