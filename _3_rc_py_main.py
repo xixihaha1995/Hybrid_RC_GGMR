@@ -9,7 +9,7 @@ if __name__ == "__main__":
     ts_sampling = 120
     _0_config.init(state_num, input_num, ts_sampling)
     _0_config.start = 0
-    _0_config.end = 10
+    _0_config.end = 5040
 
     if sys.argv[1] != 'swarm':
         para = _2_optimization.init_para()#rscs
@@ -32,10 +32,8 @@ if __name__ == "__main__":
         cost, pos = optimizer.optimize(_4_pyswarm.whole_swarm_loss, iters= _0_config.iters)
 
         y_train_pred, y_test_pred = _4_pyswarm.predict(pos)
-        _2_optimization.swarm_plot(_0_config.y_arr,y_train_pred,
-                                   f'Train, from{_0_config.start}th mins to {_0_config.end}th mins')
-        _2_optimization.swarm_plot(_0_config.y_arr_test,y_test_pred,
-                                   f'Test, from{_0_config.start + _0_config.end}th mins to {_0_config.end * 2}th mins')
+        _2_optimization.swarm_plot(_0_config.y_arr,y_train_pred, _0_config.y_arr_test,y_test_pred)
+
 
 
 

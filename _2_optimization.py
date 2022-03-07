@@ -183,9 +183,16 @@ def plot(o1, y_arr):
     plt.legend()
     plt.show()
 
-def swarm_plot(y_arr, y_arr_pred, title):
-    plt.plot(y_arr, label='measured')
-    plt.plot(y_arr_pred, label='modeled')
-    plt.title(title)
+def swarm_plot(y_train, y_train_pred, y_test, y_test_pred):
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle("Heating power(J) prediction performance with Particle Swarm Optimization (PSO)")
+    ax1.plot(y_train, label='measured')
+    ax1.plot(y_train_pred, label='modeled')
+    ax1.set_title(f'Train, from {_0_config.start}th mins to {_0_config.end}th mins')
+
+    ax2.plot(y_test, label='measured')
+    ax2.plot(y_test_pred, label='modeled')
+    ax2.set_title(f'Test, from {_0_config.start + _0_config.end}th mins to {_0_config.end * 2}th mins')
     plt.legend()
     plt.show()
+    return
