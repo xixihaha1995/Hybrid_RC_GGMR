@@ -9,7 +9,7 @@ if __name__ == "__main__":
     ts_sampling = 120
     _0_config.init(state_num, input_num, ts_sampling)
     _0_config.start = 0
-    _0_config.end = 5040
+    _0_config.end = 100
 
     if sys.argv[1] != 'swarm':
         para = _2_optimization.init_para()#rscs
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         optimizer = ps.single.GlobalBestPSO(n_particles=_0_config.n_particles, dimensions=dimensions, options=options, init_pos= rscs_init)
 
         # Perform optimization
-        cost, pos = optimizer.optimize(_4_pyswarm.whole_swarm_loss, iters= _0_config.iters )
+        cost, pos = optimizer.optimize(_4_pyswarm.whole_swarm_loss, iters= _0_config.iters)
         y_arr_pred = _4_pyswarm.predict(pos)
         _2_optimization.swarm_plot(_0_config.y_arr,y_arr_pred )
 
