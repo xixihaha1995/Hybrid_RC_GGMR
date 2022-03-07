@@ -65,6 +65,7 @@ DR=zeros(1,m);
 %x0=[R_e1 R_e2 R_e3 C_e1 C_e2 R_c1 R_c2 R_c3 C_c1 C_c2 R_f1 R_f2 C_f1];
 [A B C D]=M_ssMatrix(x0,n,m);
 [x]=lsqRCIdentification(x0);
+save ('pso_matlab.mat', 'x');
 %[AR BR CR DR]=M_ssMatrix(x,n,m);
 %ytest_org=ss2tf(A,B,C,D,n,utest,ymtest);
 ytest=SS_function(x,utest,ymtest,n,m,ts);
