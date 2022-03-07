@@ -16,7 +16,7 @@ if __name__ == "__main__":
         lmfit.report_fit(o1)
         _2_optimization.plot(o1, arg[1])
     else:
-        n_particles = 100
+        n_particles = 10
         _0_config.n_particles = n_particles
         rscs_init = _4_pyswarm.init_pos()
         # Initialize swarm
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         optimizer = ps.single.GlobalBestPSO(n_particles=n_particles, dimensions=dimensions, options=options, init_pos= rscs_init)
 
         # Perform optimization
-        cost, pos = optimizer.optimize(_4_pyswarm.whole_swarm_loss, iters=10)
+        cost, pos = optimizer.optimize(_4_pyswarm.whole_swarm_loss, iters=5)
         y_arr_pred = _4_pyswarm.predict(pos)
         _2_optimization.swarm_plot(_0_config.y_arr,y_arr_pred )
 
