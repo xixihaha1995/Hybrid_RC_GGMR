@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import _0_config, _2_optimization, csv
+import _0_config, _2_utils, csv
 from scipy import signal
 
 
@@ -17,13 +17,13 @@ def init_pos():
     return rscs_init
 
 
-def paras_to_ABCD(params):
+def paras_to_ABCD_swarm(params):
     A_init = np.zeros((_0_config.state_num, _0_config.state_num))
     B_init = np.zeros((_0_config.state_num, _0_config.input_num))
     C_init = np.zeros((1, _0_config.state_num))
     D_init = np.zeros((1, _0_config.input_num))
 
-    A, B, C, D = _2_optimization.assgin_ABCD(A_init, B_init, C_init, D_init, params)
+    A, B, C, D = _2_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params)
 
     sys = signal.StateSpace(A, B, C, D)
     sys_d = sys.to_discrete(_0_config.ts_sampling)
@@ -34,26 +34,18 @@ def paras_to_ABCD(params):
 
     return a, b, c, d
 
-def load_test_u_y():
-    case_csv = pd.read_csv('./Case600.csv', index_col=0, parse_dates=True)
-    case_arr = case_csv.to_numpy()[_0_config.start+_0_config.end:_0_config.end * 2]
-    u_arr_init = np.zeros((case_arr.shape[0], _0_config.input_num))
-    y_arr_init = np.zeros((case_arr.shape[0],))
-    u_arr, y_arr = _2_optimization.assign_input_output(u_arr_init, y_arr_init, case_arr, _0_config.ts_sampling)
-    y_arr = pd.Series(y_arr)
-    return (u_arr.T, y_arr)
 
-def obj_func(params, train = True, measure = False):
+def obj_func(params, train=True):
     if train:
-        (u_arr, y_arr) = _2_optimization.load_u_y()
+        (u_arr, y_arr) = _2_utils.load_u_y()
         _0_config.u_arr = u_arr
         _0_config.y_arr = y_arr
     else:
-        (u_arr, y_arr) = load_test_u_y()
+        (u_arr, y_arr) = _2_utils.load_u_y(train=False)
         _0_config.u_arr_test = u_arr
         _0_config.y_arr_test = y_arr
 
-    a, b, c, d = paras_to_ABCD(params)
+    a, b, c, d = paras_to_ABCD_swarm(params)
     y_model = np.zeros_like(y_arr)
     # x_discrete = 25 * np.ones((7, u_arr.shape[1]))
     x_discrete = 25 * np.ones((7, 1))
@@ -61,14 +53,12 @@ def obj_func(params, train = True, measure = False):
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
-    if not measure:
-        return y_model
-    else:
-        return y_arr, y_model
+
+    return y_arr, y_model
 
 
 def particle_loss(params):
-    y_model = obj_func(params)
+    y_measure, y_model = obj_func(params)
     return sum(abs(y_model - _0_config.y_arr))
 
 
@@ -78,10 +68,11 @@ def whole_swarm_loss(x):
     return np.array(j) / _0_config.u_arr.shape[1]
 
 
-def predict(pos, measure):
-    y_train, y_train_pred = obj_func(pos, train = True, measure = measure)
-    ytest, y_test_pred = obj_func(pos, train = False, measure = measure)
-    return y_train, y_train_pred , ytest, y_test_pred
+def predict(pos):
+    y_train, y_train_pred = obj_func(pos, train=True)
+    ytest, y_test_pred = obj_func(pos, train=False)
+    return y_train, y_train_pred, ytest, y_test_pred
+
 
 def load_pos():
     with open('./pos_rscs.csv', 'r') as f:
@@ -91,7 +82,7 @@ def load_pos():
             rscs_str.append(row[0].split('\t'))
     all_pos = []
     for i in range(len(rscs_str)):
-        cur_pos_dict ={}
+        cur_pos_dict = {}
         cur_pos_dict['title'] = rscs_str[i][0]
         cur_pos = []
         for j in range(1, len(rscs_str[i])):
