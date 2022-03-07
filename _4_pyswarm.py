@@ -43,7 +43,7 @@ def load_test_u_y():
     y_arr = pd.Series(y_arr)
     return (u_arr.T, y_arr)
 
-def obj_func(params, train = True):
+def obj_func(params, train = True, measure = False):
     if train:
         (u_arr, y_arr) = _2_optimization.load_u_y()
         _0_config.u_arr = u_arr
@@ -61,7 +61,10 @@ def obj_func(params, train = True):
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
-    return y_model
+    if not measure:
+        return y_model
+    else:
+        return y_arr, y_model
 
 
 def particle_loss(params):
@@ -75,7 +78,25 @@ def whole_swarm_loss(x):
     return np.array(j) / _0_config.u_arr.shape[1]
 
 
-def predict(pos):
-    y_train_pred = obj_func(pos, train = True)
-    y_test_pred = obj_func(pos, train = False)
-    return y_train_pred, y_test_pred
+def predict(pos, measure):
+    y_train, y_train_pred = obj_func(pos, train = True, measure = measure)
+    ytest, y_test_pred = obj_func(pos, train = False, measure = measure)
+    return y_train, y_train_pred , ytest, y_test_pred
+
+def load_pos():
+    with open('./pos_rscs.csv', 'r') as f:
+        reader = csv.reader(f)
+        rscs_str = []
+        for row in reader:
+            rscs_str.append(row[0].split('\t'))
+    all_pos = []
+    for i in range(len(rscs_str)):
+        cur_pos_dict ={}
+        cur_pos_dict['title'] = rscs_str[i][0]
+        cur_pos = []
+        for j in range(1, len(rscs_str[i])):
+            cur_pos.append(float(rscs_str[i][j]))
+        cur_pos.insert(0, 0)
+        cur_pos_dict['pos'] = cur_pos
+        all_pos.append(cur_pos_dict)
+    return all_pos

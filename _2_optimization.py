@@ -118,28 +118,28 @@ def load_init_rscs():
 def init_para():
     rscs_init = load_init_rscs()
     params = lmfit.Parameters()
-    params.add_many(('reout', rscs_init[0], 0.01*rscs_init[0], 100*rscs_init[0]),
-                    ('re', rscs_init[1], 0.01*rscs_init[1], 100*rscs_init[1]),
-                    ('rein', rscs_init[2], 0.01*rscs_init[2], 100*rscs_init[2]),
-                    ('rcout', rscs_init[3], 0.01*rscs_init[3], 100*rscs_init[3]),
-                    ('rc', rscs_init[4], 0.01*rscs_init[4], 100*rscs_init[4]),
-                    ('rcin', rscs_init[5], 0.01*rscs_init[5], 100*rscs_init[5]),
-                    ('rf', rscs_init[6], 0.01*rscs_init[6], 100*rscs_init[6]),
-                    ('rfin', rscs_init[7], 0.01*rscs_init[7], 100*rscs_init[7]),
-                    ('rw', rscs_init[8], 0.01*rscs_init[8], 100*rscs_init[8]),
-                    ('ri1', rscs_init[9], 0.01*rscs_init[9], 100*rscs_init[9]),
-                    ('ri2', rscs_init[10], 0.01*rscs_init[10], 100*rscs_init[10]),
-                    ('ce1', rscs_init[11], 0.01*rscs_init[11], 100*rscs_init[11]),
-                    ('ce2', rscs_init[12], 0.01*rscs_init[12], 100*rscs_init[12]),
-                    ('cc1', rscs_init[13], 0.01*rscs_init[13], 100*rscs_init[13]),
-                    ('cc2', rscs_init[14], 0.01*rscs_init[14], 100*rscs_init[14]),
-                    ('cf', rscs_init[15], 0.01*rscs_init[15], 100*rscs_init[15]),
-                    ('cair', rscs_init[16], 0.01*rscs_init[16], 100*rscs_init[16]),
-                    ('ci1', rscs_init[17], 0.01*rscs_init[17], 100*rscs_init[17]),
-                    ('ci2', rscs_init[18], 0.01*rscs_init[18], 100*rscs_init[18]),
-                    ('qgc', rscs_init[19], 0.01*rscs_init[19],100*rscs_init[19]),
-                    ('qsoltr', rscs_init[20], 0.01*rscs_init[20],100*rscs_init[20]),
-                    ('qinf', rscs_init[21], 0.01*rscs_init[21],100*rscs_init[21]))
+    params.add_many(('reout', rscs_init[0], 0.01 * rscs_init[0], 100 * rscs_init[0]),
+                    ('re', rscs_init[1], 0.01 * rscs_init[1], 100 * rscs_init[1]),
+                    ('rein', rscs_init[2], 0.01 * rscs_init[2], 100 * rscs_init[2]),
+                    ('rcout', rscs_init[3], 0.01 * rscs_init[3], 100 * rscs_init[3]),
+                    ('rc', rscs_init[4], 0.01 * rscs_init[4], 100 * rscs_init[4]),
+                    ('rcin', rscs_init[5], 0.01 * rscs_init[5], 100 * rscs_init[5]),
+                    ('rf', rscs_init[6], 0.01 * rscs_init[6], 100 * rscs_init[6]),
+                    ('rfin', rscs_init[7], 0.01 * rscs_init[7], 100 * rscs_init[7]),
+                    ('rw', rscs_init[8], 0.01 * rscs_init[8], 100 * rscs_init[8]),
+                    ('ri1', rscs_init[9], 0.01 * rscs_init[9], 100 * rscs_init[9]),
+                    ('ri2', rscs_init[10], 0.01 * rscs_init[10], 100 * rscs_init[10]),
+                    ('ce1', rscs_init[11], 0.01 * rscs_init[11], 100 * rscs_init[11]),
+                    ('ce2', rscs_init[12], 0.01 * rscs_init[12], 100 * rscs_init[12]),
+                    ('cc1', rscs_init[13], 0.01 * rscs_init[13], 100 * rscs_init[13]),
+                    ('cc2', rscs_init[14], 0.01 * rscs_init[14], 100 * rscs_init[14]),
+                    ('cf', rscs_init[15], 0.01 * rscs_init[15], 100 * rscs_init[15]),
+                    ('cair', rscs_init[16], 0.01 * rscs_init[16], 100 * rscs_init[16]),
+                    ('ci1', rscs_init[17], 0.01 * rscs_init[17], 100 * rscs_init[17]),
+                    ('ci2', rscs_init[18], 0.01 * rscs_init[18], 100 * rscs_init[18]),
+                    ('qgc', rscs_init[19], 0.01 * rscs_init[19], 100 * rscs_init[19]),
+                    ('qsoltr', rscs_init[20], 0.01 * rscs_init[20], 100 * rscs_init[20]),
+                    ('qinf', rscs_init[21], 0.01 * rscs_init[21], 100 * rscs_init[21]))
     return params
 
 
@@ -173,6 +173,7 @@ def load_u_y():
     y_arr = pd.Series(y_arr)
     return (u_arr.T, y_arr)
 
+
 def plot(o1, y_arr):
     max_heating = max(y_arr)
     min_heating = min(y_arr)
@@ -183,8 +184,9 @@ def plot(o1, y_arr):
     plt.legend()
     plt.show()
 
+
 def nrmse(measure, model):
-    nom = (sum((measure - model)**2) )**1/2
+    nom = (sum((measure - model) ** 2)) ** 1 / 2
     mean = measure.mean()
     denom = (sum((measure - mean) ** 2)) ** 1 / 2
     return nom / denom
@@ -197,16 +199,39 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred):
     # plt.suptitle(figure_title)
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
-    ax[0].set_title(f'Train, from {_0_config.start}th mins to {_0_config.end}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+    ax[0].set_title(
+        f'Train, from {_0_config.start * 2}th mins to {_0_config.end * 2}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
 
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {_0_config.start + _0_config.end}th mins to {_0_config.end * 2}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {(_0_config.start + _0_config.end) * 2}th mins to {_0_config.end * 2 * 2}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
 
     plt.legend()
     plt.subplots_adjust(hspace=0.8)
     plt.savefig("swarm_performance.png")
     plt.show()
 
-    return
+
+def pos_subplot(data, title, ax0=None, ax1 = None):
+    nl = '\n'
+    if not ax1:
+        ax = plt.gca()
+    ax0.plot(data[0], label='train measured')
+    ax0.plot(data[1], label='train modeled')
+    ax0.set_title(title + f'{nl}NRMSE:{nrmse(data[0], data[1]):.6f}')
+    ax0.legend()
+
+    ax1.plot(data[2], label='test measured')
+    ax1.plot(data[3], label='test modeled')
+    ax1.set_title(f'NRMSE:{nrmse(data[2], data[3]):.6f}')
+    ax1.legend()
+
+
+def pos_plot_all(all_pos):
+    f, ax = plt.subplots(len(all_pos),2)
+    for i in range(len(all_pos)):
+        pos_subplot(all_pos[i]['performance'], all_pos[i]['title'], ax[i][0], ax[i][1])
+    plt.legend()
+    plt.subplots_adjust(hspace=0.8)
+    plt.show()
