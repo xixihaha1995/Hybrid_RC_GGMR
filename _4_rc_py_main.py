@@ -1,4 +1,4 @@
-import sys, lmfit, _0_config, _2_utils, _3_pyswarm
+import sys, lmfit, _1_config, _2_utils, _3_pyswarm
 # Import PySwarms
 import pyswarms as ps
 
@@ -8,23 +8,23 @@ if __name__ == "__main__":
     state_num = 7
     input_num = 12
     ts_sampling = 120
-    _0_config.init(state_num, input_num, ts_sampling)
-    _0_config.start = 0
-    _0_config.end = 5040
+    _1_config.init(state_num, input_num, ts_sampling)
+    _1_config.start = 0
+    _1_config.end = 5040
 
     if (sys.argv[1] == 'swarm'):
-        _0_config.n_particles = int(sys.argv[2])
+        _1_config.n_particles = int(sys.argv[2])
         # number of rscs = 23
         dimensions = 23
         # Hyperparameters for pyswarms
         options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
         # initialize rscs with energyplus manually calculated rscs, or matlab optimized rscs"
         rscs_init = _3_pyswarm.init_pos()
-        _0_config.iters = int(sys.argv[3])
-        optimizer = ps.single.GlobalBestPSO(n_particles=_0_config.n_particles, dimensions=dimensions, options=options,
+        _1_config.iters = int(sys.argv[3])
+        optimizer = ps.single.GlobalBestPSO(n_particles=_1_config.n_particles, dimensions=dimensions, options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_3_pyswarm.whole_swarm_loss, iters=_0_config.iters)
+        cost, pos = optimizer.optimize(_3_pyswarm.whole_swarm_loss, iters=_1_config.iters)
         y_train, y_train_pred, ytest, y_test_pred  = _3_pyswarm.predict(pos)
         _2_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred)
 
