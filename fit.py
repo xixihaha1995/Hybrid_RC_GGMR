@@ -44,7 +44,9 @@ def plot(o1):
     plt.show()
 
 if __name__ == '__main__' :
-    o1 = lmfit.minimize(resid, para(), args=arg(), method='leastsq')
+    para = para()
+    arg = arg()
+    o1 = lmfit.minimize(resid, para, args=arg, method='leastsq')
     # print("# Fit using leastsq:")
     lmfit.report_fit(o1)
     plot(o1)
