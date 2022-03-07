@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import _0_config, _2_optimization, csv
 from scipy import signal
 
@@ -33,11 +34,24 @@ def paras_to_ABCD(params):
 
     return a, b, c, d
 
+def load_test_u_y():
+    case_csv = pd.read_csv('./Case600.csv', index_col=0, parse_dates=True)
+    case_arr = case_csv.to_numpy()[_0_config.start+_0_config.end:_0_config.end * 2]
+    u_arr_init = np.zeros((case_arr.shape[0], _0_config.input_num))
+    y_arr_init = np.zeros((case_arr.shape[0],))
+    u_arr, y_arr = _2_optimization.assign_input_output(u_arr_init, y_arr_init, case_arr, _0_config.ts_sampling)
+    y_arr = pd.Series(y_arr)
+    return (u_arr.T, y_arr)
 
-def obj_func(params):
-    (u_arr, y_arr) = _2_optimization.load_u_y()
-    _0_config.u_arr = u_arr
-    _0_config.y_arr = y_arr
+def obj_func(params, train = True):
+    if train:
+        (u_arr, y_arr) = _2_optimization.load_u_y()
+        _0_config.u_arr = u_arr
+        _0_config.y_arr = y_arr
+    else:
+        (u_arr, y_arr) = load_test_u_y()
+        _0_config.u_arr_test = u_arr
+        _0_config.y_arr_test = y_arr
 
     a, b, c, d = paras_to_ABCD(params)
     y_model = np.zeros_like(y_arr)
@@ -62,5 +76,6 @@ def whole_swarm_loss(x):
 
 
 def predict(pos):
-    y_pred = obj_func(pos)
-    return y_pred
+    y_train_pred = obj_func(pos, train = True)
+    y_test_pred = obj_func(pos, train = False)
+    return y_train_pred, y_test_pred

@@ -183,8 +183,9 @@ def plot(o1, y_arr):
     plt.legend()
     plt.show()
 
-def swarm_plot(y_arr, y_arr_pred):
+def swarm_plot(y_arr, y_arr_pred, title):
     plt.plot(y_arr, label='measured')
     plt.plot(y_arr_pred, label='modeled')
+    plt.title(title)
     plt.legend()
     plt.show()
