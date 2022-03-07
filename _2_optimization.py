@@ -183,16 +183,30 @@ def plot(o1, y_arr):
     plt.legend()
     plt.show()
 
-def swarm_plot(y_train, y_train_pred, y_test, y_test_pred):
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle("Heating power(J) prediction performance with Particle Swarm Optimization (PSO)")
-    ax1.plot(y_train, label='measured')
-    ax1.plot(y_train_pred, label='modeled')
-    ax1.set_title(f'Train, from {_0_config.start}th mins to {_0_config.end}th mins')
+def nrmse(measure, model):
+    nom = (sum((measure - model)**2) )**1/2
+    mean = measure.mean()
+    denom = (sum((measure - mean) ** 2)) ** 1 / 2
+    return nom / denom
 
-    ax2.plot(y_test, label='measured')
-    ax2.plot(y_test_pred, label='modeled')
-    ax2.set_title(f'Test, from {_0_config.start + _0_config.end}th mins to {_0_config.end * 2}th mins')
+
+def swarm_plot(y_train, y_train_pred, y_test, y_test_pred):
+    fig, ax = plt.subplots(2)
+    nl = '\n'
+    figure_title = f'Heating power(J) prediction performance{nl} with Particle Swarm Optimization (PSO)'
+    # plt.suptitle(figure_title)
+    ax[0].plot(y_train, label='measured')
+    ax[0].plot(y_train_pred, label='modeled')
+    ax[0].set_title(f'Train, from {_0_config.start}th mins to {_0_config.end}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+
+    ax[1].plot(y_test, label='measured')
+    ax[1].plot(y_test_pred, label='modeled')
+    ax[1].set_title(
+        figure_title + nl + f'Test, from {_0_config.start + _0_config.end}th mins to {_0_config.end * 2}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
+
     plt.legend()
+    plt.subplots_adjust(hspace=0.8)
+    plt.savefig("swarm_performance.png")
     plt.show()
+
     return
