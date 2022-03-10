@@ -25,7 +25,7 @@ $$
 \frac{1}{R_{cav, room}C_{room}} ,  ( \frac{-1}{R_{out, room}C_{room}} + \frac{-1}{R_{room, sur}C_{room}} + \frac{-1}{R_{cav, room}C_{room}} ), \frac{1}{R_{room, sur}C_{room}} , 0 , 0 \\
 0 ,   \frac{1}{R_{room, sur}C_{sur}} , (\frac{-1}{R_{room, sur}C_{sur}} + \frac{-1}{R_{sur, so}C_{sur}}),\frac{1}{R_{sur, so}C_{sur}} , 0 \\
 0 ,  0 ,  \frac{1}{R_{sur, so}C_{so}},(\frac{-1}{R_{sur, so}C_{so}} + \frac{-1}{R_{si, so}C_{so} }) , \frac{1}{R_{si, so}C_{so} } \\
-0 , 0 , 0 , \frac{1} {R_{so, si}} , \frac{-1}{R_{so, si}}
+0 , 0 , 0 , \frac{1} {R_{so, si}C_{si}} , \frac{-1}{R_{so, si}C_{si}}
 \end{bmatrix}
 \begin{bmatrix}
 	T_{cav}\\T_{room} \\ T_{sur}\\T_{so}\\T_{si}
@@ -67,7 +67,7 @@ A =
 \frac{1}{R_{cav, room}C_{room}} &  ( \frac{-1}{R_{out, room}C_{room}} + \frac{-1}{R_{room, sur}C_{room}} + \frac{-1}{R_{cav, room}C_{room}} )& \frac{1}{R_{room, sur}C_{room}} & 0 & 0 \\
 0 &   \frac{1}{R_{room, sur}C_{sur}} &  (\frac{-1}{R_{room, sur}C_{sur}} + \frac{-1}{R_{sur, so}C_{sur}})&\frac{1}{R_{sur, so}C_{sur}} & 0 \\
 0 &  0 &  \frac{1}{R_{sur, so}C_{so}}&(\frac{-1}{R_{sur, so}C_{so}} + \frac{-1}{R_{si, so}C_{so} }) &  \frac{1}{R_{si, so}C_{so} } \\
-0 & 0 & 0 & \frac{1} {R_{so, si}} & \frac{-1}{R_{so, si}}
+0 & 0 & 0 &\frac{1} {R_{so, si}C_{si}}  & \frac{-1}{R_{so, si}C_{si}}
 \end{bmatrix}
 \\
 B = 
@@ -90,3 +90,16 @@ d =
 \end{bmatrix}
 $$
 
+paras:
+
+1. r out cav
+2. r cav room
+3. r out room
+4. r room sur
+5. r sur so
+6. r si so
+7. c cav
+8. c room
+9. c sur
+10. c so
+11. c si
