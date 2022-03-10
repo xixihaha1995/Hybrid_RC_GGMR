@@ -90,16 +90,16 @@ d =
 \end{bmatrix}
 $$
 
-paras:
+parameter initial values:
 
-1. r out cav
-2. r cav room
-3. r out room
-4. r room sur
-5. r sur so
-6. r si so
-7. c cav
-8. c room
-9. c sur
-10. c so
-11. c si
+1. r out cav, 0.036 K/W
+2. r cav room, 0.0036 K/W
+3. r out room, 0.036 K/W
+4. r room sur, 10 K/W
+5. r sur so, 40 K/W
+6. r si so, 300 K/W
+7. c cav,  (air 75300 j/k)
+8. c room, (air 376500 J/K)
+9. c sur (concrete, 2E7 J/K)
+10. c so (water, 2629 J/K)
+11. c si (common insulation material 3360000 J/K)

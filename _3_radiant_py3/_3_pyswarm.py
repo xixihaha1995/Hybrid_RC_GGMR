@@ -12,7 +12,7 @@ def init_pos():
             rscs_str.append(row)
     rscs_str = rscs_str[0]
     rscs_lst = [float(s_num) for s_num in rscs_str]
-    rscs_lst.insert(0, 0)
+    # rscs_lst.insert(0, 0)
     rscs_init = np.array([rscs_lst for _ in range(_1_config.n_particles)])
     return rscs_init
 

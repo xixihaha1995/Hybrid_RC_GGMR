@@ -10,20 +10,19 @@ if __name__ == "__main__":
     ts_sampling = 300
     _1_config.init(state_num, input_num, ts_sampling)
     _1_config.start = 0
-    _1_config.end = 2016
+    _1_config.end = 576
 
     if (sys.argv[1] == 'swarm'):
         _1_config.n_particles = int(sys.argv[2])
         # number of rscs = 23
-        dimensions = 16
+        dimensions = 11
         # Hyperparameters for pyswarms
         options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
         # initialize rscs with energyplus manually calculated rscs, or matlab optimized rscs"
-        # rscs_init = _3_pyswarm.init_pos()
+        rscs_init = _3_pyswarm.init_pos()
         _1_config.iters = int(sys.argv[3])
-        # optimizer = ps.single.GlobalBestPSO(n_particles=_1_config.n_particles, dimensions=dimensions, options=options,
-        #                                     init_pos=rscs_init)
-        optimizer = ps.single.GlobalBestPSO(n_particles=_1_config.n_particles, dimensions=dimensions, options=options)
+        optimizer = ps.single.GlobalBestPSO(n_particles=_1_config.n_particles, dimensions=dimensions, options=options,
+                                            init_pos=rscs_init)
         # Perform optimization
         cost, pos = optimizer.optimize(_3_pyswarm.whole_swarm_loss, iters=_1_config.iters)
         y_train, y_train_pred, ytest, y_test_pred  = _3_pyswarm.predict(pos)
