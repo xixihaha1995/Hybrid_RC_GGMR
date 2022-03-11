@@ -1,4 +1,4 @@
-import sys, lmfit, _1_config, _2_utils, _3_pyswarm
+import sys, _1_config, _2_utils, _3_pyswarm
 # Import PySwarms
 import pyswarms as ps
 
@@ -9,8 +9,8 @@ if __name__ == "__main__":
     input_num = 7
     ts_sampling = 300
     _1_config.init(state_num, input_num, ts_sampling)
-    _1_config.start = 0
-    _1_config.end = 576
+    _1_config.start = 840 * 0
+    _1_config.end = 840 * 1
 
     if (sys.argv[1] == 'swarm'):
         _1_config.n_particles = int(sys.argv[2])

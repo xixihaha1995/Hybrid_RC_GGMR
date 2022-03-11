@@ -7,6 +7,7 @@ import _1_config
 
 def load_u_y(train=True):
     # excluding the first row, column
+
     case_csv = pd.read_csv('./RS_baseline_1_15_3_7.csv', index_col=0, parse_dates=True)
     ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
     if not train:
@@ -15,6 +16,9 @@ def load_u_y(train=True):
     else:
         case_arr = case_csv.to_numpy()[_1_config.start:_1_config.end]
         ambient_arr = ambient_csv.to_numpy()[_1_config.start:_1_config.end]
+    case_arr = np.concatenate((case_arr, ambient_arr), axis = 1)
+    # radiation should be column 45 + 17 = 62
+
     # np.concatenate((a, b))
     u_arr_init = np.zeros((case_arr.shape[0], _1_config.input_num))
     y_arr_init = np.zeros((case_arr.shape[0],))
@@ -27,10 +31,12 @@ def assign_input_output(u_arr, y_arr, case_arr, ts):
     # uT = [T_{out}, \dot{Q}_{sol, cav}, \dot{Q}_{sol, room}, \dot{Q}_{int, room}, \dot{Q}_{sol, sur}, \dot{Q}_{int, sur}, \frac{dT_{so}}{dt}]\\
 
     u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
-    u_arr[:, 1] = np.zeros_like(u_arr[:, 0])
-    u_arr[:, 2] = np.zeros_like(u_arr[:, 0])
+
+    radiation = case_arr[:, 62]
+    u_arr[:, 1] = radiation * 0.04
+    u_arr[:, 2] = radiation * 3.7e-19 * 0.5
     u_arr[:, 3] = np.zeros_like(u_arr[:, 0])
-    u_arr[:, 4] = np.zeros_like(u_arr[:, 0])
+    u_arr[:, 4] = radiation * 3.7e-19 * 0.5
     u_arr[:, 5] = np.zeros_like(u_arr[:, 0])
 
     u_arr[:, 6] = ((case_arr[:, 41] + case_arr[:, 40]) / 2 - 32) * 5 / 9
@@ -52,18 +58,18 @@ def assign_input_output(u_arr, y_arr, case_arr, ts):
 
 
 def assgin_ABCD(A, B, C, D, p):
-    # 0. r out cav, 0.036 K/W
-    # 1. r cav room 0.0036 K/W
-    # 2. r out room 0.036 K/W wood door
-    # 3. r room sur 10 K/W, indoor heat transfer coefficient 10 - 500 W/(m2 K)
-    # 4. r sur so 40 K/W 4 inch concrete, 100 m2 * 0.4 m2xK/W
-    # 5. r si so 300 common thermal insulation r value = 3 m2xK/W
-    # 6. c cav 75300 J/K
-    # 7  c room 376500 J/K
-    # 8  c sur, concrete 0.88 J/g/K, 2.4e6 g /m3 0.1 * 10 * 10 m3 = 2e7
+    # 0. r out cav, 0.036 K/W, corrected by Jaewan 1 / 51.92 = 0.019
+    # 1. r cav room 0.0036 K/W, corrected by Jaewan 1 / 29.07 = 0.034
+    # 2. r out room 0.036 K/W wood door, corrected by Jaewan 0.046
+    # 3. r room sur 10 K/W, indoor heat transfer coefficient 10 - 500 W/(m2 K), corrected by Jaewan 1 / 527.58 = 1.89E-3
+    # 4. r sur so 40 K/W 4 inch concrete, 100 m2 * 0.4 m2xK/W,  corrected by Jaewan 1 / 1402.44 = 7E-4
+    # 5. r si so 300 common thermal insulation r value = 3 m2xK/W, corrected by Jaewan 1 / 249.39 = 4e-3
+    # 6. c cav 75300 J/K, corrected by Jaewan 1 / 1.13e-6 = 884955
+    # 7  c room 376500 J/K, corrected by Jaewan 1 / 2.43e-7 = 4115226
+    # 8  c sur, concrete 0.88 J/g/K, 2.4e6 g /m3 0.1 * 10 * 10 m3 = 2e7, corrected by Jaewan 1 / 3.53e-8 = 2.8E7
     # (c = 4.186 J / g / c, rho = 997e3 g / m3, 1 gal / min = 6.309e-5 m3 / s,
-    # 9  c so, 4.18 J / g / c  * water 10 gal/min *  6.309e-5 m3 / s * 997e3 g / m3 = 2629 J/K
-    # 10 c si, 2100 J/(kg K) * 160 kg /m3 * 0.1 * 10 * 10 m3 = 3360000
+    # 9  c so, 4.18 J / g / c  * water 10 gal/min *  6.309e-5 m3 / s * 997e3 g / m3 = 2629 J/K, corrected by Jaewan, 1 / 3.61e-7 = 2.7E6
+    # 10 c si, 2100 J/(kg K) * 160 kg /m3 * 0.1 * 10 * 10 m3 = 3360000, corrected by Jaewan 1 / 4.14e-17 = 2.415E16
     A[0, 0] = -(1 / (p[0] * p[6])) - (1 / (p[1] * p[6]))
     A[0, 1] = (1 / (p[1] * p[6]))
 

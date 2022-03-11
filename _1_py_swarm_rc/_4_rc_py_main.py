@@ -1,4 +1,4 @@
-import sys, lmfit, _1_config, _2_utils, _3_pyswarm
+import sys, _1_config, _2_utils, _3_pyswarm
 # Import PySwarms
 import pyswarms as ps
 

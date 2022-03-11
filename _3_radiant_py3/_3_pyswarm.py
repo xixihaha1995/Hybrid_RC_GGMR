@@ -48,7 +48,8 @@ def obj_func(params, train=True):
     a, b, c, d = paras_to_ABCD_swarm(params)
     y_model = np.zeros_like(y_arr)
     # x_discrete = 25 * np.ones((7, u_arr.shape[1]))
-    x_discrete = 25 * np.ones((_1_config.state_num, 1))
+    # x_discrete = -2 * np.ones((_1_config.state_num, 1))
+    x_discrete = np.array([[11], [22], [22], [25], [25]])
     state_num = _1_config.state_num
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]

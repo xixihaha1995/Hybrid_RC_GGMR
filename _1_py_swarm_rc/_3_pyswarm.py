@@ -59,7 +59,7 @@ def obj_func(params, train=True):
 
 def particle_loss(params):
     y_measure, y_model = obj_func(params)
-    return sum(abs(y_model - _1_config.y_arr))
+    return sum((y_model - _1_config.y_arr)**2)
 
 
 def whole_swarm_loss(x):
