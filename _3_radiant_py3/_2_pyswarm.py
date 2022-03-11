@@ -54,13 +54,13 @@ def obj_func(params, constants, train=True):
 
 def particle_loss(params, constants):
     y_measure, y_model = obj_func(params, constants)
-    return sum(abs(y_model - y_measure))
+    return sum((abs(y_model - y_measure))**2) /(constants['end'] - constants['start'])
 
 
 def whole_swarm_loss(x, constants):
     n_particles = x.shape[0]
     j = [particle_loss(x[i], constants) for i in range(n_particles)]
-    return np.array(j) /(constants['end'] - constants['start'])
+    return np.array(j)
 
 
 def predict(pos, constants):

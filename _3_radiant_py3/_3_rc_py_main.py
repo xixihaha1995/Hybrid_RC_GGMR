@@ -32,7 +32,7 @@ if __name__ == "__main__":
         optimizer = ps.single.GlobalBestPSO(n_particles=swarm_constants['n_particles'], dimensions=dimensions, options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'],n_processes=4, constants = swarm_constants)
+        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'],n_processes=3, constants = swarm_constants)
 
         y_train, y_train_pred, ytest, y_test_pred  = _2_pyswarm.predict(pos, swarm_constants)
         _1_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred, swarm_constants)

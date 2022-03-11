@@ -1,4 +1,4 @@
-
+# Integrated RC network
 
 ![image-20220309191732435](C:\Users\wulic\AppData\Roaming\Typora\typora-user-images\image-20220309191732435.png)
 $$
@@ -103,3 +103,45 @@ parameter initial values:
 9. c sur (concrete, 2E7 J/K)
 10. c so (water, 2629 J/K)
 11. c si (common insulation material 3360000 J/K)
+
+# Cav RC
+
+![image-20220311145414130](C:\Users\wulic\AppData\Roaming\Typora\typora-user-images\image-20220311145414130.png)
+$$
+C_{cav}\frac{dT_{cav}}{dt} = \frac{T_{out} - T_{cav}}{R_{out, cav}} + \frac{T_{room} - T_{cav}}{R_{cav, room}} + \alpha_{sol, cav}\dot{Q}_{sol, cav}\\
+x^T = [T_{cav}, \alpha_{sol, cav}]\\
+u^T = [T_{out},T_{room}, \dot{Q}_{sol}]\\
+y = T_{cav}\\
+$$
+
+$$
+\begin{bmatrix}
+\frac{dT_{cav}}{dt} 
+\end{bmatrix}
+=
+\begin{bmatrix}
+(\frac{-1}{R_{out, cav}C_{cav}} + \frac{-1}{R_{cav, room}C_{cav}}) 
+\end{bmatrix}
+\begin{bmatrix}
+T_{cav} 
+\end{bmatrix}
++
+\begin{bmatrix}
+\frac{1}{R_{room, cav}C_{cav}}, \frac{1}{R_{out, cav}C_{cav}}, \alpha_{sol, cav}
+\end{bmatrix}
+\begin{bmatrix}
+T_{room} \\
+T_{out}\\
+\dot{Q}_{sol, cav}
+\end{bmatrix}
+$$
+
+$$
+y = T_{cav} = [1] [T_{cav}]  + [0,0,0]
+\begin{bmatrix}
+T_{room} \\
+T_{out}\\
+\dot{Q}_{sol, cav}
+\end{bmatrix}
+$$
+
