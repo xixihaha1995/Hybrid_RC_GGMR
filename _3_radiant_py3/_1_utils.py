@@ -2,27 +2,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import _1_config
 
 
-def load_u_y(train=True):
+def load_u_y(constants, train=True):
     # excluding the first row, column
 
     case_csv = pd.read_csv('./RS_baseline_1_15_3_7.csv', index_col=0, parse_dates=True)
     ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
     if not train:
-        case_arr = case_csv.to_numpy()[_1_config.start + _1_config.end:_1_config.end * 2]
-        ambient_arr = ambient_csv.to_numpy()[_1_config.start + _1_config.end:_1_config.end * 2]
+        case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+        ambient_arr = ambient_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
     else:
-        case_arr = case_csv.to_numpy()[_1_config.start:_1_config.end]
-        ambient_arr = ambient_csv.to_numpy()[_1_config.start:_1_config.end]
+        case_arr = case_csv.to_numpy()[constants['start'] : constants['end']]
+        ambient_arr = ambient_csv.to_numpy()[constants['start'] : constants['end']]
     case_arr = np.concatenate((case_arr, ambient_arr), axis = 1)
     # radiation should be column 45 + 17 = 62
 
     # np.concatenate((a, b))
-    u_arr_init = np.zeros((case_arr.shape[0], _1_config.input_num))
+    u_arr_init = np.zeros((case_arr.shape[0], constants['input_num']))
     y_arr_init = np.zeros((case_arr.shape[0],))
-    u_arr, y_arr = assign_input_output(u_arr_init, y_arr_init, case_arr, _1_config.ts_sampling)
+    u_arr, y_arr = assign_input_output(u_arr_init, y_arr_init, case_arr,  constants['ts_sampling'])
     y_arr = pd.Series(y_arr)
     return (u_arr.T, y_arr)
 
@@ -115,21 +114,24 @@ def nrmse(measure, model):
     return nom / denom
 
 
-def swarm_plot(y_train, y_train_pred, y_test, y_test_pred):
+def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     fig, ax = plt.subplots(2)
     nl = '\n'
-    minutes_interval = _1_config.ts_sampling / 60
+    minutes_interval = swarm_constants['ts_sampling'] / 60
+    start = swarm_constants['start']
+    end = swarm_constants['end']
+
     figure_title = f'Heating power(J) prediction performance{nl} with Particle Swarm Optimization (PSO)'
     # plt.suptitle(figure_title)
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
-        f'Train, from {_1_config.start * minutes_interval}th mins to {_1_config.end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
 
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {(_1_config.start + _1_config.end) * minutes_interval}th mins to {_1_config.end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {(start +end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
 
     plt.legend()
     plt.subplots_adjust(hspace=0.8)
