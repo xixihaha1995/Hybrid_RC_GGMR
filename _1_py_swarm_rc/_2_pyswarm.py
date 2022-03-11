@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-import _1_config, _2_utils, csv
+import _1_utils, csv
 from scipy import signal
 
 
-def init_pos():
+def init_pos(n_particles):
     with open('./init_rscs.csv', 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
@@ -13,20 +13,21 @@ def init_pos():
     rscs_str = rscs_str[0]
     rscs_lst = [float(s_num) for s_num in rscs_str]
     rscs_lst.insert(0, 0)
-    rscs_init = np.array([rscs_lst for _ in range(_1_config.n_particles)])
+    rscs_init = np.array([rscs_lst for _ in range(n_particles)])
     return rscs_init
 
 
-def paras_to_ABCD_swarm(params):
-    A_init = np.zeros((_1_config.state_num, _1_config.state_num))
-    B_init = np.zeros((_1_config.state_num, _1_config.input_num))
-    C_init = np.zeros((1, _1_config.state_num))
-    D_init = np.zeros((1, _1_config.input_num))
+def paras_to_ABCD_swarm(params, constants):
 
-    A, B, C, D = _2_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params)
+    A_init = np.zeros((constants['state_num'], constants['state_num']))
+    B_init = np.zeros((constants['state_num'], constants['input_num']))
+    C_init = np.zeros((1, constants['state_num']))
+    D_init = np.zeros((1, constants['input_num']))
+
+    A, B, C, D = _1_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params)
 
     sys = signal.StateSpace(A, B, C, D)
-    sys_d = sys.to_discrete(_1_config.ts_sampling)
+    sys_d = sys.to_discrete(constants['ts_sampling'])
     a = sys_d.A
     b = sys_d.B
     c = sys_d.C
@@ -35,21 +36,15 @@ def paras_to_ABCD_swarm(params):
     return a, b, c, d
 
 
-def obj_func(params, train=True):
+def obj_func(params, constants, train=True):
     if train:
-        (u_arr, y_arr) = _2_utils.load_u_y()
-        _1_config.u_arr = u_arr
-        _1_config.y_arr = y_arr
+        (u_arr, y_arr) = _1_utils.load_u_y(constants)
     else:
-        (u_arr, y_arr) = _2_utils.load_u_y(train=False)
-        _1_config.u_arr_test = u_arr
-        _1_config.y_arr_test = y_arr
-
-    a, b, c, d = paras_to_ABCD_swarm(params)
+        (u_arr, y_arr) = _1_utils.load_u_y(constants, train=False)
+    a, b, c, d = paras_to_ABCD_swarm(params, constants)
     y_model = np.zeros_like(y_arr)
-    # x_discrete = 25 * np.ones((7, u_arr.shape[1]))
     x_discrete = 25 * np.ones((7, 1))
-    state_num = _1_config.state_num
+    state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
@@ -57,20 +52,20 @@ def obj_func(params, train=True):
     return y_arr, y_model
 
 
-def particle_loss(params):
-    y_measure, y_model = obj_func(params)
-    return sum((y_model - _1_config.y_arr)**2)
+def particle_loss(params, constants):
+    y_measure, y_model = obj_func(params, constants)
+    return sum(abs(y_model - y_measure))
 
 
-def whole_swarm_loss(x):
+def whole_swarm_loss(x, constants):
     n_particles = x.shape[0]
-    j = [particle_loss(x[i]) for i in range(n_particles)]
-    return np.array(j) / _1_config.u_arr.shape[1]
+    j = [particle_loss(x[i], constants) for i in range(n_particles)]
+    return np.array(j) /(constants['end'] - constants['start'])
 
 
-def predict(pos):
-    y_train, y_train_pred = obj_func(pos, train=True)
-    ytest, y_test_pred = obj_func(pos, train=False)
+def predict(pos, constants):
+    y_train, y_train_pred = obj_func(pos, constants, train=True)
+    ytest, y_test_pred = obj_func(pos, constants, train=False)
     return y_train, y_train_pred, ytest, y_test_pred
 
 
