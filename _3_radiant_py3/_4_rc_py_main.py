@@ -1,5 +1,6 @@
 import sys, _1_config, _2_utils, _3_pyswarm
 # Import PySwarms
+from multiprocessing import Value
 import pyswarms as ps
 
 if __name__ == "__main__":
@@ -8,9 +9,13 @@ if __name__ == "__main__":
     state_num = 5
     input_num = 7
     ts_sampling = 300
-    _1_config.init(state_num, input_num, ts_sampling)
-    _1_config.start = 840 * 0
-    _1_config.end = 840 * 1
+
+    start = 2016 * 0
+    end = 2016 * 1
+
+    # _mp_state_num = Value('d', 3.14)
+
+    _1_config.init(state_num, input_num, ts_sampling, start, end)
 
     if (sys.argv[1] == 'swarm'):
         _1_config.n_particles = int(sys.argv[2])
@@ -24,7 +29,7 @@ if __name__ == "__main__":
         optimizer = ps.single.GlobalBestPSO(n_particles=_1_config.n_particles, dimensions=dimensions, options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_3_pyswarm.whole_swarm_loss, iters=_1_config.iters)
+        cost, pos = optimizer.optimize(_3_pyswarm.whole_swarm_loss, iters=_1_config.iters, stat_num = state_num)
         y_train, y_train_pred, ytest, y_test_pred  = _3_pyswarm.predict(pos)
         _2_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred)
 

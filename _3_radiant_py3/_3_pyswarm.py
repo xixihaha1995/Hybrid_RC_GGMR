@@ -60,10 +60,10 @@ def obj_func(params, train=True):
 
 def particle_loss(params):
     y_measure, y_model = obj_func(params)
-    return sum(abs(y_model - _1_config.y_arr))
+    return sum(abs(y_model - y_measure))
 
 
-def whole_swarm_loss(x):
+def whole_swarm_loss(x, stat_num):
     n_particles = x.shape[0]
     j = [particle_loss(x[i]) for i in range(n_particles)]
     return np.array(j) / _1_config.u_arr.shape[1]
