@@ -33,6 +33,7 @@ if __name__ == "__main__":
     swarm_constants['n_particles'] = args.a[6]
     swarm_constants['iters'] = args.a[7]
     swarm_constants['case_nbr'] = args.a[8]
+    _2_pyswarm.call_load_u_y(swarm_constants)
 
     if not args.visual:
         # Hyperparameters for pyswarms
@@ -44,11 +45,10 @@ if __name__ == "__main__":
                                             options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], n_processes=3,
+        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'],
                                        constants=swarm_constants)
         cost_history = optimizer.cost_history
         plot_cost_history(cost_history)
-        plt.show()
         y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(pos, swarm_constants)
         _1_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred, swarm_constants)
 

@@ -160,8 +160,11 @@ r out cav, r cav room, c cav, alpha sol cav
 initial error, best_cost=1.75e+5
 0.019,0.034,885000,1 #calculated
 0.019,0.034,885000,2E-5 #trivial and errors
+2.58782929e-02 3.73895712e-02 8.85000163e+05 1.10505928e-05 # 500 particle 50 iterations
 ```
 
 ![](_3_radiant_py3/cav_no_solar.png)
 
 ![](_3_radiant_py3/cav_with_solar.png)
+
+![](_3_radiant_py3/cav_with_solar_500_50.png)

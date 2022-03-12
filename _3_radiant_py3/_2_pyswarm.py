@@ -3,6 +3,16 @@ import pandas as pd
 import _1_utils, csv
 from scipy import signal
 
+u_train = None
+y_train = None
+u_test = None
+y_test = None
+
+def call_load_u_y(constants):
+    global u_train, y_train, u_test, y_test
+    (u_train, y_train) = _1_utils.load_u_y(constants)
+    (u_test, y_test) = _1_utils.load_u_y(constants, train=False)
+
 
 def init_pos(case_nbr, n_particles):
     with open('./init_rscs.txt', 'r') as f:
@@ -38,9 +48,9 @@ def paras_to_ABCD_swarm(params, constants):
 
 def obj_func(params, constants, train=True):
     if train:
-        (u_arr, y_arr) = _1_utils.load_u_y(constants)
+        u_arr, y_arr = u_train, y_train
     else:
-        (u_arr, y_arr) = _1_utils.load_u_y(constants, train=False)
+        u_arr, y_arr = u_test, y_test
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
     y_model = np.zeros_like(y_arr)
     if constants['case_nbr'] == 3:
