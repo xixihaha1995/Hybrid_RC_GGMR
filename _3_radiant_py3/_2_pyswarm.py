@@ -8,10 +8,13 @@ y_train = None
 u_test = None
 y_test = None
 
+load_u_y = False
+
 def call_load_u_y(constants):
-    global u_train, y_train, u_test, y_test
+    global u_train, y_train, u_test, y_test, load_u_y
     (u_train, y_train) = _1_utils.load_u_y(constants)
     (u_test, y_test) = _1_utils.load_u_y(constants, train=False)
+    load_u_y = True
 
 
 def init_pos(case_nbr, n_particles):
@@ -47,6 +50,9 @@ def paras_to_ABCD_swarm(params, constants):
 
 
 def obj_func(params, constants, train=True):
+    if not load_u_y:
+        call_load_u_y(constants)
+
     if train:
         u_arr, y_arr = u_train, y_train
     else:
