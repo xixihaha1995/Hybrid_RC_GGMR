@@ -4,15 +4,15 @@ import _1_utils, csv
 from scipy import signal
 
 
-def init_pos(n_particles):
-    with open('./init_rscs.csv', 'r') as f:
+def init_pos(case_nbr, n_particles):
+    with open('./init_rscs.txt', 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
         for row in reader:
+            row = [float(s_num) for s_num in row]
             rscs_str.append(row)
-    rscs_str = rscs_str[0]
-    rscs_lst = [float(s_num) for s_num in rscs_str]
     # rscs_lst.insert(0, 0)
+    rscs_lst = rscs_str[case_nbr]
     rscs_init = np.array([rscs_lst for _ in range(n_particles)])
     return rscs_init
 
@@ -24,7 +24,7 @@ def paras_to_ABCD_swarm(params, constants):
     C_init = np.zeros((1, constants['state_num']))
     D_init = np.zeros((1, constants['input_num']))
 
-    A, B, C, D = _1_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params)
+    A, B, C, D = _1_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params, case_nbr = constants['case_nbr'])
 
     sys = signal.StateSpace(A, B, C, D)
     sys_d = sys.to_discrete(constants['ts_sampling'])
@@ -43,7 +43,10 @@ def obj_func(params, constants, train=True):
         (u_arr, y_arr) = _1_utils.load_u_y(constants, train=False)
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
     y_model = np.zeros_like(y_arr)
-    x_discrete = np.array([[11], [22], [22], [25], [25]])
+    if constants['case_nbr'] == 3:
+        x_discrete = np.array([[11], [22], [22], [25], [25]])
+    elif constants['case_nbr'] == 0:
+        x_discrete = np.array([[22]])
     state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]

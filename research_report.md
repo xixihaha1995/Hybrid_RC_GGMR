@@ -145,3 +145,10 @@ T_{out}\\
 \end{bmatrix}
 $$
 
+p[0] = r out cav, K/W, 1 / 51.92 = 0.019
+
+p[1] = r cav room, K/W, 1/29.07 = 0.034
+
+p[2] = c cav, K/W, 1 / 1.13e-6 = 885000
+
+p[3] = alpha sol cav, -, 1
