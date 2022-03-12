@@ -2,11 +2,19 @@
 
 ## single zone
 
--a 120 0 5040 7 12 22 10 10 -1 1
+-a 120 0 5040 7 12 22 10 10 -1 0
 
 ## cav
 
--a 300 0 2016 1 3 4 500 100 0
+-a 300 0 2016 1 3 4 500 100 0 0
+
+## integrated rc
+
+-a 300 0 2016 5 7 11 500 100 3 0
+
+# Single Zone log
+
+![Initial Performance](_3_radiant_py3/single_zone_swarm_performance.png)
 
 # Integrated RC network
 
