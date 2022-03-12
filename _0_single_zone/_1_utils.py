@@ -4,8 +4,6 @@ import pandas as pd
 
 
 def load_u_y(constants, train=True):
-    # excluding the first row, column
-
     case_csv = pd.read_csv('./Case600.csv', index_col=0, parse_dates=True)
     if not train:
         case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]

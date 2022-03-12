@@ -90,19 +90,17 @@ def predict(pos, constants):
 
 
 def load_pos():
-    with open('./pos_rscs.csv', 'r') as f:
+    with open('./pos_rscs.txt', 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
+        all_pos = []
         for row in reader:
-            rscs_str.append(row[0].split('\t'))
-    all_pos = []
-    for i in range(len(rscs_str)):
-        cur_pos_dict = {}
-        cur_pos_dict['title'] = rscs_str[i][0]
-        cur_pos = []
-        for j in range(1, len(rscs_str[i])):
-            cur_pos.append(float(rscs_str[i][j]))
-        cur_pos.insert(0, 0)
-        cur_pos_dict['pos'] = cur_pos
-        all_pos.append(cur_pos_dict)
+            cur_pos_dict = {}
+            cur_pos_dict['title'] = row[0]
+            cur_pos = []
+            for j in range(1, len(row)):
+                cur_pos.append(float(row[j]))
+            cur_pos_dict['pos'] = cur_pos
+            all_pos.append(cur_pos_dict)
     return all_pos
+

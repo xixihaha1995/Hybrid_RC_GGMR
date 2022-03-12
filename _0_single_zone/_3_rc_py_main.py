@@ -11,12 +11,12 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     Use like: 
     --------------------------------
-    this.py -arg [ts_sampling] [start] [end] [state_num] [input_num] [dimensions] [n_particle] [iters] [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3]
-    or
-    this.py -v 
+    this.py -arg [ts_sampling] [start] [end] [state_num] [input_num]...
+    [dimensions] [n_particle] [iters]...
+    [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3],[mode, optimization = 0, visual = 1]
     '''))
     parser.add_argument("-a", nargs='+', type=int, help="Specify args used for rc network")
-    parser.add_argument("-v", '--visual', action="store_true", help="Visualize all pos performance")
+
     args = parser.parse_args()
     ts_sampling = args.a[0]
     start = args.a[1]
@@ -35,9 +35,8 @@ if __name__ == "__main__":
     swarm_constants['n_particles'] = args.a[6]
     swarm_constants['iters'] = args.a[7]
     swarm_constants['case_nbr'] = args.a[8]
-    # _2_pyswarm.call_load_u_y(swarm_constants)
 
-    if not args.visual:
+    if args.a[9] == 0:
         # Hyperparameters for pyswarms
         options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
         # initialize rscs with energyplus manually calculated rscs, or matlab optimized rscs"
@@ -56,14 +55,14 @@ if __name__ == "__main__":
         y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(pos, swarm_constants)
         _1_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred, swarm_constants)
 
-    elif args.visual:
+    elif args.a[9] == 1:
         all_pos = _2_pyswarm.load_pos()
         all_pos_performance = []
         for i in range(len(all_pos)):
             cur_performance_dict = {}
             cur_performance_dict['title'] = all_pos[i]['title']
             cur_performance = []
-            y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(all_pos[i]['pos'], measure=True)
+            y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(all_pos[i]['pos'], swarm_constants)
             cur_performance.append(y_train)
             cur_performance.append(y_train_pred)
             cur_performance.append(ytest)
