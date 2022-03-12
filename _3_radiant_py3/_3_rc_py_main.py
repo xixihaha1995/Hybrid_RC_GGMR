@@ -1,7 +1,8 @@
 import argparse, textwrap
-
 import pyswarms as ps
-import sys, _1_utils, _2_pyswarm
+import matplotlib.pyplot as plt
+import _1_utils, _2_pyswarm
+from pyswarms.utils.plotters import plot_cost_history
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -45,7 +46,9 @@ if __name__ == "__main__":
         # Perform optimization
         cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], n_processes=3,
                                        constants=swarm_constants)
-
+        cost_history = optimizer.cost_history
+        plot_cost_history(cost_history)
+        plt.show()
         y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(pos, swarm_constants)
         _1_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred, swarm_constants)
 

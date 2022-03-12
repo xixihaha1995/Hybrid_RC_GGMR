@@ -35,12 +35,18 @@ def paras_to_ABCD_swarm(params, constants):
 
     return a, b, c, d
 
+u_arr = None
+y_arr = None
+
+def call_load_u_y(constants):
+    global u_arr, y_arr
+    (u_arr, y_arr) = _1_utils.load_u_y(constants)
 
 def obj_func(params, constants, train=True):
-    if train:
-        (u_arr, y_arr) = _1_utils.load_u_y(constants)
-    else:
-        (u_arr, y_arr) = _1_utils.load_u_y(constants, train=False)
+    # if train:
+    #     (u_arr, y_arr) = _1_utils.load_u_y(constants)
+    # else:
+    #     (u_arr, y_arr) = _1_utils.load_u_y(constants, train=False)
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
     y_model = np.zeros_like(y_arr)
     x_discrete = 25 * np.ones((7, 1))
@@ -54,7 +60,7 @@ def obj_func(params, constants, train=True):
 
 def particle_loss(params, constants):
     y_measure, y_model = obj_func(params, constants)
-    return sum((abs(y_model - y_measure))**2) /(constants['end'] - constants['start'])
+    return sum((y_model - y_measure)**2)
 
 
 def whole_swarm_loss(x, constants):

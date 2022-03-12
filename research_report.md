@@ -157,6 +157,11 @@ p[3] = alpha sol cav, -, 1
 
 ```python
 r out cav, r cav room, c cav, alpha sol cav
+initial error, best_cost=1.75e+5
 0.019,0.034,885000,1 #calculated
 0.019,0.034,885000,2E-5 #trivial and errors
 ```
+
+![](_3_radiant_py3/cav_no_solar.png)
+
+![](_3_radiant_py3/cav_with_solar.png)

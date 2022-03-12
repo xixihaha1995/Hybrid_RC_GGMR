@@ -1,4 +1,5 @@
 import sys, _1_utils, _2_pyswarm
+from pyswarms.utils.plotters import plot_cost_history
 import pyswarms as ps
 
 if __name__ == "__main__":
@@ -8,8 +9,8 @@ if __name__ == "__main__":
     input_num = 12
     ts_sampling = 120
 
-    start = 5040 * 0
-    end = 5040 * 1
+    start = 150 * 0
+    end = 150 * 1
     dimensions = 23
 
     # _mp_state_num = Value('d', 3.14)
@@ -27,10 +28,14 @@ if __name__ == "__main__":
         # initialize rscs with energyplus manually calculated rscs, or matlab optimized rscs"
         rscs_init = _2_pyswarm.init_pos(swarm_constants['n_particles'])
         swarm_constants['iters'] = int(sys.argv[3])
+        _2_pyswarm.call_load_u_y(swarm_constants)
         optimizer = ps.single.GlobalBestPSO(n_particles=swarm_constants['n_particles'], dimensions=dimensions, options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'],n_processes=4, constants = swarm_constants)
+        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], constants = swarm_constants)
+
+        cost_history = optimizer.cost_history
+        plot_cost_history(cost_history)
 
         y_train, y_train_pred, ytest, y_test_pred  = _2_pyswarm.predict(pos, swarm_constants)
         _1_utils.swarm_plot(y_train, y_train_pred, ytest, y_test_pred, swarm_constants)
