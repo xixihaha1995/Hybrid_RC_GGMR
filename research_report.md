@@ -145,6 +145,8 @@ T_{out}\\
 \end{bmatrix}
 $$
 
+## initial guessing
+
 p[0] = r out cav, K/W, 1 / 51.92 = 0.019
 
 p[1] = r cav room, K/W, 1/29.07 = 0.034
@@ -152,3 +154,9 @@ p[1] = r cav room, K/W, 1/29.07 = 0.034
 p[2] = c cav, K/W, 1 / 1.13e-6 = 885000
 
 p[3] = alpha sol cav, -, 1
+
+```python
+r out cav, r cav room, c cav, alpha sol cav
+0.019,0.034,885000,1 #calculated
+0.019,0.034,885000,2E-5 #trivial and errors
+```
