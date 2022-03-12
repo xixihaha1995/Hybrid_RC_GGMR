@@ -213,3 +213,55 @@ TypeError: object of type 'numpy.float64' has no len()
 2022-03-11 22:52:26,656 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 1004.0928553473956, best pos: [ 3.85443702e-03  6.26061034e-03  8.85000168e+05 -4.90229228e-01]
 2022-03-11 22:53:29,641 - pyswarms.single.global_best - INFO - Optimize for 100 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
 2022-03-11 22:59:19,808 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 73036.38519570131, best pos: [1.35746337e-02 4.80479809e-02 8.85000197e+05 1.69230027e-05]
+2022-03-12 10:51:01,107 - pyswarms.single.global_best - INFO - Optimize for 1 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 10:51:07,408 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 73036.38519570131, best pos: [1.35746337e-02 4.80479809e-02 8.85000197e+05 1.69230027e-05]
+2022-03-12 10:52:45,449 - pyswarms.single.global_best - INFO - Optimize for 2 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 10:52:51,548 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 73036.38519570131, best pos: [1.35746337e-02 4.80479809e-02 8.85000197e+05 1.69230027e-05]
+2022-03-12 10:53:16,851 - pyswarms.single.global_best - INFO - Optimize for 10 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 10:53:24,031 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 12124401737.33806, best pos: [1.32128300e-03 2.81334230e-02 7.14694100e-03 1.44675900e-03
+ 6.23586310e-02 1.15740740e-02 5.26116071e-01 9.46969700e-03
+ 3.97083330e-02 2.81334230e-02 2.81334230e-02 4.62190104e+05
+ 4.62190104e+05 4.36078656e+05 4.36078656e+05 9.36000000e+05
+ 1.68512787e+05 9.24380208e+05 9.24380208e+05 1.00000000e+00
+ 1.00000000e+00 1.00000000e+00]
+2022-03-12 10:56:28,955 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 10:56:35,030 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 4620.858333190279, best pos: [3.98774173e-01 7.58303770e-01 3.08695592e+00 1.01920431e+00
+ 1.51678691e+00 5.03079208e-01 8.85003079e+05 4.12000242e+06
+ 2.80000020e+07 2.70000071e+06 2.42000000e+16]
+2022-03-12 10:58:53,379 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:07:06,923 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:07:13,020 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 2074.333762062168, best pos: [5.31710596e-02 7.61706435e-01 2.02889096e+00 2.02108853e-01
+ 2.52217149e+00 7.02493083e-01 8.85002041e+05 4.12000228e+06
+ 2.80000007e+07 2.70000100e+06 2.42000000e+16]
+2022-03-12 11:08:16,525 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:08:22,542 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 1409.572380489134, best pos: [1.86162136e+00 1.62755089e+00 3.10199896e+00 3.08498654e+00
+ 2.87449257e+00 5.62766500e-01 8.85002829e+05 4.12000103e+06
+ 2.80000007e+07 2.70000277e+06 2.42000000e+16]
+2022-03-12 11:09:39,194 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:09:45,320 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 1702.2671997477821, best pos: [8.83989380e-02 8.97370123e-01 2.82650726e+00 1.39019285e+00
+ 2.25529720e+00 2.93881867e-01 8.85000764e+05 4.12000237e+06
+ 2.80000004e+07 2.70000036e+06 2.42000000e+16]
+2022-03-12 11:11:54,416 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:12:00,609 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 9734743361029836.0, best pos: [1.90e-02 3.40e-02 4.60e-02 1.89e-03 7.00e-04 4.00e-03 8.85e+05 4.12e+06
+ 2.80e+07 2.70e+06 2.42e+16]
+2022-03-12 11:15:17,980 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:15:24,356 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 226651143745.85522, best pos: [1.16945677e-01 2.41305155e+00 1.39961468e+00 2.35538723e+00
+ 7.18942251e-01 1.98925837e+00 8.85002468e+05 4.12000216e+06
+ 2.80000009e+07 2.70000266e+06 2.42000000e+16]
+2022-03-12 11:55:51,780 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:56:23,486 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 11:56:39,417 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 226646210656.96664, best pos: [6.67523737e-01 1.56880788e+00 4.60950646e-01 2.32155085e+00
+ 2.66245226e+00 2.45656567e+00 8.85001047e+05 4.12000242e+06
+ 2.80000008e+07 2.70000008e+06 2.42000000e+16]
+2022-03-12 12:01:57,171 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 12:02:03,619 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 226624236118.30005, best pos: [2.76279926e-01 2.28376118e+00 2.52071448e+00 2.12976812e+00
+ 2.09999422e+00 2.41281328e+00 8.85001132e+05 4.12000241e+06
+ 2.80000007e+07 2.70000098e+06 2.42000000e+16]
+2022-03-12 12:04:47,388 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 12:04:53,743 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 226756952341.24127, best pos: [6.76468198e-01 1.52180835e+00 1.68156424e+00 1.00953121e+00
+ 2.81554194e+00 2.60334790e+00 8.85000566e+05 4.12000266e+06
+ 2.80000025e+07 2.70000071e+06 2.42000000e+16]
+2022-03-12 12:06:07,545 - pyswarms.single.global_best - INFO - Optimize for 5 iters with {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+2022-03-12 12:06:14,064 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 226674638516.55554, best pos: [4.73797695e-01 2.57182613e+00 4.61012482e-01 2.58540316e+00
+ 9.01791268e-01 4.80905351e-01 8.85001411e+05 4.12000089e+06
+ 2.80000010e+07 2.70000066e+06 2.42000000e+16]

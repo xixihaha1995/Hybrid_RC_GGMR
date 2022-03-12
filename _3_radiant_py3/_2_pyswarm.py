@@ -24,7 +24,6 @@ def init_pos(case_nbr, n_particles):
         for row in reader:
             row = [float(s_num) for s_num in row]
             rscs_str.append(row)
-    # rscs_lst.insert(0, 0)
     rscs_lst = rscs_str[case_nbr]
     rscs_init = np.array([rscs_lst for _ in range(n_particles)])
     return rscs_init
@@ -62,6 +61,8 @@ def obj_func(params, constants, train=True):
         x_discrete = np.array([[11], [22], [22], [25], [25]])
     elif constants['case_nbr'] == 0:
         x_discrete = np.array([[22]])
+    elif constants['case_nbr'] == -1:
+        x_discrete = 25 * np.ones((constants['state_num'], 1))
     state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]

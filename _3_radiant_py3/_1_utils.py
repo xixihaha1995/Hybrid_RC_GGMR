@@ -1,21 +1,38 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os, json
+
+
+def loadJSON(name):
+    with open(os.path.join(name + '.json'), 'r') as f:
+        testDict = json.loads(f.read())
+    return testDict
+
+def saveJSON(data, name):
+    with open(os.path.join(name + '.json'), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 
 def load_u_y(constants, train=True):
-    # excluding the first row, column
-
-    case_csv = pd.read_csv('./RS_VAV_baseline_1_15_3_7.csv', index_col=0, parse_dates=True, encoding = 'unicode_escape')
-    ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
-    if not train:
-        case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
-        ambient_arr = ambient_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+    if constants['case_nbr'] == -1:
+        case_csv = pd.read_csv('./Case600.csv', index_col=0, parse_dates=True)
+        if not train:
+            case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+        else:
+            case_arr = case_csv.to_numpy()[constants['start']: constants['end']]
     else:
-        case_arr = case_csv.to_numpy()[constants['start']: constants['end']]
-        ambient_arr = ambient_csv.to_numpy()[constants['start']: constants['end']]
-    case_arr = np.concatenate((case_arr, ambient_arr), axis=1)
-    # np.concatenate((a, b))
+        case_csv = pd.read_csv('./RS_VAV_baseline_1_15_3_7.csv', index_col=0, parse_dates=True,
+                               encoding='unicode_escape')
+        ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
+        if not train:
+            case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+            ambient_arr = ambient_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+        else:
+            case_arr = case_csv.to_numpy()[constants['start']: constants['end']]
+            ambient_arr = ambient_csv.to_numpy()[constants['start']: constants['end']]
+        case_arr = np.concatenate((case_arr, ambient_arr), axis=1)
+
     u_arr_init = np.zeros((case_arr.shape[0], constants['input_num']))
     y_arr_init = np.zeros((case_arr.shape[0],))
     u_arr, y_arr = assign_input_output(u_arr_init, y_arr_init, case_arr, constants['ts_sampling'],
@@ -27,40 +44,57 @@ def load_u_y(constants, train=True):
 def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
     # case_arr col = 57 + 20
     if case_nbr == 0:
-    #     ut = t room, t out,  q sol
-    #     yt = t cav
+        #     ut = t room, t out,  q sol
+        #     yt = t cav
         u_arr[:, 0] = (case_arr[:, 2] - 32) * 5 / 9
         u_arr[:, 1] = (case_arr[:, 0] - 32) * 5 / 9
-        u_arr[:, 2] = case_arr[:, 57+17]
+        u_arr[:, 2] = case_arr[:, 57 + 17]
         y_arr[:, ] = (case_arr[:, 49] - 32) * 5 / 9
 
-    elif case_nbr == 1:
+    elif case_nbr == 3:
         # uT = [T_{out}, \dot{Q}_{sol, cav}, \dot{Q}_{sol, room}, \dot{Q}_{int, room}, \dot{Q}_{sol, sur}, \dot{Q}_{int, sur}, \frac{dT_{so}}{dt}]\\
         u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
-        radiation = case_arr[:, 62]
+        radiation = case_arr[:, 57 + 17]
         u_arr[:, 1] = radiation * 0.04
         u_arr[:, 2] = radiation * 3.7e-19 * 0.5
         u_arr[:, 3] = np.zeros_like(u_arr[:, 0])
         u_arr[:, 4] = radiation * 3.7e-19 * 0.5
         u_arr[:, 5] = np.zeros_like(u_arr[:, 0])
 
-        u_arr[:, 6] = ((case_arr[:, 41] + case_arr[:, 40]) / 2 - 32) * 5 / 9
+        u_arr[:, 6] = ((case_arr[:, 29] + case_arr[:, 28]) / 2 - 32) * 5 / 9
         u_arr[0, 6] = 0
         u_arr[1:, 6] = (u_arr[1:, 6] - u_arr[0:-1, 6]) / ts
 
-        return_temp_c = (case_arr[:, 41] - 32) * 5 / 9
-        sulp_temp_c = (case_arr[:, 40] - 32) * 5 / 9
-        flow_volume_rate_gal_min = case_arr[:, 39]
+        return_temp_c = (case_arr[:, 29] - 32) * 5 / 9
+        sulp_temp_c = (case_arr[:, 28] - 32) * 5 / 9
+        flow_volume_rate_gal_min = case_arr[:, 27]
         # c = 4.186 J/g/c, rho = 997e3 g/m3, 1 gal / min = 6.309e-5 m3/s,
         c = 4.186
         rho = 997e3
         gal_permin_to_m3_persecond = 6.309e-5
         delta_t = (return_temp_c - sulp_temp_c)
         y_arr[:, ] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * delta_t
+    elif case_nbr == -1:
+        u_arr[:, 0] = case_arr[:, 0]
+        u_arr[:, 1] = case_arr[:, 1]
+        u_arr[:, 2] = case_arr[:, 7] + case_arr[:, 10] + case_arr[:, 13] + case_arr[:, 16]
+        u_arr[:, 3] = case_arr[:, 6] + case_arr[:, 9] + case_arr[:, 12] + case_arr[:, 15]
+        u_arr[:, 4] = case_arr[:, 22]
+        u_arr[:, 5] = case_arr[:, 21]
+        u_arr[:, 6] = case_arr[:, 18]
+        u_arr[:, 7] = case_arr[:, 2]
+        u_arr[:, 8] = case_arr[:, 3] + case_arr[:, 4]
+        u_arr[:, 9] = -case_arr[:, 26] / ts
+        u_arr[:, 10] = case_arr[:, 25]
+        u_arr[0, 11] = 0
+        u_arr[1:, 11] = (u_arr[1:, 10] - u_arr[0:-1, 10]) / ts
+
+        y_arr[:, ] = (case_arr[:, 27] - case_arr[:, 28]) / ts
+
     return u_arr, y_arr
 
 
-def assgin_ABCD(A, B, C, D, p, case_nbr = 3):
+def assgin_ABCD(A, B, C, D, p, case_nbr=3):
     if case_nbr == 0:
         pass
         A[0, 0] = -(1 / (p[0] * p[2])) - (1 / (p[1] * p[2]))
@@ -68,7 +102,7 @@ def assgin_ABCD(A, B, C, D, p, case_nbr = 3):
         B[0, 1] = 1 / (p[0] * p[2])
         B[0, 2] = p[3]
 
-        C[0,0] = 1
+        C[0, 0] = 1
 
     elif case_nbr == 3:
         # 0. r out cav, 0.036 K/W, corrected by Jaewan 1 / 51.92 = 0.019
@@ -117,6 +151,46 @@ def assgin_ABCD(A, B, C, D, p, case_nbr = 3):
         C[0, 4] = 1 / p[5]
 
         D[0, 6] = -p[9]
+    elif case_nbr == -1:
+        A[1 - 1, 1 - 1] = -(1 / (p[0] * p[11])) - (1 / (p[1] * p[11]))
+        A[1 - 1, 2 - 1] = (1 / (p[1] * p[11]))
+        A[2 - 1, 1 - 1] = 1 / (p[1] * p[12])
+        A[2 - 1, 2 - 1] = -(1 / (p[1] * p[12]) + 1 / (p[2] * p[12]))
+        A[3 - 1, 3 - 1] = -(1 / (p[3] * p[13]) + 1 / (p[4] * p[13]))
+        A[3 - 1, 4 - 1] = 1 / (p[4] * p[13])
+        A[4 - 1, 3 - 1] = 1 / (p[4] * p[14])
+        A[4 - 1, 4 - 1] = -(1 / (p[4] * p[14]) + 1 / (p[5] * p[14]))
+        A[5 - 1, 5 - 1] = -(1 / (p[6] * p[15]) + 1 / (p[7] * p[15]))
+        A[6 - 1, 6 - 1] = -1 / (p[9] * p[17])
+        A[6 - 1, 7 - 1] = 1 / (p[9] * p[17])
+        A[7 - 1, 6 - 1] = 1 / (p[9] * p[18])
+        A[7 - 1, 7 - 1] = -1 / (p[9] * p[18]) - 1 / (p[10] * p[18])
+
+        B[1 - 1, 1 - 1] = (1 / (p[0] * p[11]))
+        B[1 - 1, 3 - 1] = 1 / p[11]
+        B[2 - 1, 4 - 1] = 1 / p[12]
+        B[2 - 1, 11 - 1] = 1 / (p[2] * p[12])
+        B[3 - 1, 1 - 1] = 1 / (p[3] * p[13])
+        B[3 - 1, 5 - 1] = 1 / p[13]
+        B[4 - 1, 6 - 1] = 1 / p[14]
+        B[4 - 1, 11 - 1] = 1 / (p[5] * p[14])
+        B[5 - 1, 2 - 1] = 1 / (p[6] * p[15])
+        B[5 - 1, 7 - 1] = 1 / (p[15])
+        B[5 - 1, 11 - 1] = 1 / (p[7] * p[15])
+        B[6 - 1, 9 - 1] = p[20] / (2 * p[17])
+        B[7 - 1, 9 - 1] = p[20] / (2 * p[18])
+        B[7 - 1, 11 - 1] = 1 / (p[10] * p[18])
+
+        C[1 - 1, 2 - 1] = -1 / p[2]
+        C[1 - 1, 4 - 1] = -1 / p[5]
+        C[1 - 1, 5 - 1] = -1 / p[7]
+        C[1 - 1, 7 - 1] = -1 / p[10]
+
+        D[1 - 1, 1 - 1] = -1 / p[8]
+        D[1 - 1, 8 - 1] = -p[19]
+        D[1 - 1, 10 - 1] = -p[21]
+        D[1 - 1, 11 - 1] = 1 / p[2] + 1 / p[5] + 1 / p[7] + 1 / p[10] + 1 / p[8]
+        D[1 - 1, 12 - 1] = p[16]
 
     return A, B, C, D
 
@@ -125,6 +199,8 @@ def nrmse(measure, model):
     nom = (sum((measure - model) ** 2)) ** 1 / 2
     mean = measure.mean()
     denom = (sum((measure - mean) ** 2)) ** 1 / 2
+    if denom == 0:
+        denom = len(measure)
     return nom / denom
 
 
@@ -134,7 +210,9 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     minutes_interval = swarm_constants['ts_sampling'] / 60
     start = swarm_constants['start']
     end = swarm_constants['end']
-    if swarm_constants['case_nbr'] == 0:
+    if swarm_constants['case_nbr'] == -1:
+        figure_title = f'Single Zone RC network for Heating Power prediction(J){nl}'
+    elif swarm_constants['case_nbr'] == 0:
         figure_title = f'Cav RC network for T_cav prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 3:
         figure_title = f'Integrated RC network for Heating power(J) prediction performance{nl}'
@@ -150,7 +228,8 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
 
     plt.legend()
     plt.subplots_adjust(hspace=0.8)
-    plt.savefig("swarm_performance.png")
+    case_nbr = swarm_constants['case_nbr']
+    plt.savefig(f'_{case_nbr}_swarm_performance.png')
     plt.show()
 
 

@@ -24,7 +24,6 @@ def init_pos(case_nbr, n_particles):
         for row in reader:
             row = [float(s_num) for s_num in row]
             rscs_str.append(row)
-    # rscs_lst.insert(0, 0)
     rscs_lst = rscs_str[case_nbr]
     rscs_init = np.array([rscs_lst for _ in range(n_particles)])
     return rscs_init
