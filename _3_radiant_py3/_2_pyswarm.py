@@ -52,7 +52,6 @@ def paras_to_ABCD_swarm(params, constants):
 def obj_func(params, constants, train=True):
     if not load_u_y:
         call_load_u_y(constants)
-
     if train:
         u_arr, y_arr = u_train, y_train
     else:

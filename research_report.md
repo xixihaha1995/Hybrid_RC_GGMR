@@ -157,10 +157,10 @@ p[3] = alpha sol cav, -, 1
 
 ```python
 r out cav, r cav room, c cav, alpha sol cav
-initial error, best_cost=1.75e+5
-0.019,0.034,885000,1 #calculated
+0.019,0.034,885000,1 #calculated， initial error, best_cost=1.75e+5
 0.019,0.034,885000,2E-5 #trivial and errors
-2.58782929e-02 3.73895712e-02 8.85000163e+05 1.10505928e-05 # 500 particle 50 iterations
+2.58782929e-02 3.73895712e-02 8.85000163e+05 1.10505928e-05 # 500 particle 50 iterations， best_cost=1.21e+5
+1.35746337e-02 4.80479809e-02 8.85000197e+05 1.69230027e-05 # 500 particle 200 iterations， best_cost=7.3e+4
 ```
 
 ![](_3_radiant_py3/cav_no_solar.png)
@@ -168,3 +168,20 @@ initial error, best_cost=1.75e+5
 ![](_3_radiant_py3/cav_with_solar.png)
 
 ![](_3_radiant_py3/cav_with_solar_500_50.png)
+
+![](_3_radiant_py3/cav_with_solar_500_50_2.png)
+
+![](_3_radiant_py3/cav_with_solar_500_50_3.png)
+
+## test multi-processes
+
+
+
+| 前50个数据 | pos                                                          |      |      |
+| ---------- | ------------------------------------------------------------ | ---- | ---- |
+| 3进程并发  | 8.16505902e-04  1.94427052e-03  8.85000490e+05 -1.09815616e-01 | 16   |      |
+| 单进程     | 2.02431304e-03 4.91892908e-03 8.85000045e+05 2.27941988e-01  | 29   |      |
+
+
+
+2.34823223e-03 6.96492546e-03 8.84999875e+05 4.34410595e-01

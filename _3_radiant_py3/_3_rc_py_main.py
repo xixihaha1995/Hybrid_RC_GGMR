@@ -1,11 +1,12 @@
 import argparse, textwrap, time
 import pyswarms as ps
-import matplotlib.pyplot as plt
+
 import _1_utils, _2_pyswarm
 from pyswarms.utils.plotters import plot_cost_history
 
 if __name__ == "__main__":
     start_time = time.time()
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent('''\
     Use like: 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
                                             options=options,
                                             init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], n_processes= 3,
+        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], n_processes= 4,
                                        constants=swarm_constants)
         end_time = time.time()
         print(f'Elapsed time:{end_time - start_time}')
