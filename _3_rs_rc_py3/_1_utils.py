@@ -255,11 +255,15 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
         f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+    if swarm_constants['case_nbr'] == 2:
+        ax[0].set_ylim((18, 26))
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
         figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
 
+    if swarm_constants['case_nbr'] == 2:
+        ax[1].set_ylim((18, 26))
     plt.legend()
     plt.subplots_adjust(hspace=0.8)
     case_nbr = swarm_constants['case_nbr']
