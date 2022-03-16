@@ -57,12 +57,15 @@ def obj_func(params, constants, train=True):
         u_arr, y_arr = u_test, y_test
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
     y_model = np.zeros_like(y_arr)
-    if constants['case_nbr'] == 3:
-        x_discrete = np.array([[11], [22], [22], [25], [25]])
+
+    if constants['case_nbr'] == -1:
+        x_discrete = 25 * np.ones((constants['state_num'], 1))
     elif constants['case_nbr'] == 0:
         x_discrete = np.array([[22]])
-    elif constants['case_nbr'] == -1:
-        x_discrete = 25 * np.ones((constants['state_num'], 1))
+    elif constants['case_nbr'] == 2:
+        x_discrete = np.array([[22],[26], [21]])
+    elif constants['case_nbr'] == 3:
+        x_discrete = np.array([[11], [22], [22], [25], [25]])
     state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]

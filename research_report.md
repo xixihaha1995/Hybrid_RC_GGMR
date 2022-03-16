@@ -14,7 +14,7 @@
 
 # Single Zone log
 
-![Initial Performance](_3_radiant_py3/single_zone_swarm_performance.png)
+![Initial Performance](_3_rs_rc_py3/single_zone_swarm_performance.png)
 
 # Integrated RC network
 
@@ -143,7 +143,7 @@ parameter initial values:
 
 ![image-20220311145414130](C:\Users\wulic\AppData\Roaming\Typora\typora-user-images\image-20220311145414130.png)
 $$
-C_{cav}\frac{dT_{cav}}{dt} = \frac{T_{out} - T_{cav}}{R_{out, cav}} + \frac{T_{room} - T_{cav}}{R_{cav, room}} + \alpha_{sol, cav}\dot{Q}_{sol, cav}\\
+C_{cav}\frac{dT_{cav}}{dt} = \frac{T_{out} - T_{cav}}{R_{out, cav}} + \frac{T_{room} - T_{cav}}{R_{cav, room}} + \alpha_{sol, cav}\dot{Q}_{sol}\\
 x^T = [T_{cav}, \alpha_{sol, cav}]\\
 u^T = [T_{out},T_{room}, \dot{Q}_{sol}]\\
 y = T_{cav}\\
@@ -162,12 +162,12 @@ T_{cav}
 \end{bmatrix}
 +
 \begin{bmatrix}
-\frac{1}{R_{room, cav}C_{cav}}, \frac{1}{R_{out, cav}C_{cav}}, \alpha_{sol, cav}
+\frac{1}{R_{room, cav}C_{cav}}, \frac{1}{R_{out, cav}C_{cav}},\frac{\alpha_{sol, cav}}{C_{cav}} 
 \end{bmatrix}
 \begin{bmatrix}
 T_{room} \\
 T_{out}\\
-\dot{Q}_{sol, cav}
+\dot{Q}_{sol}
 \end{bmatrix}
 $$
 
@@ -176,7 +176,7 @@ y = T_{cav} = [1] [T_{cav}]  + [0,0,0]
 \begin{bmatrix}
 T_{room} \\
 T_{out}\\
-\dot{Q}_{sol, cav}
+\dot{Q}_{sol}
 \end{bmatrix}
 $$
 
@@ -192,21 +192,23 @@ p[3] = alpha sol cav, -, 1
 
 ```python
 r out cav, r cav room, c cav, alpha sol cav
-0.019,0.034,885000,1 #calculated， initial error, best_cost=1.75e+5
+0.019,0.034,885000,0.04 #calculated， initial error, best_cost=3.46e+5
 0.019,0.034,885000,2E-5 #trivial and errors
 2.58782929e-02 3.73895712e-02 8.85000163e+05 1.10505928e-05 # 500 particle 50 iterations， best_cost=1.21e+5
 1.35746337e-02 4.80479809e-02 8.85000197e+05 1.69230027e-05 # 500 particle 200 iterations， best_cost=7.3e+4
 ```
 
-![](_3_radiant_py3/cav_no_solar.png)
+![](_3_rs_rc_py3/cav_no_solar.png)
 
-![](_3_radiant_py3/cav_with_solar.png)
+![](_3_rs_rc_py3/cav_with_solar.png)
 
-![](_3_radiant_py3/cav_with_solar_500_50.png)
+![](_3_rs_rc_py3/cav_with_solar_500_50.png)
 
-![](_3_radiant_py3/cav_with_solar_500_50_2.png)
+![](_3_rs_rc_py3/cav_with_solar_500_50_2.png)
 
-![](_3_radiant_py3/cav_with_solar_500_50_3.png)
+![](_3_rs_rc_py3/cav_with_solar_500_50_3.png)
+
+![](_3_rs_rc_py3/_0_cav_updated_500_100.png)
 
 ## test multi-processes
 
@@ -217,6 +219,5 @@ r out cav, r cav room, c cav, alpha sol cav
 | 3进程并发  | 8.16505902e-04  1.94427052e-03  8.85000490e+05 -1.09815616e-01 | 16   |      |
 | 单进程     | 2.02431304e-03 4.91892908e-03 8.85000045e+05 2.27941988e-01  | 29   |      |
 
+# Slab RC Agent
 
-
-2.34823223e-03 6.96492546e-03 8.84999875e+05 4.34410595e-01

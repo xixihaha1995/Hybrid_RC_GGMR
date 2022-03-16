@@ -42,39 +42,17 @@ def load_u_y(constants, train=True):
 
 
 def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
-    # case_arr col = 57 + 20
-    if case_nbr == 0:
-        #     ut = t room, t out,  q sol
-        #     yt = t cav
-        u_arr[:, 0] = (case_arr[:, 2] - 32) * 5 / 9
-        u_arr[:, 1] = (case_arr[:, 0] - 32) * 5 / 9
-        u_arr[:, 2] = case_arr[:, 57 + 17]
-        y_arr[:, ] = (case_arr[:, 49] - 32) * 5 / 9
+    return_temp_c = (case_arr[:, 29] - 32) * 5 / 9
+    sulp_temp_c = (case_arr[:, 28] - 32) * 5 / 9
+    flow_volume_rate_gal_min = case_arr[:, 27]
+    # c = 4.186 J/g/c, rho = 997e3 g/m3, 1 gal / min = 6.309e-5 m3/s,
+    c = 4.186
+    rho = 997e3
+    gal_permin_to_m3_persecond = 6.309e-5
+    t_slab = ((case_arr[:, 5] + case_arr[:, 6] + case_arr[:, 7] + case_arr[:, 8] +case_arr[:, 9]
+              +case_arr[:, 10] + case_arr[:, 11] + case_arr[:, 12] + case_arr[:, 13] + case_arr[:, 14]) / 10 - 32) * 5 / 9
 
-    elif case_nbr == 3:
-        # uT = [T_{out}, \dot{Q}_{sol, cav}, \dot{Q}_{sol, room}, \dot{Q}_{int, room}, \dot{Q}_{sol, sur}, \dot{Q}_{int, sur}, \frac{dT_{so}}{dt}]\\
-        u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
-        radiation = case_arr[:, 57 + 17]
-        u_arr[:, 1] = radiation * 0.04
-        u_arr[:, 2] = radiation * 3.7e-19 * 0.5
-        u_arr[:, 3] = np.zeros_like(u_arr[:, 0])
-        u_arr[:, 4] = radiation * 3.7e-19 * 0.5
-        u_arr[:, 5] = np.zeros_like(u_arr[:, 0])
-
-        u_arr[:, 6] = ((case_arr[:, 29] + case_arr[:, 28]) / 2 - 32) * 5 / 9
-        u_arr[0, 6] = 0
-        u_arr[1:, 6] = (u_arr[1:, 6] - u_arr[0:-1, 6]) / ts
-
-        return_temp_c = (case_arr[:, 29] - 32) * 5 / 9
-        sulp_temp_c = (case_arr[:, 28] - 32) * 5 / 9
-        flow_volume_rate_gal_min = case_arr[:, 27]
-        # c = 4.186 J/g/c, rho = 997e3 g/m3, 1 gal / min = 6.309e-5 m3/s,
-        c = 4.186
-        rho = 997e3
-        gal_permin_to_m3_persecond = 6.309e-5
-        delta_t = (return_temp_c - sulp_temp_c)
-        y_arr[:, ] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * delta_t
-    elif case_nbr == -1:
+    if case_nbr == -1:
         u_arr[:, 0] = case_arr[:, 0]
         u_arr[:, 1] = case_arr[:, 1]
         u_arr[:, 2] = case_arr[:, 7] + case_arr[:, 10] + case_arr[:, 13] + case_arr[:, 16]
@@ -90,19 +68,113 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[1:, 11] = (u_arr[1:, 10] - u_arr[0:-1, 10]) / ts
 
         y_arr[:, ] = (case_arr[:, 27] - case_arr[:, 28]) / ts
+    elif case_nbr == 0:
+        #     ut = t room, t out,  q sol
+        #     yt = t cav
+        u_arr[:, 0] = (case_arr[:, 2] - 32) * 5 / 9
+        u_arr[:, 1] = (case_arr[:, 0] - 32) * 5 / 9
+        u_arr[:, 2] = case_arr[:, 57 + 17]
+        y_arr[:, ] = (case_arr[:, 49] - 32) * 5 / 9
+
+    elif case_nbr == 2:
+        #     ut = t room, q sol,  q rad
+        #     yt = t slab
+        pass
+        u_arr[:, 0] = (case_arr[:, 2] - 32) * 5 / 9
+        u_arr[:, 1] = case_arr[:, 57 + 17]
+        u_arr[:, 2] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+
+        y_arr[:, ] = t_slab
+
+    elif case_nbr == 3:
+        # uT = [T_{out}, \dot{Q}_{sol, cav}, \dot{Q}_{sol, room}, \dot{Q}_{int, room}, \dot{Q}_{sol, sur}, \dot{Q}_{int, sur}, \frac{dT_{so}}{dt}]\\
+        u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
+        radiation = case_arr[:, 57 + 17]
+        u_arr[:, 1] = radiation * 0.04
+        u_arr[:, 2] = radiation * 3.7e-19 * 0.5
+        u_arr[:, 3] = np.zeros_like(u_arr[:, 0])
+        u_arr[:, 4] = radiation * 3.7e-19 * 0.5
+        u_arr[:, 5] = np.zeros_like(u_arr[:, 0])
+
+        u_arr[:, 6] = ((case_arr[:, 29] + case_arr[:, 28]) / 2 - 32) * 5 / 9
+        u_arr[0, 6] = 0
+        u_arr[1:, 6] = (u_arr[1:, 6] - u_arr[0:-1, 6]) / ts
+
+        delta_t = (return_temp_c - sulp_temp_c)
+        y_arr[:, ] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * delta_t
+
 
     return u_arr, y_arr
 
 
 def assgin_ABCD(A, B, C, D, p, case_nbr=3):
-    if case_nbr == 0:
+
+    if case_nbr == -1:
+        A[1 - 1, 1 - 1] = -(1 / (p[0] * p[11])) - (1 / (p[1] * p[11]))
+        A[1 - 1, 2 - 1] = (1 / (p[1] * p[11]))
+        A[2 - 1, 1 - 1] = 1 / (p[1] * p[12])
+        A[2 - 1, 2 - 1] = -(1 / (p[1] * p[12]) + 1 / (p[2] * p[12]))
+        A[3 - 1, 3 - 1] = -(1 / (p[3] * p[13]) + 1 / (p[4] * p[13]))
+        A[3 - 1, 4 - 1] = 1 / (p[4] * p[13])
+        A[4 - 1, 3 - 1] = 1 / (p[4] * p[14])
+        A[4 - 1, 4 - 1] = -(1 / (p[4] * p[14]) + 1 / (p[5] * p[14]))
+        A[5 - 1, 5 - 1] = -(1 / (p[6] * p[15]) + 1 / (p[7] * p[15]))
+        A[6 - 1, 6 - 1] = -1 / (p[9] * p[17])
+        A[6 - 1, 7 - 1] = 1 / (p[9] * p[17])
+        A[7 - 1, 6 - 1] = 1 / (p[9] * p[18])
+        A[7 - 1, 7 - 1] = -1 / (p[9] * p[18]) - 1 / (p[10] * p[18])
+
+        B[1 - 1, 1 - 1] = (1 / (p[0] * p[11]))
+        B[1 - 1, 3 - 1] = 1 / p[11]
+        B[2 - 1, 4 - 1] = 1 / p[12]
+        B[2 - 1, 11 - 1] = 1 / (p[2] * p[12])
+        B[3 - 1, 1 - 1] = 1 / (p[3] * p[13])
+        B[3 - 1, 5 - 1] = 1 / p[13]
+        B[4 - 1, 6 - 1] = 1 / p[14]
+        B[4 - 1, 11 - 1] = 1 / (p[5] * p[14])
+        B[5 - 1, 2 - 1] = 1 / (p[6] * p[15])
+        B[5 - 1, 7 - 1] = 1 / (p[15])
+        B[5 - 1, 11 - 1] = 1 / (p[7] * p[15])
+        B[6 - 1, 9 - 1] = p[20] / (2 * p[17])
+        B[7 - 1, 9 - 1] = p[20] / (2 * p[18])
+        B[7 - 1, 11 - 1] = 1 / (p[10] * p[18])
+
+        C[1 - 1, 2 - 1] = -1 / p[2]
+        C[1 - 1, 4 - 1] = -1 / p[5]
+        C[1 - 1, 5 - 1] = -1 / p[7]
+        C[1 - 1, 7 - 1] = -1 / p[10]
+
+        D[1 - 1, 1 - 1] = -1 / p[8]
+        D[1 - 1, 8 - 1] = -p[19]
+        D[1 - 1, 10 - 1] = -p[21]
+        D[1 - 1, 11 - 1] = 1 / p[2] + 1 / p[5] + 1 / p[7] + 1 / p[10] + 1 / p[8]
+        D[1 - 1, 12 - 1] = p[16]
+
+    elif case_nbr == 0:
         pass
         A[0, 0] = -(1 / (p[0] * p[2])) - (1 / (p[1] * p[2]))
         B[0, 0] = 1 / (p[1] * p[2])
         B[0, 1] = 1 / (p[0] * p[2])
-        B[0, 2] = p[3]
+        B[0, 2] = p[3]/p[2]
 
         C[0, 0] = 1
+
+    elif case_nbr == 2:
+        pass
+        A[0, 0] = -1 / (p[0] * p[3] ) + -1/(p[1] * p[3])
+        A[0, 1] = 1 / (p[1] * p[3])
+        A[1, 0] = 1 / (p[1] * p[4])
+        A[1, 1] = -1 / (p[1] * p[4]) + -1 / (p[2] * p[4])
+        A[1, 2] = 1 / (p[2] * p[4])
+        A[2, 1] = 1/ (p[2] * p[5])
+        A[2, 2] = -1 / (p[2] * p[5])
+
+        B[0, 0] = 1 / (p[0] * p[3])
+        B[0, 1] = p[6] / p[3]
+        B[1, 2] = 1
+
+        C[0,0] = 1
+
 
     elif case_nbr == 3:
         # 0. r out cav, 0.036 K/W, corrected by Jaewan 1 / 51.92 = 0.019
@@ -151,46 +223,7 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         C[0, 4] = 1 / p[5]
 
         D[0, 6] = -p[9]
-    elif case_nbr == -1:
-        A[1 - 1, 1 - 1] = -(1 / (p[0] * p[11])) - (1 / (p[1] * p[11]))
-        A[1 - 1, 2 - 1] = (1 / (p[1] * p[11]))
-        A[2 - 1, 1 - 1] = 1 / (p[1] * p[12])
-        A[2 - 1, 2 - 1] = -(1 / (p[1] * p[12]) + 1 / (p[2] * p[12]))
-        A[3 - 1, 3 - 1] = -(1 / (p[3] * p[13]) + 1 / (p[4] * p[13]))
-        A[3 - 1, 4 - 1] = 1 / (p[4] * p[13])
-        A[4 - 1, 3 - 1] = 1 / (p[4] * p[14])
-        A[4 - 1, 4 - 1] = -(1 / (p[4] * p[14]) + 1 / (p[5] * p[14]))
-        A[5 - 1, 5 - 1] = -(1 / (p[6] * p[15]) + 1 / (p[7] * p[15]))
-        A[6 - 1, 6 - 1] = -1 / (p[9] * p[17])
-        A[6 - 1, 7 - 1] = 1 / (p[9] * p[17])
-        A[7 - 1, 6 - 1] = 1 / (p[9] * p[18])
-        A[7 - 1, 7 - 1] = -1 / (p[9] * p[18]) - 1 / (p[10] * p[18])
 
-        B[1 - 1, 1 - 1] = (1 / (p[0] * p[11]))
-        B[1 - 1, 3 - 1] = 1 / p[11]
-        B[2 - 1, 4 - 1] = 1 / p[12]
-        B[2 - 1, 11 - 1] = 1 / (p[2] * p[12])
-        B[3 - 1, 1 - 1] = 1 / (p[3] * p[13])
-        B[3 - 1, 5 - 1] = 1 / p[13]
-        B[4 - 1, 6 - 1] = 1 / p[14]
-        B[4 - 1, 11 - 1] = 1 / (p[5] * p[14])
-        B[5 - 1, 2 - 1] = 1 / (p[6] * p[15])
-        B[5 - 1, 7 - 1] = 1 / (p[15])
-        B[5 - 1, 11 - 1] = 1 / (p[7] * p[15])
-        B[6 - 1, 9 - 1] = p[20] / (2 * p[17])
-        B[7 - 1, 9 - 1] = p[20] / (2 * p[18])
-        B[7 - 1, 11 - 1] = 1 / (p[10] * p[18])
-
-        C[1 - 1, 2 - 1] = -1 / p[2]
-        C[1 - 1, 4 - 1] = -1 / p[5]
-        C[1 - 1, 5 - 1] = -1 / p[7]
-        C[1 - 1, 7 - 1] = -1 / p[10]
-
-        D[1 - 1, 1 - 1] = -1 / p[8]
-        D[1 - 1, 8 - 1] = -p[19]
-        D[1 - 1, 10 - 1] = -p[21]
-        D[1 - 1, 11 - 1] = 1 / p[2] + 1 / p[5] + 1 / p[7] + 1 / p[10] + 1 / p[8]
-        D[1 - 1, 12 - 1] = p[16]
 
     return A, B, C, D
 
@@ -214,13 +247,14 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
         figure_title = f'Single Zone RC network for Heating Power prediction(J){nl}'
     elif swarm_constants['case_nbr'] == 0:
         figure_title = f'Cav RC network for T_cav prediction(C){nl}'
+    elif swarm_constants['case_nbr'] == 2:
+        figure_title = f'Slab RC network for T_slab prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 3:
         figure_title = f'Integrated RC network for Heating power(J) prediction performance{nl}'
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
         f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
-
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(

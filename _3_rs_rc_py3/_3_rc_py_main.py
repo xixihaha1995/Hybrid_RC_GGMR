@@ -64,10 +64,10 @@ if __name__ == "__main__":
         this_log_dict['cost_hist'] = cost_history
         this_log_dict['pos'] = pos.tolist()
         this_log_dict['elapsed_time'] = end_time - start_time
-        if swarm_constants['case_nbr'] not in all_log_dict:
-            all_log_dict[swarm_constants['case_nbr']] = []
+        if str(swarm_constants['case_nbr']) not in all_log_dict:
+            all_log_dict[str(swarm_constants['case_nbr'])] = []
 
-        all_log_dict[swarm_constants['case_nbr']].append(this_log_dict)
+        all_log_dict[str(swarm_constants['case_nbr'])].append(this_log_dict)
         _1_utils.saveJSON(all_log_dict, "all_cases_log")
         plot_cost_history(cost_history)
         y_train, y_train_pred, ytest, y_test_pred = _2_pyswarm.predict(pos, swarm_constants)
