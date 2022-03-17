@@ -63,9 +63,11 @@ def obj_func(params, constants, train=True):
     elif constants['case_nbr'] == 0:
         x_discrete = np.array([[22]])
     elif constants['case_nbr'] == 2:
-        x_discrete = np.array([[22],[26], [21]])
+        x_discrete = np.array([[22],[27], [21]])
     elif constants['case_nbr'] == 3:
         x_discrete = np.array([[11], [22], [22], [25], [25]])
+    elif constants['case_nbr'] == 4:
+        x_discrete = np.array([[22], [27]])
     state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
         y_model[i,] = c @ x_discrete + d @ u_arr[:, i]
