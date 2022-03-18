@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import _1_utils, csv
 from scipy import signal
 
@@ -7,14 +6,7 @@ u_train = None
 y_train = None
 u_test = None
 y_test = None
-
-load_u_y = False
-
-def call_load_u_y(constants):
-    global u_train, y_train, u_test, y_test, load_u_y
-    (u_train, y_train) = _1_utils.load_u_y(constants)
-    (u_test, y_test) = _1_utils.load_u_y(constants, train=False)
-    load_u_y = True
+load_u_y_bool = False
 
 
 def init_pos(case_nbr, n_particles):
@@ -29,27 +21,19 @@ def init_pos(case_nbr, n_particles):
     return rscs_init
 
 
-def paras_to_ABCD_swarm(params, constants):
+def whole_swarm_loss(x, constants):
+    n_particles = x.shape[0]
+    j = [particle_loss(x[i], constants) for i in range(n_particles)]
+    return np.array(j)
 
-    A_init = np.zeros((constants['state_num'], constants['state_num']))
-    B_init = np.zeros((constants['state_num'], constants['input_num']))
-    C_init = np.zeros((1, constants['state_num']))
-    D_init = np.zeros((1, constants['input_num']))
 
-    A, B, C, D = _1_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params, case_nbr = constants['case_nbr'])
-
-    sys = signal.StateSpace(A, B, C, D)
-    sys_d = sys.to_discrete(constants['ts_sampling'])
-    a = sys_d.A
-    b = sys_d.B
-    c = sys_d.C
-    d = sys_d.D
-
-    return a, b, c, d
+def particle_loss(params, constants):
+    y_measure, y_model = obj_func(params, constants)
+    return sum((abs(y_model - y_measure)) ** 2)
 
 
 def obj_func(params, constants, train=True):
-    if not load_u_y:
+    if not load_u_y_bool:
         call_load_u_y(constants)
     if train:
         u_arr, y_arr = u_train, y_train
@@ -63,7 +47,7 @@ def obj_func(params, constants, train=True):
     elif constants['case_nbr'] == 0:
         x_discrete = np.array([[22]])
     elif constants['case_nbr'] == 2:
-        x_discrete = np.array([[22],[27], [21]])
+        x_discrete = np.array([[22], [27], [21]])
     elif constants['case_nbr'] == 3:
         x_discrete = np.array([[11], [22], [22], [25], [25]])
     elif constants['case_nbr'] == 4:
@@ -76,15 +60,29 @@ def obj_func(params, constants, train=True):
     return y_arr, y_model
 
 
-def particle_loss(params, constants):
-    y_measure, y_model = obj_func(params, constants)
-    return sum((abs(y_model - y_measure))**2)
+def call_load_u_y(constants):
+    global u_train, y_train, u_test, y_test, load_u_y_bool
+    (u_train, y_train) = _1_utils.load_u_y(constants)
+    (u_test, y_test) = _1_utils.load_u_y(constants, train=False)
+    load_u_y_bool = True
 
 
-def whole_swarm_loss(x, constants):
-    n_particles = x.shape[0]
-    j = [particle_loss(x[i], constants) for i in range(n_particles)]
-    return np.array(j)
+def paras_to_ABCD_swarm(params, constants):
+    A_init = np.zeros((constants['state_num'], constants['state_num']))
+    B_init = np.zeros((constants['state_num'], constants['input_num']))
+    C_init = np.zeros((1, constants['state_num']))
+    D_init = np.zeros((1, constants['input_num']))
+
+    A, B, C, D = _1_utils.assgin_ABCD(A_init, B_init, C_init, D_init, params, case_nbr=constants['case_nbr'])
+
+    sys = signal.StateSpace(A, B, C, D)
+    sys_d = sys.to_discrete(constants['ts_sampling'])
+    a = sys_d.A
+    b = sys_d.B
+    c = sys_d.C
+    d = sys_d.D
+
+    return a, b, c, d
 
 
 def predict(pos, constants):

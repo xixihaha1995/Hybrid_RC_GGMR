@@ -112,9 +112,7 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
     t_slab = ((case_arr[:, 5] + case_arr[:, 6] + case_arr[:, 7] + case_arr[:, 8] + case_arr[:, 9]
                + case_arr[:, 10] + case_arr[:, 11] + case_arr[:, 12] + case_arr[:, 13] + case_arr[:,
                                                                                          14]) / 10 - 32) * 5 / 9
-    # t_slab = (case_arr[:, 5]- 32) * 5 / 9
     ligthing_power =case_arr[:, -1]
-    # ligthing_power = np.zeros_like()
 
     if case_nbr == -1:
         u_arr[:, 0] = case_arr[:, 0]
@@ -169,7 +167,6 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         y_arr[:, ] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * delta_t
 
     elif case_nbr == 4:
-
         #     ut = t room, q sol,  q rad, q light, t adj
         #     yt = t slab
         pass

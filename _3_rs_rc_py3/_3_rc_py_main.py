@@ -6,9 +6,6 @@ from pyswarms.utils.plotters import plot_cost_history
 from datetime import datetime
 
 if __name__ == "__main__":
-    '''
-    {'0':[{'time', 'arg', 'cos', 'pos', 'elapsed time'}, {},...{}]}
-    '''
     all_log_dict = _1_utils.loadJSON("all_cases_log")
     this_log_dict ={}
     fmt = '%Y%m%d%H%M%S'
@@ -20,9 +17,9 @@ if __name__ == "__main__":
     --------------------------------
     this.py -arg [ts_sampling] [start] [end] [state_num] [input_num]...
     [dimensions] [n_particle] [iters]...
-    [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3],[mode, optimization = 0, visual = 1]
+    [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3, slab_adj = 4],[mode, optimization = 0, visual = 1]
     '''))
-    parser.add_argument("-a", nargs='+', type=int, help="Specify args used for rc network")
+    parser.add_argument("-a", nargs='+', type=int, help="Specify args used for RC modeling")
 
     args = parser.parse_args()
     ts_sampling = args.a[0]
@@ -32,7 +29,6 @@ if __name__ == "__main__":
     input_num = args.a[4]
     dimensions = args.a[5]
 
-    # _mp_state_num = Value('d', 3.14)
     swarm_constants = {}
     swarm_constants['start'] = start
     swarm_constants['end'] = end
