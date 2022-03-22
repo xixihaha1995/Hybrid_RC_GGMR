@@ -29,7 +29,8 @@ def whole_swarm_loss(x, constants):
 
 def particle_loss(params, constants):
     y_measure, y_model = obj_func(params, constants)
-    return sum((abs(y_model - y_measure)) ** 2)
+    y_measure = y_measure.to_numpy()
+    return sum((y_model - y_measure) ** 2)
 
 
 def obj_func(params, constants, train=True):
@@ -54,9 +55,11 @@ def obj_func(params, constants, train=True):
         x_discrete = np.array([[11], [22], [22], [25], [25]])
     elif constants['case_nbr'] == 4:
         x_discrete = np.array([[22], [27]])
+    elif constants['case_nbr'] == 5:
+        x_discrete = np.array([[0], [10],[22],[21]])
     state_num = constants['state_num']
     for i in range(u_arr.shape[1]):
-        y_model[i,] = c @ x_discrete + d @ u_arr[:, i]
+        y_model[i] = (c @ x_discrete + d @ u_arr[:, i])[0,0]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
 
     return y_arr, y_model
