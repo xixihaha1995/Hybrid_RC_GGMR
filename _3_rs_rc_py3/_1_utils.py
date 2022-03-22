@@ -4,6 +4,59 @@ import pandas as pd
 import os, json
 from datetime import datetime
 
+def add_internal(ambient_arr):
+    # start =
+    pass
+    cur_utc = 1642204800+25200
+    internal_heating = []
+    for _ in range(len(ambient_arr)):
+        isowkday = datetime.fromtimestamp(cur_utc).isoweekday()
+        hour = datetime.fromtimestamp(cur_utc).hour
+        if isowkday <= 5:
+            if hour < 6:
+                internal = 0
+            elif hour >=6 and hour < 7:
+                internal = 0.1
+            elif hour >= 7 and hour < 8:
+                internal = 0.2
+            elif hour >= 8 and hour < 12:
+                internal = 0.95
+            elif hour >= 12 and hour < 13:
+                internal = 0.5
+            elif hour >= 13 and hour < 17:
+                internal = 0.95
+            elif hour >= 17 and hour < 18:
+                internal = 0.3
+            elif hour >= 18 and hour < 22 :
+                internal = 0.1
+            elif hour >= 22 and hour < 24:
+                internal = 0.05
+        if isowkday == 6:
+            if hour < 6:
+                internal = 0
+            elif hour >= 6 and hour < 8:
+                internal = 0.1
+            elif hour >= 8 and hour < 12:
+                internal = 0.3
+            elif hour >= 12 and hour < 17:
+                internal = 0.1
+            elif hour >= 17 and hour < 19:
+                internal = 0.05
+            elif hour >= 19 and hour < 24:
+                internal = 0
+        if isowkday == 7:
+            if hour < 6:
+                internal = 0
+            elif hour >= 6 and hour < 18:
+                internal = 0.05
+            elif hour >= 18 and hour < 24:
+                internal = 0
+        internal_heating.append([7.5* 30 *internal])
+        cur_utc += 300
+
+    ambient_arr = np.concatenate((ambient_arr, internal_heating), axis=1)
+    return ambient_arr
+
 def add_adj(ambient_arr):
     lst_2d = [[21] for _ in range(len(ambient_arr))]
     ambient_arr = np.concatenate((ambient_arr, np.array(lst_2d)), axis=1)
@@ -83,7 +136,8 @@ def load_u_y(constants, train=True):
         case_csv = pd.read_csv('./RS_VAV_baseline_1_15_3_7.csv', index_col=0, parse_dates=True,
                                encoding='unicode_escape')
         ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
-        ambient_arr = add_adj(ambient_csv.to_numpy())
+        ambient_arr = add_internal(ambient_csv.to_numpy())
+        ambient_arr = add_adj(ambient_arr)
         ambient_arr = add_lighting(ambient_arr)
         if not train:
             case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
@@ -113,6 +167,16 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
                + case_arr[:, 10] + case_arr[:, 11] + case_arr[:, 12] + case_arr[:, 13] + case_arr[:,
                                                                                          14]) / 10 - 32) * 5 / 9
     ligthing_power =case_arr[:, -1]
+    # c_air = 700 J/kg/K, 0.00047194745 m3_per3_perCFM, rho_air = 1.255 kg/m3
+    c_air = 700
+    rho_air = 1.255
+    out_temp = (case_arr[:, 38] - 32)*5 / 9
+    cfm_1 = case_arr[:, 41]
+    t_supp_1 = (case_arr[:, 42] - 32 ) * 5/ 9
+    cfm_2 = case_arr[:, 45]
+    t_supp_2 = (case_arr[:, 46] - 32) * 5 / 9
+    m3_per3_perCFM = 0.00047194745
+    # QAHU = c_air*cfm * m3_per3_perCFM *rho_air*(T_supp - OA)
 
     if case_nbr == -1:
         u_arr[:, 0] = case_arr[:, 0]
@@ -137,17 +201,34 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[:, 1] = (case_arr[:, 0] - 32) * 5 / 9
         u_arr[:, 2] = case_arr[:, 57 + 17]
         y_arr[:, ] = (case_arr[:, 49] - 32) * 5 / 9
+    elif case_nbr == 1:
+        #     ut = t out, Tcav Tslab, Qsol, Qlight, Qint, Qahu,
+        #     yt = t room
+        # QAHU = c_air*cfm * m3_per3_perCFM *rho_air*(T_supp - OA)
+        u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
+        u_arr[:, 1] = (case_arr[:, 49] - 32) * 5 / 9
+        u_arr[:, 2] = t_slab
+        u_arr[:, 3] = case_arr[:, 57 + 17]
+        u_arr[:, 4] = ligthing_power
+        u_arr[:, 5] = case_arr[:,-3]
+        u_arr[:, 6] = c_air * m3_per3_perCFM * rho_air * (cfm_1 * (t_supp_1 - out_temp) + cfm_2 * (t_supp_2 - out_temp))
+
+        y_arr = (case_arr[:, 2] - 32) * 5 / 9
+
 
     elif case_nbr == 2:
-        #     ut = t room, q sol,  q rad
-        #     yt = t slab
+        #     ut = t room, q sol, q light, dT_{source} / dt
+        #     yt = q rad
         pass
         u_arr[:, 0] = (case_arr[:, 2] - 32) * 5 / 9
         u_arr[:, 1] = case_arr[:, 57 + 17]
-        u_arr[:, 2] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
-        u_arr[:, 3] = ligthing_power
+        u_arr[:, 2] = ligthing_power
+        t_so = (sulp_temp_c + return_temp_c) / 2
+        # t_so = sulp_temp_c
+        u_arr[:-1, 3] = (t_so[1:] - t_so[:-1] ) /ts
+        u_arr[-1, 3] = 0
 
-        y_arr[:, ] = t_slab
+        y_arr[:, ] = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
 
     elif case_nbr == 3:
         # uT = [T_{out}, \dot{Q}_{sol, cav}, \dot{Q}_{sol, room}, \dot{Q}_{int, room}, \dot{Q}_{sol, sur}, \dot{Q}_{int, sur}, \frac{dT_{so}}{dt}]\\
@@ -231,6 +312,23 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         B[0, 2] = p[3] / p[2]
 
         C[0, 0] = 1
+    elif case_nbr == 1:
+        pass
+        A[0, 0] = -1 / (p[0] * p[4]) + -1 / (p[1] * p[4])
+        A[0, 1] = 1 / (p[1] * p[4])
+        A[1, 0] = 1 / (p[1] * p[5])
+        A[1, 1] = -1 / (p[1] * p[5])
+
+        B[0, 1] = 1 /(p[0] * p[4])
+        B[0, 3] = p[6] / p[4]
+        B[1, 1] = 1 / (p[2] * p[5])
+        B[1, 2] = 1 / (p[3] * p[5])
+        B[1, 3] = p[7] / p[5]
+        B[1, 4] = p[8] / p[5]
+        B[1, 5] = p[9] / p[5]
+        B[1, 6] = 1
+
+        C[0, 1] = p[10]
 
     elif case_nbr == 2:
         pass
@@ -244,10 +342,13 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
 
         B[0, 0] = 1 / (p[0] * p[3])
         B[0, 1] = p[6] / p[3]
-        B[0, 3] = p[7] / p[3]
-        B[1, 2] = 1 / p[4]
+        B[0, 2] = p[7] / p[3]
 
-        C[0, 0] = 1
+        C[0, 0] = -1 / p[1]
+        C[0, 1] = (1 / p[1] + 1 / p[2])
+        C[0, 2] = -1 / p[2]
+
+        D[0, 3] = p[4]
 
 
     elif case_nbr == 3:
@@ -317,12 +418,14 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
 
 
 def nrmse(measure, model):
-    nom = (sum((measure - model) ** 2)) ** 1 / 2
-    mean = measure.mean()
-    denom = (sum((measure - mean) ** 2)) ** 1 / 2
-    if denom == 0:
-        denom = len(measure)
-    return nom / denom
+    nom = (sum((measure - model) ** 2) / len(measure)) ** 1 / 2
+    if not isinstance(nom, float):
+        nom = nom[0,0]
+    # mean = measure.mean()
+    # denom = (sum((measure - mean) ** 2)) ** 1 / 2
+    # if denom == 0:
+    #     denom = len(measure)
+    return nom
 
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
@@ -335,8 +438,10 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
         figure_title = f'Single Zone RC network for Heating Power prediction(J){nl}'
     elif swarm_constants['case_nbr'] == 0:
         figure_title = f'Cav RC network for T_cav prediction(C){nl}'
+    elif swarm_constants['case_nbr'] == 1:
+        figure_title = f'Room RC network for T_room prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 2:
-        figure_title = f'Slab RC network for T_slab prediction(C){nl}'
+        figure_title = f'Slab RC network for Q_rad prediction(W){nl}'
     elif swarm_constants['case_nbr'] == 3:
         figure_title = f'Integrated RC network for Heating power(J) prediction performance{nl}'
     elif swarm_constants['case_nbr'] == 4:
@@ -344,13 +449,13 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
-        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, RMSE:{nrmse(y_train, y_train_pred):.2f}')
     if swarm_constants['case_nbr'] == 2:
         ax[0].set_ylim((None, None))
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, RMSE:{nrmse(y_test, y_test_pred):.2f}')
 
     if swarm_constants['case_nbr'] == 2:
         ax[1].set_ylim((None, None))
@@ -367,12 +472,12 @@ def pos_subplot(data, title, ax0=None, ax1=None):
         ax = plt.gca()
     ax0.plot(data[0], label='train measured')
     ax0.plot(data[1], label='train modeled')
-    ax0.set_title(title + f'{nl}NRMSE:{nrmse(data[0], data[1]):.6f}')
+    ax0.set_title(title + f'{nl}RMSE:{nrmse(data[0], data[1]):.6f}')
     ax0.legend()
 
     ax1.plot(data[2], label='test measured')
     ax1.plot(data[3], label='test modeled')
-    ax1.set_title(f'NRMSE:{nrmse(data[2], data[3]):.6f}')
+    ax1.set_title(f'RMSE:{nrmse(data[2], data[3]):.6f}')
     ax1.legend()
 
 

@@ -24,7 +24,7 @@ def init_pos(case_nbr, n_particles):
 def whole_swarm_loss(x, constants):
     n_particles = x.shape[0]
     j = [particle_loss(x[i], constants) for i in range(n_particles)]
-    return np.array(j)
+    return np.array(j).reshape(n_particles)
 
 
 def particle_loss(params, constants):
@@ -46,8 +46,10 @@ def obj_func(params, constants, train=True):
         x_discrete = 25 * np.ones((constants['state_num'], 1))
     elif constants['case_nbr'] == 0:
         x_discrete = np.array([[22]])
+    elif constants['case_nbr'] == 1:
+        x_discrete = np.array([[0],[22]])
     elif constants['case_nbr'] == 2:
-        x_discrete = np.array([[22], [27], [21]])
+        x_discrete = np.array([[22], [30], [21]])
     elif constants['case_nbr'] == 3:
         x_discrete = np.array([[11], [22], [22], [25], [25]])
     elif constants['case_nbr'] == 4:
