@@ -521,11 +521,11 @@ def nrmse(measure, model):
     nom = (sum((measure - model) ** 2) / len(measure)) ** 1 / 2
     if not isinstance(nom, float):
         nom = nom[0,0]
-    # mean = measure.mean()
-    # denom = (sum((measure - mean) ** 2)) ** 1 / 2
+    mean = model.mean()
+    denom = (sum((model - mean) ** 2) / len(model)) ** 1 / 2
     # if denom == 0:
     #     denom = len(measure)
-    return nom
+    return nom / denom
 
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
@@ -553,13 +553,13 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
-        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, RMSE:{nrmse(y_train, y_train_pred):.2f}')
+        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
     if swarm_constants['case_nbr'] == 2:
         ax[0].set_ylim((None, None))
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, RMSE:{nrmse(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
 
     if swarm_constants['case_nbr'] == 2:
         ax[1].set_ylim((None, None))
@@ -576,12 +576,12 @@ def pos_subplot(data, title, ax0=None, ax1=None):
         ax = plt.gca()
     ax0.plot(data[0], label='train measured')
     ax0.plot(data[1], label='train modeled')
-    ax0.set_title(title + f'{nl}RMSE:{nrmse(data[0], data[1]):.6f}')
+    ax0.set_title(title + f'{nl}NRMSE:{nrmse(data[0], data[1]):.6f}')
     ax0.legend()
 
     ax1.plot(data[2], label='test measured')
     ax1.plot(data[3], label='test modeled')
-    ax1.set_title(f'RMSE:{nrmse(data[2], data[3]):.6f}')
+    ax1.set_title(f'NRMSE:{nrmse(data[2], data[3]):.6f}')
     ax1.legend()
 
 
