@@ -17,7 +17,7 @@ if __name__ == "__main__":
     --------------------------------
     this.py -arg [ts_sampling] [start] [end] [state_num] [input_num]...
     [dimensions] [n_particle] [iters]...
-    [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3, slab_adj = 4, room_state = 5],[mode, optimization = 0, visual = 1]
+    [rc network, single = -1, cav = 0, room = 1, slab = 2, integrated = 3, slab_adj = 4, room_state = 5, room_sink_state = 6],[mode, optimization = 0, visual = 1]
     '''))
     parser.add_argument("-a", nargs='+', type=int, help="Specify args used for RC modeling")
 

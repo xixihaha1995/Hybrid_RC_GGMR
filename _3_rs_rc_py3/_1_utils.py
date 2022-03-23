@@ -275,6 +275,23 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
 
         y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
 
+    elif case_nbr == 6:
+        pass
+        # ut = tout, tslab1, t cav, tsource, Qsol, Qint, Qlight, QAHU, dTso/dt
+        # yt = Qrad
+        u_arr[:, 0] = (case_arr[:, 0] - 32) * 5 / 9
+        u_arr[:, 1] = t_slab
+        u_arr[:, 2] = (case_arr[:, 49] - 32) * 5 / 9
+        u_arr[:, 3] = (sulp_temp_c + return_temp_c) / 2
+        u_arr[:, 4] = case_arr[:, 57 + 17]
+        u_arr[:, 5] = case_arr[:,-3]
+        u_arr[:, 6] = ligthing_power
+        u_arr[:, 7] =  c_air * m3_per3_perCFM * rho_air * (cfm_1 * (t_supp_1 - out_temp) + cfm_2 * (t_supp_2 - out_temp))
+        u_arr[:-1, 8] =  (u_arr[1:,3] - u_arr[:-1, 3] ) /ts
+        u_arr[-1, 8] = 0
+
+        y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+
     return u_arr, y_arr
 
 
@@ -438,7 +455,7 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         A[1, 1] = -1 / (p[1] * p[7]) -1 / (p[2]*p[7])
         A[1, 2] = 1 / (p[2]*p[7])
         A[2, 1] = 1/ (p[2] * p[8])
-        A[2, 2] = -1 / (p[3] * p[8]) -1/(p[4] * p[8]) -1 /(p[5] * p[8]) -  1/ (p[2] * p[8])
+        A[2, 2] = -  1/ (p[2] * p[8]) -1 / (p[3] * p[8]) -1/(p[4] * p[8]) -1 /(p[5] * p[8])
         A[2, 3] = 1 / (p[3] * p[8])
         A[3, 2] = 2 / (p[3] * p[9])
         A[3,3] = -2 /(p[3] * p[9])
@@ -459,6 +476,42 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
 
         D[0, 1] = 1 / p[4]
         D[0, 7] = p[18]
+
+    elif case_nbr == 6:
+        A[0, 0] = -1 / (p[0] * p[9]) + -1 /(p[1] * p[9])
+        A[0, 1] = 1 / (p[1] * p[9])
+        A[1, 0] = 1 / (p[1] * p[10])
+        A[1, 1] = -1 / (p[1] * p[10]) -1 / (p[2]*p[10])
+        A[1, 2] = 1 / (p[2]*p[10])
+        A[2, 1] = 1/ (p[2] * p[11])
+        A[2, 2] =  -  1/ (p[2] * p[11]) -1 / (p[3] * p[11]) -1/(p[4] * p[11]) -1 /(p[5] * p[11])
+        A[2, 3] = 1 / (p[3] * p[11])
+        A[3, 2] = 2 / (p[3] * p[12])
+        A[3,3] = -2 /(p[3] * p[12])
+        A[4, 4] = -1 /(p[6] * p[13]) -1 / (p[7] * p[13])
+        A[5, 5] = -1 / (p[8] * p[14])
+
+        B[0, 0] = 1/(p[0] * p[9])
+        B[0, 4] = p[16] / p[9]
+        B[1, 4] = p[17] / p[10]
+        B[1, 5] = p[18] / p[10]
+        B[1, 6] = p[19] / p[10]
+        B[2, 1] = 1 / (p[4] * p[11])
+        B[2,2] = 1 /(p[5] * p[11])
+        B[2, 7] = p[20] / p[11]
+        B[3, 4] = p[21] / p[12]
+        B[3, 5] = p[22] / p[12]
+        B[3, 6] = p[23] / p[12]
+        B[4, 1] = 1/ (p[6]*p[13])
+        B[4, 3] = 1 /(p[7] * p[13])
+        B[5, 3] = 1 / (p[8] * p[14])
+
+
+        C[0, 4] = -1 / p[7]
+        C[0, 5] = -1 / p[8]
+
+        D[0, 3] = 1 / p[7] + 1 / p[8]
+        D[0, 8] = p[15]
 
 
     return A, B, C, D
@@ -495,6 +548,8 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
         figure_title = f'Slab RC network (Sink is temperature boundary as 21 C) for T_slab prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 5:
         figure_title = f'Systems network for Heating power(W) prediction performance{nl}'
+    elif swarm_constants['case_nbr'] == 6:
+        figure_title = f'Systems network (Sink as state variable) for Heating power(W) prediction performance{nl}'
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
