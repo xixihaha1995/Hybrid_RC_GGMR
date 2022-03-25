@@ -7,3 +7,11 @@ For example, to run the integrated case (room, sink as state variables) for Q_ra
 ```python
 python _3_rc_py_main.py -a 300 0 2016 6 9 24 2 2 6 0
 ```
+
+```python
+RC(0th time step) -> 0th time step predicted load;
+```
+or
+```python
+RC(Nth time step, Mth time step) -> Nth to Mth time step predicted loads. 
+```

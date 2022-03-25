@@ -44,7 +44,7 @@ if __name__ == "__main__":
     if args.a[9] == 0:
         # Hyperparameters for pyswarms
         options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
-        # initialize rscs with energyplus manually calculated rscs, or matlab optimized rscs"
+        # initialize rscs
         rscs_init = _2_pyswarm.init_pos(args.a[8],swarm_constants['n_particles'])
 
         optimizer = ps.single.GlobalBestPSO(n_particles=swarm_constants['n_particles'], dimensions=dimensions,
