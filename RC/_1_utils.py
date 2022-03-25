@@ -3,6 +3,18 @@ import numpy as np
 import pandas as pd
 import os, json
 from datetime import datetime
+from csv import writer
+
+
+def append_list_as_row(file_name, list_of_elem):
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    file_name_abs = os.path.join(script_dir, 'outputs', file_name)
+    # Open file in append mode
+    with open(file_name_abs, 'a+', newline='') as write_obj:
+        # Create a writer object from csv module
+        csv_writer = writer(write_obj)
+        # Add contents of list as last row in the csv file
+        csv_writer.writerow(list_of_elem)
 
 def add_internal(ambient_arr):
     # start =
@@ -115,7 +127,8 @@ def add_lighting(ambient_arr):
 
 
 def loadJSON(name):
-    with open(os.path.join(name + '.json'), 'r') as f:
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    with open(os.path.join(script_dir, 'outputs',name + '.json'), 'r') as f:
         testDict = json.loads(f.read())
     return testDict
 
@@ -126,25 +139,30 @@ def saveJSON(data, name):
 
 
 def load_u_y(constants, train=True):
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    case600_csv_abs = os.path.join(script_dir, 'inputs', 'Case600.csv')
+    rs_vav_csv_abs = os.path.join(script_dir, 'inputs', 'RS_VAV_baseline_1_15_3_7.csv')
+    ambient_csv_abs = os.path.join(script_dir, 'inputs', 'ambient-weather-20220115-20220307_2.csv')
+
     if constants['case_nbr'] == -1:
-        case_csv = pd.read_csv('./Case600.csv', index_col=0, parse_dates=True)
+        case_csv = pd.read_csv(case600_csv_abs, index_col=0, parse_dates=True)
         if not train:
-            case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
+            case_arr = case_csv.to_numpy()[constants['start']:]
         else:
-            case_arr = case_csv.to_numpy()[constants['start']: constants['end']]
+            case_arr = case_csv.to_numpy()[: constants['start']]
     else:
-        case_csv = pd.read_csv('./RS_VAV_baseline_1_15_3_7.csv', index_col=0, parse_dates=True,
+        case_csv = pd.read_csv(rs_vav_csv_abs, index_col=0, parse_dates=True,
                                encoding='unicode_escape')
-        ambient_csv = pd.read_csv('./ambient-weather-20220115-20220307_2.csv', index_col=0, parse_dates=True)
+        ambient_csv = pd.read_csv(ambient_csv_abs, index_col=0, parse_dates=True)
         ambient_arr = add_internal(ambient_csv.to_numpy())
         ambient_arr = add_adj(ambient_arr)
         ambient_arr = add_lighting(ambient_arr)
         if not train:
-            case_arr = case_csv.to_numpy()[constants['start'] + constants['end']:constants['end'] * 2]
-            ambient_arr = ambient_arr[constants['start'] + constants['end']:constants['end'] * 2]
+            case_arr = case_csv.to_numpy()[constants['start']:]
+            ambient_arr = ambient_arr[constants['start']:]
         else:
-            case_arr = case_csv.to_numpy()[constants['start']: constants['end']]
-            ambient_arr = ambient_arr[constants['start']: constants['end']]
+            case_arr = case_csv.to_numpy()[: constants['start']]
+            ambient_arr = ambient_arr[: constants['start']]
         case_arr = np.concatenate((case_arr, ambient_arr), axis=1)
 
     u_arr_init = np.zeros((case_arr.shape[0], constants['input_num']))
@@ -527,11 +545,19 @@ def nrmse(measure, model):
     #     denom = len(measure)
     return nom / denom
 
+def cv_rmse(measure, model):
+    rmse = (sum((measure - model) ** 2) / len(measure)) ** 1 / 2
+    mean_measured = measure.mean()
+    return rmse / mean_measured
+
+def mae(measure, model):
+    return sum(abs(measure - model)) / len(measure)
+
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     fig, ax = plt.subplots(2)
     nl = '\n'
-    minutes_interval = swarm_constants['ts_sampling'] / 60
+    minutes_interval = int(swarm_constants['ts_sampling'] / 60)
     start = swarm_constants['start']
     end = swarm_constants['end']
     if swarm_constants['case_nbr'] == -1:
@@ -553,21 +579,25 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
-        f'Train, from {start * minutes_interval}th mins to {end * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.2f}')
+        f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f},MAE:{mae(y_train, y_train_pred):.2f}')
     if swarm_constants['case_nbr'] == 2:
         ax[0].set_ylim((None, None))
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {(start + end) * minutes_interval}th mins to {end * 2 * minutes_interval}th mins, NRMSE:{nrmse(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, CVRMSE:{cv_rmse(y_test, y_test_pred):.2f},MAE:{mae(y_test, y_test_pred):.2f}')
 
     if swarm_constants['case_nbr'] == 2:
         ax[1].set_ylim((None, None))
     plt.legend()
     plt.subplots_adjust(hspace=0.8)
     case_nbr = swarm_constants['case_nbr']
-    plt.savefig(f'_{case_nbr}_swarm_performance.png')
+
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    result_pic_abs = os.path.join(script_dir, 'outputs',f'_{case_nbr}_swarm_performance.png')
+    plt.savefig(result_pic_abs, bbox_inches='tight')
     plt.show()
+
 
 
 def pos_subplot(data, title, ax0=None, ax1=None):
@@ -576,12 +606,12 @@ def pos_subplot(data, title, ax0=None, ax1=None):
         ax = plt.gca()
     ax0.plot(data[0], label='train measured')
     ax0.plot(data[1], label='train modeled')
-    ax0.set_title(title + f'{nl}NRMSE:{nrmse(data[0], data[1]):.6f}')
+    ax0.set_title(title + f'{nl}CVRMSE:{cv_rmse(data[0], data[1]):.2f},MAE:{mae(data[0], data[1]):.2f}')
     ax0.legend()
 
     ax1.plot(data[2], label='test measured')
     ax1.plot(data[3], label='test modeled')
-    ax1.set_title(f'NRMSE:{nrmse(data[2], data[3]):.6f}')
+    ax1.set_title(f'CVRMSE:{cv_rmse(data[2], data[3]):.2f},MAE:{mae(data[2], data[3]):.2f}')
     ax1.legend()
 
 

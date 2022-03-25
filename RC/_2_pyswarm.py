@@ -1,5 +1,6 @@
 import numpy as np
-import _1_utils, csv
+from . import _1_utils
+import csv, os
 from scipy import signal
 
 u_train = None
@@ -10,7 +11,8 @@ load_u_y_bool = False
 
 
 def init_pos(case_nbr, n_particles):
-    with open('./init_rscs.txt', 'r') as f:
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    with open(os.path.join(script_dir, 'init_rscs.txt'), 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
         for row in reader:
@@ -99,7 +101,7 @@ def predict(pos, constants):
 
 
 def load_pos():
-    with open('./pos_rscs.csv', 'r') as f:
+    with open('./RC/pos_rscs.txt', 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
         for row in reader:
