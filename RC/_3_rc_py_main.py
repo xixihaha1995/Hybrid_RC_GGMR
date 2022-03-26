@@ -54,10 +54,9 @@ class RC_Class():
         rscs_init = _2_pyswarm.init_pos(_case_nbr,swarm_constants['n_particles'])
 
         optimizer = ps.single.GlobalBestPSO(n_particles=swarm_constants['n_particles'], dimensions=dimensions,
-                                            options=options,
-                                            init_pos=rscs_init)
+                                            options=options, init_pos=rscs_init)
         # Perform optimization
-        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'],
+        cost, pos = optimizer.optimize(_2_pyswarm.whole_swarm_loss, iters=swarm_constants['iters'], n_processes=4,
                                        constants=swarm_constants)
 
         end_time = time.time()
