@@ -573,23 +573,27 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     elif swarm_constants['case_nbr'] == 4:
         figure_title = f'Slab RC network (Sink is temperature boundary as 21 C) for T_slab prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 5:
-        figure_title = f'Systems network for Heating power(W) prediction performance{nl}'
+        figure_title = f'Radiant Slab Systems RC (Without Sink Node) for Heating/Cooling Load Prediction{nl}'
     elif swarm_constants['case_nbr'] == 6:
-        figure_title = f'Systems network (Sink as state variable) for Heating power(W) prediction performance{nl}'
+        figure_title = f'Radiant Slab Systems RC (With Sink Node) for Heating/Cooling Load Prediction{nl}'
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
     ax[0].set_title(
         f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f},MAE:{mae(y_train, y_train_pred):.2f}')
+    ax[0].set_ylabel('Load Power (W)')
+    ax[0].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
         ax[0].set_ylim((None, None))
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
         figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, CVRMSE:{cv_rmse(y_test, y_test_pred):.2f},MAE:{mae(y_test, y_test_pred):.2f}')
-
+    ax[1].set_ylabel('Load Power (W)')
+    ax[1].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
         ax[1].set_ylim((None, None))
-    plt.legend()
+    ax[0].legend()
+    ax[1].legend()
     plt.subplots_adjust(hspace=0.8)
     case_nbr = swarm_constants['case_nbr']
 

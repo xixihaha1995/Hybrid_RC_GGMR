@@ -2,6 +2,7 @@ import numpy as np
 from . import _1_utils
 import csv, os
 from scipy import signal
+import matplotlib.pyplot as plt
 
 u_train = None
 y_train = None
@@ -9,10 +10,24 @@ u_test = None
 y_test = None
 load_u_y_bool = False
 
+def plot_state_variables_dynamis(x_all):
+    plt.plot(x_all[:,0], label = "Envelop 1")
+    plt.plot(x_all[:,1], label="Envelop 2")
+    plt.plot(x_all[:,2], label="Room")
+    plt.plot(x_all[:,3], label="Internal Wall")
+    plt.plot(x_all[:,4], label="Slab")
+    plt.plot(x_all[:,5], label="Sink")
+    plt.ylim((-10, 100))
+    plt.xlabel("Time steps, interval = 5 mins")
+    plt.ylabel("Temperature degree Celsius")
+    plt.title("State Variable dynamics from Jan 15, 2022 to March 7, 2022 for Radiant Slab System RC")
+    plt.legend()
+    plt.show()
+
 
 def init_pos(case_nbr, n_particles):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
-    with open(os.path.join(script_dir, 'init_rscs.txt'), 'r') as f:
+    with open(os.path.join(script_dir, 'inputs','init_rscs.txt'), 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
         for row in reader:
@@ -62,9 +77,18 @@ def obj_func(params, constants, train=True):
     elif constants['case_nbr'] == 6:
         x_discrete = np.array([[0], [10],[22],[21],[23],[21]])
     state_num = constants['state_num']
+
+    if constants['inspect_x_state'] and not train:
+        x_all=[]
     for i in range(u_arr.shape[1]):
         y_model[i] = (c @ x_discrete + d @ u_arr[:, i])[0,0]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
+        if constants['inspect_x_state'] and not train:
+            x_all.append(x_discrete.reshape(constants['state_num'],))
+
+
+    if constants['inspect_x_state'] and not train:
+        plot_state_variables_dynamis(np.array(x_all))
 
     return y_arr, y_model
 
@@ -101,7 +125,9 @@ def predict(pos, constants):
 
 
 def load_pos():
-    with open('./RC/pos_rscs.txt', 'r') as f:
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    all_pos_to_compare_abs = os.path.join(script_dir, 'inputs', 'pos_rscs.txt')
+    with open(all_pos_to_compare_abs, 'r') as f:
         reader = csv.reader(f)
         rscs_str = []
         for row in reader:

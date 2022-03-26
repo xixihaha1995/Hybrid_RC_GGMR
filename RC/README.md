@@ -1,17 +1,33 @@
-Usage:
+Directory structure:
 ```
-python  _3_rc_py_main.py -a [time step] [start time (th time step)] [end time (th time step)] [state_num] [input_num] [RsCs number] [particle_num] [iters_num][cases_num, single zone = -1, cav temp = 0, room temp = 1, slab temp = 2, integrated = 3, slab adj = 4, room as state = 5, room with sink as state = 6],[opt_mode, optimization = 0, visual = 1]
+Hybrid_GGMR_RC_Folder
+│   quick_start.py
+│   hybrid_ggmr_rc.py
+└───RC
+│   │   _1_utils.py
+│   │   _2_pyswarm.py
+│   │   _3_rc_py_main.py
+│   └───inputs
+│       │   file111.txt
+│       │   file112.txt
+│       │   ...
+│       outputs
+│       │   file111.txt
+│       │   file112.txt
+│       │   ...
+│   
+└───GGMR_Folder
+    │   file021.txt
+    │   file022.txt
+    │   ...
 ```
-For example, to run the integrated case (room, sink as state variables) for Q_rad prediction, with time step = 300(seconds), start time = 0 th time step, end time = 2016th time step, state_num = 6, input_num = 9, paras_num =24, particle_num = 2, iters_num = 2, cases_num = 6, opt_mode = 0:
 
+Usage: <br>
 ```python
-python _3_rc_py_main.py -a 300 0 2016 6 9 24 2 2 6 0
-```
+from RC import _3_rc_py_main as RC_package
+rc_obj = RC_package.RC_Class() # call this once
 
-```python
-RC(0th time step) -> 0th time step predicted load;
+for time_idx in [66, 70]:
+    print(rc_obj.predict(_time_idx = time_idx))
 ```
-or
-```python
-RC(Nth time step, Mth time step) -> Nth to Mth time step predicted loads. 
-```
+See more details in `quick_start.py`
