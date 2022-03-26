@@ -26,10 +26,13 @@ Hybrid_GGMR_RC_Folder
 
 Usage: <br>
 ```python
+from multiprocessing import freeze_support
 from RC import _3_rc_py_main as RC_package
-rc_obj = RC_package.RC_Class() # call this once
-
-for time_idx in [66, 70]:
-    print(rc_obj.predict(_time_idx = time_idx))
+if __name__ == '__main__':
+    freeze_support()
+    
+	rc_obj = RC_package.RC_Class() # call this once
+    for time_idx in [66, 70]:
+        print(rc_obj.predict(_time_idx = time_idx))
 ```
 Please see more details in `quick_start.py`.

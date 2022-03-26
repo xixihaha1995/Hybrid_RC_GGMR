@@ -1,5 +1,5 @@
 import numpy as np
-import _1_utils
+from . import _1_utils
 import csv, os
 from scipy import signal
 import matplotlib.pyplot as plt
