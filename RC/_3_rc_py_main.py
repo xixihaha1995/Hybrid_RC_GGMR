@@ -7,7 +7,7 @@ from datetime import datetime
 class RC_Class():
     def __init__(self, case_nbr = 6):
         script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
-        measure_predict_csv_abs = os.path.join(script_dir, 'outputs', f'{case_nbr}_measured_modeled.csv')
+        measure_predict_csv_abs = os.path.join(script_dir, 'outputs', f'_saved_{case_nbr}_measured_modeled.csv')
         self.all_rc_predicted  = pd.read_csv(measure_predict_csv_abs).to_numpy()
 
     def predict(self, _time_idx = 0):

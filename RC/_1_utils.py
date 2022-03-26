@@ -134,7 +134,8 @@ def loadJSON(name):
 
 
 def saveJSON(data, name):
-    with open(os.path.join(name + '.json'), 'w', encoding='utf-8') as f:
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    with open(os.path.join(script_dir, 'outputs',name + '.json'), 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 

@@ -1,6 +1,8 @@
 Directory structure:
 ```
 Hybrid_GGMR_RC_Folder
+│   README_RC.md
+│   report.log #this is auto-generated from pyswarms
 │   quick_start.py
 │   hybrid_ggmr_rc.py
 └───RC
@@ -30,4 +32,4 @@ rc_obj = RC_package.RC_Class() # call this once
 for time_idx in [66, 70]:
     print(rc_obj.predict(_time_idx = time_idx))
 ```
-See more details in `quick_start.py`
+Please see more details in `quick_start.py`.
