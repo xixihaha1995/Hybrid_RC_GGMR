@@ -4,12 +4,6 @@ from . import _1_utils, _2_pyswarm
 from pyswarms.utils.plotters import plot_cost_history
 from datetime import datetime
 
-
-
-
-
-
-
 class RC_Class():
     def __init__(self, case_nbr = 6):
         script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in

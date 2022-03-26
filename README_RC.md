@@ -31,8 +31,9 @@ from RC import _3_rc_py_main as RC_package
 if __name__ == '__main__':
     freeze_support()
     
-	rc_obj = RC_package.RC_Class() # call this once
-    for time_idx in [66, 70]:
+    rc_obj = RC_package.RC_Class(case_nbr=6) # call this once
+
+    for time_idx in range(66, 70):
         print(rc_obj.predict(_time_idx = time_idx))
 ```
 Please see more details in `quick_start.py`.
