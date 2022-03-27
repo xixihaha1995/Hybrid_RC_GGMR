@@ -14,10 +14,10 @@ if __name__ == '__main__':
         print(rc_obj.predict(_time_idx = time_idx))
     '''
 
-    rc_obj = RC_package.RC_Class(case_nbr=6) # call this once
-
-    for time_idx in range(66, 70):
-        print(rc_obj.predict(_time_idx = time_idx))
+    # rc_obj = RC_package.RC_Class(case_nbr=6) # call this once
+    #
+    # for time_idx in range(66, 70):
+    #     print(rc_obj.predict(_time_idx = time_idx))
 
     '''
     #RC training
@@ -29,10 +29,10 @@ if __name__ == '__main__':
     rc_obj = RC_package.RC_Class()
     rc_obj.train(_test_start= 4033, _state_num=4, _input_num=8,_para_nums=19,_case_nbr=5, _n_particle=2, _iters=2)
     '''
-    # rc_obj = RC_package.RC_Class()
-    # # rc_obj.train(_test_start= 4033, _n_particle=1000, _iters=150) #training
-    # rc_obj.train(_test_start=1) #use trained RsCs get predicted
-    # rc_obj.train(_test_start= 1, _state_num=4, _input_num=8,_para_nums=19,_case_nbr=5)
+    rc_obj = RC_package.RC_Class()
+    # rc_obj.train(_test_start= 4033, _n_particle=1000, _iters=150) #training
+    # rc_obj.train(_test_start=4033) #use trained RsCs get predicted
+    # rc_obj.train(_test_start= 4033, _state_num=4, _input_num=8,_para_nums=19,_case_nbr=5)
 
 
 

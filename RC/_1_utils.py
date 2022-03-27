@@ -547,13 +547,35 @@ def nrmse(measure, model):
     return nom / denom
 
 def cv_rmse(measure, model):
-    rmse = (sum((measure - model) ** 2) / len(measure)) ** 1 / 2
+    new_model = []
+    for num in model:
+        if (np.isnan(num)):
+            new_model.append(0)
+        else:
+            new_model.append(num)
+    rmse = (sum((measure - new_model) ** 2) / len(measure)) ** 1 / 2
     mean_measured = measure.mean()
     return rmse / mean_measured
 
 def mae(measure, model):
-    return sum(abs(measure - model)) / len(measure)
+    new_model = []
+    for num in model:
+        if (np.isnan(num)):
+            new_model.append(0)
+        else:
+            new_model.append(num)
+    return sum(abs(measure - new_model)) / len(measure)
 
+def mean_absolute_percentage_error(measure, model):
+    nom = abs(measure - model) / abs(measure)
+    nom[nom == float('inf')] = 0
+    new_nom = []
+    for num in nom:
+        if (np.isnan(num)):
+            new_nom.append(0)
+        else:
+            new_nom.append(num)
+    return sum(new_nom) / len(measure)
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     fig, ax = plt.subplots(2)
@@ -579,8 +601,9 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
         figure_title = f'Radiant Slab Systems RC (With Sink Node) for Heating/Cooling Load Prediction{nl}'
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
+
     ax[0].set_title(
-        f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f},MAE:{mae(y_train, y_train_pred):.2f}')
+        f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f},MAE:{mae(y_train, y_train_pred):.2f},MAPE:{mean_absolute_percentage_error(y_train, y_train_pred):.2f}')
     ax[0].set_ylabel('Load Power (W)')
     ax[0].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
@@ -588,7 +611,7 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, CVRMSE:{cv_rmse(y_test, y_test_pred):.2f},MAE:{mae(y_test, y_test_pred):.2f}')
+        figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, CVRMSE:{cv_rmse(y_test, y_test_pred):.2f},MAE:{mae(y_test, y_test_pred):.2f}, MAPE:{mean_absolute_percentage_error(y_test, y_test_pred):.2f}')
     ax[1].set_ylabel('Load Power (W)')
     ax[1].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
