@@ -164,6 +164,8 @@ def load_u_y(constants, train=True):
         else:
             case_arr = case_csv.to_numpy()[: constants['start']]
             ambient_arr = ambient_arr[: constants['start']]
+            # case_arr = case_csv.to_numpy()
+            # ambient_arr = ambient_arr
         case_arr = np.concatenate((case_arr, ambient_arr), axis=1)
 
     u_arr_init = np.zeros((case_arr.shape[0], constants['input_num']))

@@ -1,6 +1,6 @@
-import numpy as np
+import numpy as np, pandas as pd
 from . import _1_utils
-import csv, os
+import csv, os, random
 from scipy import signal
 import matplotlib.pyplot as plt
 
@@ -9,6 +9,84 @@ y_train = None
 u_test = None
 y_test = None
 load_u_y_bool = False
+
+load_all_case_arr = False
+all_case_arr_arr =None
+
+def _statistical_distribution_best_warming_up():
+    pos = [0.31104853199463756, 0.5467046592684783, 0.9935975211504724, -0.014585286370612916, 0.721647509968919,
+           0.4686516990698716, 0.000565144547088079, 0.0006441690230600109, 0.0009074541207515334, 2600000.379360871,
+           1300000.4824038981, 100000000.82953805, 1200000.0401698523, 5999999.992084267, 19999.996035939595,
+           274999.9999740066, 100.17175908793585, 0.1872934280213577, 1.5246900378107624, 2.460589040747263,
+           1.4087593540485726, 0.4659914186864218, 1.013398093721322, 1.7993314767358861]
+
+    tim_start_arr = [random.randint(100, 14000) for i in range(100)]
+    segment_len = range(1, 41)
+
+    all_optimized_warming = []
+    for time_start in tim_start_arr:
+        predicted_err = []
+        for segment in segment_len:
+            cur_case_arr = different_warming_up(time_idx=time_start, seg_length=segment)
+            (u_measured_arr, y_measured_arr) = warming_up_init_assign_u_y(cur_case_arr)
+            y_measured_arr = y_measured_arr.to_numpy()
+            y_model_arr = warming_up_predict(pos, u_measured_arr)
+            predicted_err.append(abs(y_model_arr[-1] - y_measured_arr[-1]) / abs(y_measured_arr[-1]))
+        all_optimized_warming.append(predicted_err)
+    plt.plot(np.mean(all_optimized_warming, axis=0))
+    plt.ylabel("Mean Absolute Percentage Error")
+    plt.xlabel("Warming time steps (5 mins per step)")
+    plt.show()
+
+def warming_input_demo(time_idx, seg_length):
+    case_arr_cur = different_warming_up(time_idx, seg_length)
+    (u_arr_Tran, y_arr) = warming_up_init_assign_u_y(case_arr_cur)
+    return u_arr_Tran
+
+
+def different_warming_up(time_idx, seg_length):
+    global load_all_case_arr, all_case_arr_arr
+    if not load_all_case_arr:
+        script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+        all_case_arr_abs = os.path.join(script_dir, 'inputs', 'case_arr.csv')
+        all_case_arr_arr = pd.read_csv(all_case_arr_abs).to_numpy()
+        load_all_case_arr = True
+
+    sliced_case_arr = all_case_arr_arr[time_idx - seg_length + 1: time_idx + 1]
+    return sliced_case_arr
+
+def warming_up_init_assign_u_y(case_arr, _case_nbr=6, _ts=300, _input_num=9):
+    u_arr_init = np.zeros((case_arr.shape[0], _input_num))
+    y_arr_init = np.zeros((case_arr.shape[0],))
+    u_arr, y_arr = _1_utils.assign_input_output(u_arr_init, y_arr_init, case_arr, _ts,
+                                       case_nbr=_case_nbr)
+    y_arr = pd.Series(y_arr)
+    return (u_arr.T, y_arr)
+
+def warming_up_predict(u_arr, pos = None,  _case_nbr=6, _ts=300, _state_num=6, _input_num=9):
+    if not pos:
+        pos = [0.31104853199463756, 0.5467046592684783, 0.9935975211504724, -0.014585286370612916, 0.721647509968919,
+               0.4686516990698716, 0.000565144547088079, 0.0006441690230600109, 0.0009074541207515334, 2600000.379360871,
+               1300000.4824038981, 100000000.82953805, 1200000.0401698523, 5999999.992084267, 19999.996035939595,
+               274999.9999740066, 100.17175908793585, 0.1872934280213577, 1.5246900378107624, 2.460589040747263,
+               1.4087593540485726, 0.4659914186864218, 1.013398093721322, 1.7993314767358861]
+
+    constants = {}
+    constants['state_num'] = _state_num
+    constants['input_num'] = _input_num
+    constants['case_nbr'] = _case_nbr
+    constants['ts_sampling'] = _ts
+
+    a, b, c, d = paras_to_ABCD_swarm(pos, constants)
+    y_model = np.zeros((u_arr.shape[1],))
+
+    x_discrete = np.array([[0], [10],[22],[21],[23],[21]])
+
+    for i in range(u_arr.shape[1]):
+        y_model[i] = (c @ x_discrete + d @ u_arr[:, i])[0,0]
+        x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((_state_num, 1))
+
+    return y_model
 
 def plot_state_variables_dynamis(x_all):
     plt.plot(x_all[:,0], label = "Envelop 1")

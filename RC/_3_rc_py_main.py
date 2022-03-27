@@ -10,7 +10,11 @@ class RC_Class():
         measure_predict_csv_abs = os.path.join(script_dir, 'outputs', f'_saved_{case_nbr}_measured_modeled.csv')
         self.all_rc_predicted  = pd.read_csv(measure_predict_csv_abs).to_numpy()
 
-    def predict(self, _time_idx = 0):
+    def predict_with_warming(self, u_measured_arr):
+        y_model_arr = _2_pyswarm.warming_up_predict(u_measured_arr)
+        return y_model_arr[-1]
+
+    def load_predicted(self, _time_idx = 0):
         return self.all_rc_predicted[_time_idx, 1]
 
     def train(self, _test_start=None, _end=None, _n_particle=2, _iters=2, _case_nbr=6, _ts=300, _state_num=6, _input_num=9,
