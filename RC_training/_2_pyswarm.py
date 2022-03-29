@@ -36,20 +36,30 @@ def comparison_absolute_percentage_error():
 
 def comparison_performance():
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
-    case_5_6_arr_abs = os.path.join(script_dir, 'outputs', 'case5_6_comparison.csv')
+    case_5_6_arr_abs = os.path.join(script_dir, 'outputs', 'case5_6_7_comparison.csv')
     case_5_6_arr = pd.read_csv(case_5_6_arr_abs).to_numpy()
 
-    sampled_idx = range(5033, 5333)
+    time_inter = 240
+    sampled_idx = range(4000, 14000, int(time_inter/5))
     sampled_load = []
     for ind in sampled_idx:
         sampled_load.append(case_5_6_arr[ind,:])
     sampled_load = np.array(sampled_load)
-    plt.plot(sampled_idx, sampled_load[:,0], label = "Measured")
-    plt.plot(sampled_idx, sampled_load[:, 1], linestyle = '--' ,label = "Model 1")
-    plt.plot(sampled_idx, sampled_load[:, 2], linestyle='-.', label="Model 2")
-    plt.ylabel("Radiant Slab Load Predicted Load (W)")
-    plt.xlabel("Selected Time Steps, 5 min interval")
-    plt.legend()
+
+    fig, ax = plt.subplots(3)
+    ax[0].plot(sampled_idx, sampled_load[:,0], label = "Measured")
+    ax[0].plot(sampled_idx, sampled_load[:, 1], linestyle = '--' ,label = "Model 1")
+    ax[1].plot(sampled_idx, sampled_load[:,0], label = "Measured")
+    ax[1].plot(sampled_idx, sampled_load[:, 2], linestyle = '--' ,label = "Model 2")
+    ax[2].plot(sampled_idx, sampled_load[:,0], label = "Measured")
+    ax[2].plot(sampled_idx, sampled_load[:, 3], linestyle = '--' ,label = "Model 3")
+
+    ax[0].legend()
+    ax[1].legend()
+    ax[2].legend()
+
+    fig.text(0.5, 0.04, f'Sampled Time Steps,  {time_inter} mins interval', ha='center')
+    fig.text(0.04, 0.5, 'Radiant Slab Load Predicted Load (W)', va='center', rotation='vertical')
     plt.show()
 
 
@@ -166,7 +176,7 @@ def whole_swarm_loss(x, constants):
 def particle_loss(params, constants):
     y_measure, y_model = obj_func(params, constants)
     y_measure = y_measure.to_numpy()
-    return sum((y_model - y_measure) ** 2) / len(y_measure)
+    return sum((y_model - y_measure) ** 2)
 
 
 def obj_func(params, constants, train=True):
@@ -195,6 +205,8 @@ def obj_func(params, constants, train=True):
         x_discrete = np.array([[0], [10],[22],[21]])
     elif constants['case_nbr'] == 6:
         x_discrete = np.array([[0], [10],[22],[21],[23],[21]])
+    elif constants['case_nbr'] == 7:
+        x_discrete = np.array([[0], [10],[22],[21],[23]])
     state_num = constants['state_num']
 
     if constants['inspect_x_state'] and not train:
@@ -202,6 +214,7 @@ def obj_func(params, constants, train=True):
     for i in range(u_arr.shape[1]):
         y_model[i] = (c @ x_discrete + d @ u_arr[:, i])[0,0]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((state_num, 1))
+        # x_discrete[5,0] = 21
         if constants['inspect_x_state'] and not train:
             x_all.append(x_discrete.reshape(constants['state_num'],))
 

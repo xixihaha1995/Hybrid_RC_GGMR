@@ -297,7 +297,7 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
 
         y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
 
-    elif case_nbr == 6:
+    elif case_nbr == 6 or case_nbr == 7:
         pass
         # ut = tout, tslab1, t cav, tsource, Qsol, Qint, Qlight, QAHU, dTso/dt
         # yt = Qrad
@@ -499,7 +499,7 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         D[0, 1] = 1 / p[4]
         D[0, 7] = p[18]
 
-    elif case_nbr == 6:
+    elif case_nbr == 6 or case_nbr == 7:
         A[0, 0] = -1 / (p[0] * p[9]) + -1 /(p[1] * p[9])
         A[0, 1] = 1 / (p[1] * p[9])
         A[1, 0] = 1 / (p[1] * p[10])
@@ -511,7 +511,8 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         A[3, 2] = 2 / (p[3] * p[12])
         A[3,3] = -2 /(p[3] * p[12])
         A[4, 4] = -1 /(p[6] * p[13]) -1 / (p[7] * p[13])
-        A[5, 5] = -1 / (p[8] * p[14])
+        if case_nbr == 6:
+            A[5, 5] = -1 / (p[8] * p[14])
 
         B[0, 0] = 1/(p[0] * p[9])
         B[0, 4] = p[16] / p[9]
@@ -526,13 +527,17 @@ def assgin_ABCD(A, B, C, D, p, case_nbr=3):
         B[3, 6] = p[23] / p[12]
         B[4, 1] = 1/ (p[6]*p[13])
         B[4, 3] = 1 /(p[7] * p[13])
-        B[5, 3] = 1 / (p[8] * p[14])
+        if case_nbr == 6:
+            B[5, 3] = 1 / (p[8] * p[14])
 
 
         C[0, 4] = -1 / p[7]
-        C[0, 5] = -1 / p[8]
-
-        D[0, 3] = 1 / p[7] + 1 / p[8]
+        if case_nbr == 6:
+            C[0, 5] = -1 / p[8]
+        if case_nbr == 6:
+            D[0, 3] = 1 / p[7] + 1 / p[8]
+        if case_nbr == 7:
+            D[0, 3] = 1 / p[7]
         D[0, 8] = p[15]
 
 
@@ -597,9 +602,12 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     elif swarm_constants['case_nbr'] == 4:
         figure_title = f'Slab RC network (Sink is temperature boundary as 21 C) for T_slab prediction(C){nl}'
     elif swarm_constants['case_nbr'] == 5:
-        figure_title = f'Radiant Slab Systems RC (Without Sink Node) for Heating/Cooling Load Prediction{nl}'
+        figure_title = f'Radiant Slab Systems RC (4 States) for Heating/Cooling Load Prediction{nl}'
     elif swarm_constants['case_nbr'] == 6:
-        figure_title = f'Radiant Slab Systems RC (With Sink Node) for Heating/Cooling Load Prediction{nl}'
+        figure_title = f'Radiant Slab Systems RC (6 States) for Heating/Cooling Load Prediction{nl}'
+    elif swarm_constants['case_nbr'] == 7:
+        figure_title = f'Radiant Slab Systems RC (5 States) for Heating/Cooling Load Prediction{nl}'
+
     ax[0].plot(y_train, label='measured')
     ax[0].plot(y_train_pred, label='modeled')
 
