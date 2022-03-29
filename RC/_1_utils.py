@@ -556,7 +556,7 @@ def cv_rmse(measure, model):
         else:
             new_model.append(num)
     rmse = (sum((measure - new_model) ** 2) / len(measure)) ** 1 / 2
-    mean_measured = measure.mean()
+    mean_measured = abs(measure).mean()
     return rmse / mean_measured
 
 def mae(measure, model):
