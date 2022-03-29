@@ -166,7 +166,7 @@ def whole_swarm_loss(x, constants):
 def particle_loss(params, constants):
     y_measure, y_model = obj_func(params, constants)
     y_measure = y_measure.to_numpy()
-    return sum((y_model - y_measure) ** 2)
+    return sum((y_model - y_measure) ** 2) / len(y_measure)
 
 
 def obj_func(params, constants, train=True):

@@ -291,8 +291,9 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[:, 4] = case_arr[:,-3]
         u_arr[:, 5] = ligthing_power
         u_arr[:, 6] =  c_air * m3_per3_perCFM * rho_air * (cfm_1 * (t_supp_1 - out_temp) + cfm_2 * (t_supp_2 - out_temp))
-        u_arr[:-1, 7] =  (t_slab[1:] - t_slab[:-1] ) /ts
-        u_arr[-1, 7] = 0
+        u_arr[0, 7] = 0
+        u_arr[1:, 7] = (t_slab[1:] - t_slab[0:-1]) / ts
+
 
         y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
 
