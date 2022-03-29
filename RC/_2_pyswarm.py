@@ -13,6 +13,46 @@ load_u_y_bool = False
 load_all_case_arr = False
 all_case_arr_arr =None
 
+def comparison_absolute_percentage_error():
+    random.seed(9)
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    case_5_6_arr_abs = os.path.join(script_dir, 'outputs', 'case5_6_comparison.csv')
+    case_5_6_arr = pd.read_csv(case_5_6_arr_abs).to_numpy()
+
+    sampled_idx = [random.randint(4033, 14000) for i in range(40)]
+    sampled_idx.sort()
+
+    sampled_load = []
+    for ind in sampled_idx:
+        sampled_load.append([abs(case_5_6_arr[ind, 1] - case_5_6_arr[ind, 0]), abs(case_5_6_arr[ind, 2] - case_5_6_arr[ind, 0])] / abs(case_5_6_arr[ind, 0]))
+        # sampled_load.append(case_5_6_arr[ind,:])
+    sampled_load = np.array(sampled_load)
+    plt.plot(sampled_idx, sampled_load[:,0], label = "Model 1 Absolute Percentage Error ")
+    plt.plot(sampled_idx, sampled_load[:, 1], linestyle = '--' ,label = "Model 2 Absolute Percentage Error")
+    plt.ylabel("Radiant Slab Load Predicted Percentage Error")
+    plt.xlabel("Time Step, 5 min (Feb 1 to March 7)")
+    plt.legend()
+    plt.show()
+
+def comparison_performance():
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    case_5_6_arr_abs = os.path.join(script_dir, 'outputs', 'case5_6_comparison.csv')
+    case_5_6_arr = pd.read_csv(case_5_6_arr_abs).to_numpy()
+
+    sampled_idx = range(5033, 5333)
+    sampled_load = []
+    for ind in sampled_idx:
+        sampled_load.append(case_5_6_arr[ind,:])
+    sampled_load = np.array(sampled_load)
+    plt.plot(sampled_idx, sampled_load[:,0], label = "Measured")
+    plt.plot(sampled_idx, sampled_load[:, 1], linestyle = '--' ,label = "Model 1")
+    plt.plot(sampled_idx, sampled_load[:, 2], linestyle='-.', label="Model 2")
+    plt.ylabel("Radiant Slab Load Predicted Load (W)")
+    plt.xlabel("Selected Time Steps, 5 min interval")
+    plt.legend()
+    plt.show()
+
+
 def _statistical_distribution_best_warming_up():
     pos = [0.31104853199463756, 0.5467046592684783, 0.9935975211504724, -0.014585286370612916, 0.721647509968919,
            0.4686516990698716, 0.000565144547088079, 0.0006441690230600109, 0.0009074541207515334, 2600000.379360871,
