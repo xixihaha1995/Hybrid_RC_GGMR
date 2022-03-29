@@ -118,6 +118,7 @@ def warming_up_predict(u_arr, pos = None,  _case_nbr=6, _ts=300, _state_num=6, _
     constants['ts_sampling'] = _ts
 
     a, b, c, d = paras_to_ABCD_swarm(pos, constants)
+
     y_model = np.zeros((u_arr.shape[1],))
 
     x_discrete = np.array([[0], [10],[22],[21],[23],[21]])

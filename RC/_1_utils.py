@@ -555,9 +555,9 @@ def cv_rmse(measure, model):
             new_model.append(0)
         else:
             new_model.append(num)
-    rmse = (sum((measure - new_model) ** 2) / len(measure)) ** 1 / 2
+    rmse = (sum((measure - new_model) ** 2) / len(measure)) ** (1 / 2)
     mean_measured = abs(measure).mean()
-    return rmse / mean_measured
+    return rmse * 100 / mean_measured
 
 def mae(measure, model):
     new_model = []
@@ -605,7 +605,7 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[0].plot(y_train_pred, label='modeled')
 
     ax[0].set_title(
-        f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.6f}, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f},MAE:{mae(y_train, y_train_pred):.2f},MAPE:{mean_absolute_percentage_error(y_train, y_train_pred):.2f}')
+        f'Train, from {0}th mins to {(start-1) * minutes_interval}th mins, NRMSE:{nrmse(y_train, y_train_pred):.6f}, CVRMSE:{cv_rmse(y_train, y_train_pred):.2f}%,MAE:{mae(y_train, y_train_pred):.2f},MAPE:{mean_absolute_percentage_error(y_train, y_train_pred):.2f}')
     ax[0].set_ylabel('Load Power (W)')
     ax[0].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
@@ -614,7 +614,7 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
         figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, '
-                            f'NRMSE:{nrmse(y_test, y_test_pred):.6f},CVRMSE:{cv_rmse(y_test, y_test_pred):.2f},MAE:{mae(y_test, y_test_pred):.2f}, MAPE:{mean_absolute_percentage_error(y_test, y_test_pred):.2f}')
+                            f'NRMSE:{nrmse(y_test, y_test_pred):.6f},CVRMSE:{cv_rmse(y_test, y_test_pred):.2f}%,MAE:{mae(y_test, y_test_pred):.2f}, MAPE:{mean_absolute_percentage_error(y_test, y_test_pred):.2f}')
     ax[1].set_ylabel('Load Power (W)')
     ax[1].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
     if swarm_constants['case_nbr'] == 2:
