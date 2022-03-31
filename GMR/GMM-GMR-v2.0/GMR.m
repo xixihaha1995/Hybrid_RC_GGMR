@@ -58,56 +58,57 @@ nbData = length(x);
 nbVar = size(Mu,1);
 nbStates = size(Sigma,3);
 
-%% Fast matrix computation (see the commented code for a version involving 
-%% one-by-one computation, which is easier to understand).
-%%
-%% Compute the influence of each GMM component, given input x
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i=1:nbStates
-  Pxi(:,i) = Priors(i).*gaussPDF(x, Mu(in,i), Sigma(in,in,i));
-end
-beta = Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates);
-%% Compute expected means y, given input x
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for j=1:nbStates
-  y_tmp(:,:,j) = repmat(Mu(out,j),1,nbData) + Sigma(out,in,j)*inv(Sigma(in,in,j)) * (x-repmat(Mu(in,j),1,nbData));
-end
-beta_tmp = reshape(beta,[1 size(beta)]);
-y_tmp2 = repmat(beta_tmp,[length(out) 1 1]) .* y_tmp;
-y = sum(y_tmp2,3);
-%% Compute expected covariance matrices Sigma_y, given input x
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for j=1:nbStates
-  Sigma_y_tmp(:,:,1,j) = Sigma(out,out,j) - (Sigma(out,in,j)*inv(Sigma(in,in,j))*Sigma(in,out,j));
-end
-beta_tmp = reshape(beta,[1 1 size(beta)]);
-Sigma_y_tmp2 = repmat(beta_tmp.*beta_tmp, [length(out) length(out) 1 1]) .* repmat(Sigma_y_tmp,[1 1 nbData 1]);
-Sigma_y = sum(Sigma_y_tmp2,4);
-
-
-% %% Slow one-by-one computation (better suited to understand the algorithm) 
+% %% Fast matrix computation (see the commented code for a version involving 
+% %% one-by-one computation, which is easier to understand).
 % %%
 % %% Compute the influence of each GMM component, given input x
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for i=1:nbStates
-%   Pxi(:,i) = gaussPDF(x, Mu(in,i), Sigma(in,in,i));
+%   Pxi(:,i) = Priors(i).*gaussPDF(x, Mu(in,i), Sigma(in,in,i));
 % end
-% beta = (Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates))';
-% %% Compute expected output distribution, given input x
+% beta = Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates);
+% %% Compute expected means y, given input x
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% y = zeros(length(out), nbData);
-% Sigma_y = zeros(length(out), length(out), nbData);
-% for i=1:nbData
-%   % Compute expected means y, given input x
-%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   for j=1:nbStates
-%     yj_tmp = Mu(out,j) + Sigma(out,in,j)*inv(Sigma(in,in,j)) * (x(:,i)-Mu(in,j));
-%     y(:,i) = y(:,i) + beta(j,i).*yj_tmp;
-%   end
-%   % Compute expected covariance matrices Sigma_y, given input x
-%   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   for j=1:nbStates
-%     Sigmaj_y_tmp = Sigma(out,out,j) - (Sigma(out,in,j)*inv(Sigma(in,in,j))*Sigma(in,out,j));
-%     Sigma_y(:,:,i) = Sigma_y(:,:,i) + beta(j,i)^2.* Sigmaj_y_tmp;
-%   end
+% for j=1:nbStates
+%   y_tmp(:,:,j) = repmat(Mu(out,j),1,nbData) + Sigma(out,in,j)*inv(Sigma(in,in,j)) * (x-repmat(Mu(in,j),1,nbData));
 % end
+% beta_tmp = reshape(beta,[1 size(beta)]);
+% y_tmp2 = repmat(beta_tmp,[length(out) 1 1]) .* y_tmp;
+% y = sum(y_tmp2,3);
+% %% Compute expected covariance matrices Sigma_y, given input x
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% for j=1:nbStates
+%   Sigma_y_tmp(:,:,1,j) = Sigma(out,out,j) - (Sigma(out,in,j)*inv(Sigma(in,in,j))*Sigma(in,out,j));
+% end
+% beta_tmp = reshape(beta,[1 1 size(beta)]);
+% Sigma_y_tmp2 = repmat(beta_tmp.*beta_tmp, [length(out) length(out) 1 1]) .* repmat(Sigma_y_tmp,[1 1 nbData 1]);
+% Sigma_y = sum(Sigma_y_tmp2,4);
+
+
+%% Slow one-by-one computation (better suited to understand the algorithm) 
+%%
+%% Compute the influence of each GMM component, given input x
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for i=1:nbStates
+  Pxi(:,i) = gaussPDF(x, Mu(in,i), Sigma(in,in,i));
+end
+beta = (Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates))';
+%% Compute expected output distribution, given input x
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+y = zeros(length(out), nbData);
+Sigma_y = zeros(length(out), length(out), nbData);
+
+for i=1:nbData
+  % Compute expected means y, given input x
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  for j=1:nbStates
+    yj_tmp = Mu(out,j) + Sigma(out,in,j)*inv(Sigma(in,in,j)) * (x(:,i)-Mu(in,j));
+    y(:,i) = y(:,i) + beta(j,i).*yj_tmp;
+  end
+  % Compute expected covariance matrices Sigma_y, given input x
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  for j=1:nbStates
+    Sigmaj_y_tmp = Sigma(out,out,j) - (Sigma(out,in,j)*inv(Sigma(in,in,j))*Sigma(in,out,j));
+    Sigma_y(:,:,i) = Sigma_y(:,:,i) + beta(j,i)^2.* Sigmaj_y_tmp;
+  end
+end

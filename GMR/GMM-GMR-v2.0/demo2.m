@@ -92,5 +92,5 @@ axis([min([Data(1,:),Data(3,:)])-0.02 max([Data(1,:),Data(3,:)])+0.02 ...
   min([Data(2,:),Data(4,:)])-0.01 max([Data(2,:),Data(4,:)])+0.01]);
 xlabel('x_1,x_3','fontsize',16); ylabel('x_2,x_4','fontsize',16);
 
-pause;
+% pause;
 close all;

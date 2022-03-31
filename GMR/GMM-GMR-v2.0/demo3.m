@@ -129,5 +129,5 @@ plotGMM(expData([2,3],:), expSigma([1,2],[1,2],:), [0 0 .8], 2);
 axis([min(expData(2,:))-0.02 max(expData(2,:))+0.02 min(expData(3,:))-0.02 max(expData(3,:))+0.02]);
 xlabel('x_1','fontsize',16); ylabel('x_2','fontsize',16);
 
-pause;
+% pause;
 close all;
