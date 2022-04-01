@@ -310,3 +310,9 @@ Aiming at best cost around 6e9
 
 [Priors, Mu, Sigma, Linespaced_Inputs, Input Dimensions, Output Dimension] => [Expected means, expected covariance matrices]
 
+
+
+$$
+y_{predicted} = \sum_{j=1}^{nbStates}(\beta_{j}(\mu_j + \frac{\sigma_{out\cross in, j}}{\sigma_{in\cross in, j}}))
+$$
+

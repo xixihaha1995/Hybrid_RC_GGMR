@@ -34,8 +34,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 load('data/case_arr.mat'); %load 'Data'
 total_length = size(data,2);
-training_length = 2016;
-testing_length = 500;
+training_length = 4033;
+testing_length = 5000;
 nbVarAll = size(data,1);
 nbVarInput = nbVarAll - 1;
 
@@ -78,5 +78,9 @@ xlabel('Time step, 5 min interval')
 ylabel('Radiant Slab Loads (W)') 
 plot(reverse_norm_model_test_y);
 plot(actual_test_y);
+rmse = (sum((reverse_norm_model_test_y - actual_test_y).^2) / length(actual_test_y)).^ (0.5); 
+mean_measured = mean(abs(actual_test_y));
+cvrmse = rmse*100 / mean_measured;
+title("CVRMSE is " + cvrmse + "%")
 legend({'Predicted','Actual'},'Location','southwest')
 close all;
