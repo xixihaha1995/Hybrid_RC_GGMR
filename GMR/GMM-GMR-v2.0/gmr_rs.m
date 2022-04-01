@@ -1,7 +1,7 @@
 function gmr_rs
 %% Definition of the number of components used in GMM.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nbStates = 4;
+nbStates = 6;
 
 %% Convert RC training data to GMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,23 +34,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 load('data/case_arr.mat'); %load 'Data'
 total_length = size(data,2);
-training_length = 500;
-testing_length = 100;
+training_length = 2016;
+testing_length = 500;
 nbVarAll = size(data,1);
 nbVarInput = nbVarAll - 1;
 
-train_no_norm = data(:,1:training_length);
-test_no_norm = data(:,training_length+1 :training_length+testing_length);
-training_data = normalize(train_no_norm);
-testing_data = normalize(test_no_norm);
+% train_no_norm = data(:,1:training_length);
+% test_no_norm = data(:,training_length+1 :training_length+testing_length);
+% training_data = normalize(train_no_norm);
+% testing_data = normalize(test_no_norm);
 
-% train_input_no_norm = data(1:nbVarInput,1:training_length);
-% training_input_data=normalize(train_input_no_norm);
-% training_data= [training_input_data; data(nbVarAll,1:training_length)];
-% 
-% test_input_no_norm = data(1:nbVarInput,training_length+1:training_length+testing_length);
-% testing_input_data=normalize(test_input_no_norm);
-% testing_data= [testing_input_data; data(nbVarAll,training_length+1:training_length+testing_length)];
+train_input_no_norm = data(1:nbVarInput,1:training_length);
+training_input_data=normalize(train_input_no_norm);
+training_data= [training_input_data; data(nbVarAll,1:training_length)];
+
+test_input_no_norm = data(1:nbVarInput,training_length+1:training_length+testing_length);
+testing_input_data=normalize(test_input_no_norm);
+testing_data= [testing_input_data; data(nbVarAll,training_length+1:training_length+testing_length)];
 %% Training of GMM by EM algorithm, initialized by k-means clustering.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [Priors, Mu, Sigma] = EM_init_kmeans(training_data, nbStates);
@@ -60,21 +60,19 @@ testing_data = normalize(test_no_norm);
 %% constraints. A sequence of temporal values is used as input, and the 
 %% expected distribution is retrieved. 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for i=1:nbVarInput
-    expData(i,:) = linspace(min(testing_data(i,:)), max(testing_data(i,:)), testing_length);
-end
 [expData(nbVarAll,:), expSigma] = GMR(Priors, Mu, Sigma,  testing_data(1:nbVarInput,:), [1:nbVarInput], [nbVarAll]);
 
 %% Plot of the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 figure('position',[10,10,1000,800],'name','GMM-GMR-rs');
 subplot(1,1,1); hold on;
-train_y_mean = mean(train_no_norm(nbVarAll,:));
-train_y_std = std(train_no_norm(nbVarAll,:));
-% reverse_norm_model_test_y = expData(nbVarAll,:);
-% actual_test_y = testing_data(nbVarAll,:);
-actual_test_y = test_no_norm(nbVarAll,:);
-reverse_norm_model_test_y = expData(nbVarAll,:) * train_y_std + train_y_mean;
+
+reverse_norm_model_test_y = expData(nbVarAll,:);
+actual_test_y = testing_data(nbVarAll,:);
+% train_y_mean = mean(train_no_norm(nbVarAll,:));
+% train_y_std = std(train_no_norm(nbVarAll,:));
+% actual_test_y = test_no_norm(nbVarAll,:);
+% reverse_norm_model_test_y = expData(nbVarAll,:) * train_y_std + train_y_mean;
 
 xlabel('Time step, 5 min interval') 
 ylabel('Radiant Slab Loads (W)') 
