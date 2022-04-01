@@ -1,7 +1,7 @@
 function gmr_rs
 %% Definition of the number of components used in GMM.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nbStates = 6;
+nbStates = 14;
 
 %% Convert RC training data to GMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,8 +34,8 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 load('data/case_arr.mat'); %load 'Data'
 total_length = size(data,2);
-training_length = 4033;
-testing_length = 5000;
+training_length = 4032;
+testing_length = total_length - training_length;
 nbVarAll = size(data,1);
 nbVarInput = nbVarAll - 1;
 
