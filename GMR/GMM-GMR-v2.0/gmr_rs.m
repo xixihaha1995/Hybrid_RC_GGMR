@@ -1,7 +1,7 @@
 function gmr_rs
 %% Definition of the number of components used in GMM.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nbStates = 200;
+nbStates = 4;
 
 %% Convert RC training data to GMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,7 +35,7 @@ end
 load('data/case_arr.mat'); %load 'Data'
 total_length = size(data,2);
 training_length = 500;
-testing_length = 500;
+testing_length = 100;
 nbVarAll = size(data,1);
 nbVarInput = nbVarAll - 1;
 
@@ -63,7 +63,7 @@ testing_data = normalize(test_no_norm);
 for i=1:nbVarInput
     expData(i,:) = linspace(min(testing_data(i,:)), max(testing_data(i,:)), testing_length);
 end
-[expData(nbVarAll,:), expSigma] = GMR(Priors, Mu, Sigma,  expData(1,:), [1:nbVarInput], [nbVarAll]);
+[expData(nbVarAll,:), expSigma] = GMR(Priors, Mu, Sigma,  testing_data(1:nbVarInput,:), [1:nbVarInput], [nbVarAll]);
 
 %% Plot of the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

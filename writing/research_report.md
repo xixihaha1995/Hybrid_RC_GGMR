@@ -300,3 +300,13 @@ Aiming at best cost around 6e9
 | intial-from 6 optimized | 0.31104853199463756,0.5467046592684783,0.9935975211504724,<br>-0.014585286370612916,0.721647509968919,0.4686516990698716,<br>0.000565144547088079,0.0006441690230600109,0.0009074541207515334,<br>2600000.379360871,1300000.4824038981,100000000.82953805,1200000.0401698523,<br>5999999.992084267,19999.996035939595,274999.9999740066,100.17175908793585,<br>0.1872934280213577,1.5246900378107624,2.460589040747263,1.4087593540485726,<br>0.4659914186864218,1.013398093721322,1.7993314767358861 | borrowed from case 6 |        |
 |                         |                                                              |                      |        |
 
+# GMR
+
+## Expectation-Maximization (EM)
+
+[Initial Priors, Initial Mu, Initial Sigma] => [Trained Priors, Trained Mu, Trained Sigma]
+
+## GMR 
+
+[Priors, Mu, Sigma, Linespaced_Inputs, Input Dimensions, Output Dimension] => [Expected means, expected covariance matrices]
+
