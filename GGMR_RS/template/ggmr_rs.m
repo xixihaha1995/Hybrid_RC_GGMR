@@ -1,8 +1,8 @@
+clear
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfile('data/case_arr.mat')
-    T_csv=readtable('data/case_arr.csv');
-    T = T_csv.';
+if ~isfile('data/case_arr_sim.mat')
+    T=readtable('data/case_arr.csv');
     t_out=(T{:,1} - 32) *5/9;
     t_slabs= (T{:,6} - 32 ) * 5/9;
     t_cav = (T{:,50} - 32) * 5/ 9;
@@ -24,14 +24,23 @@ if ~isfile('data/case_arr.mat')
     gal_per_min_to_m3 = 6.309e-5;
     y= c_water*rho_water*gal_per_min_to_m3*vfr_water.*(t_water_sup - t_water_ret);
     
-    save('data/case_arr.mat','t_slabs','t_cav','t_water_sup','t_water_ret','vfr_water','q_solar',...
+    t_slabs = t_slabs.';
+    t_cav = t_cav.';
+    t_water_sup = t_water_sup.';
+    t_water_ret = t_water_ret.';
+    vfr_water = vfr_water.';
+    q_solar = q_solar.';
+    q_light = q_light.';
+    q_inte_heat = q_inte_heat.';
+    ahu_cfm1 = ahu_cfm1.';
+    ahu_cfm2 = ahu_cfm2.';
+    ahu_t_sup2 = ahu_t_sup2.';
+    t_out = t_out.';
+    y = y.';
+    save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup','t_water_ret','vfr_water','q_solar',...
         'q_light','q_inte_heat','ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out','y');
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
 
 %% Flow training
 load('data/case_arr_sim.mat'); %load 'Data'
@@ -44,7 +53,7 @@ vfr_water_norm = normalize(vfr_water);
 y_norm = normalize(y);
 
 rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; t_water_sup_norm;...
-    t_water_ret_normy; vfr_water_norm; y_norm];
+    t_water_ret_norm; vfr_water_norm; y_norm];
 
 total_length = size(rs_data_var_norm_all,2);
 training_length = 4032;
@@ -58,33 +67,22 @@ y_train = y(:,1:training_length);
 y_test = y(:,training_length+1 :training_length+testing_length);
 
 nbStates=20;
-
+%% Flow prediction using slightly modified GMR
 [rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(rs_data_var_norm_train, nbStates);
 [rs_Priors, rs_Mu, rs_Sigma]  = EM(rs_data_var_norm_train, rs_Priors, rs_Mu, rs_Sigma);
 
 [rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
-
-%% Flow prediction
-% %Flow_expData(1:f_var,:)=Flow_data_var(1:f_var,:);% all data
-Flow_expData(1:f_var,:)=Flow_data_var(1:f_var,m:tn);% all data
-[Flow_expData(f_all,:), flow_beta1] = GMR(Flow_Priors, Flow_Mu, Flow_Sigma, Flow_expData(1:f_var,:),[1:f_var],[f_all]);
-ntest_flow = Flow_expData(f_all,:); %normalized evolved flow from the evolving gmr model
-
 rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_measured_gmr = mean(abs(y_test));
-cvrmse_gmr = rmse*100 / mean_measured;
- %% flow evolving
+cvrmse_gmr = rmse_gmr*100 / mean_measured_gmr;
+%% Flow prediction using Evolving GMR /GGMR
 sum_beta_rs=sum(rs_beta,1);
+[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test(1:nbVarInput,:),sum_beta_rs);
+rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predicted flow after denormalization
 
-[Flow_Priors, Flow_Mu, Flow_Sigma, flow_expData] = Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, Flow_data_var(m:tn),sum_beta_flow);
-nevolved_flow = flow_expData.'; %normalixed evolved flow from the evolving gmr model
-evolve_Predicted_Flow = flow_expData*std(Flow)+mean(Flow); %Actual predicted flow after denormalization
-
-R_sq_flow_ae = 1-sum((evolve_Predicted_Flow-Flow(m:tn)').^2)/sum((evolve_Predicted_Flow-mean(Flow(m:tn))).^2);
-CVrmse_flow_ae=sqrt(sum((evolve_Predicted_Flow-Flow(m:tn)').^2)/size(Flow(m:tn),2))/mean(Flow(m:tn));
-NMBE_flow_ae=sum(evolve_Predicted_Flow-Flow(m:tn)')/size(Flow(m:tn),2)/mean(Flow(m:tn));
-R_sq_flow_ae
-CVrmse_flow_ae
-NMBE_flow_ae
+rmse_ggmr = (sum((rs_expData_ggmr - y_test).^2) / length(y_test)).^ (0.5); 
+mean_measured_ggmr = mean(abs(y_test));
+cvrmse_ggmr = rmse_ggmr*100 / mean_measured_ggmr;
+cloase all;
