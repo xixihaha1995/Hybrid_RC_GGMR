@@ -95,6 +95,6 @@ xlabel('Time step, 5 min interval')
 ylabel('Radiant Slab Loads (W)') 
 plot(rs_expData_gmr);
 plot(rs_expData_ggmr);
-plot(actual_test_y);
+plot(y_test);
 title("CVRMSE, GMR:" + cvrmse_gmr + "%, GGMR:"+ cvrmse_ggmr + "%")
 legend({'GMR Predicted','GGMR Predicted','Actual'},'Location','southwest')
