@@ -1,6 +1,7 @@
 function gmr_rs
 %% Definition of the number of components used in GMM.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear
 nbStates = 14;
 
 %% Convert RC training data to GMR training data
@@ -110,9 +111,21 @@ xlabel('Time step, 5 min interval')
 ylabel('Radiant Slab Loads (W)') 
 plot(reverse_norm_model_test_y);
 plot(actual_test_y);
+
 rmse = (sum((reverse_norm_model_test_y - actual_test_y).^2) / length(actual_test_y)).^ (0.5); 
+mean_model = mean(abs(reverse_norm_model_test_y));
+std_model = (sum((reverse_norm_model_test_y - mean_model).^2) / length(reverse_norm_model_test_y)) .^ (0.5); 
+nrmse = rmse *100 / std_model;
+
 mean_measured = mean(abs(actual_test_y));
 cvrmse = rmse*100 / mean_measured;
-title("CVRMSE is " + cvrmse + "%")
-legend({'Predicted','Actual'},'Location','southwest')
-close all;
+
+mae = sum(abs(actual_test_y - reverse_norm_model_test_y)) / length(actual_test_y);
+
+mape_ratio = abs(actual_test_y - reverse_norm_model_test_y) ./ abs(actual_test_y);
+mape_ratio(isinf(mape_ratio)) = 0;
+mape = sum(mape_ratio)*100 / length(actual_test_y);
+    
+title({"NRMSE is " + nrmse + "%","CVRMSE is " + cvrmse + "%",...
+    "MAE is " + mae + "W","MAPE is " + mape + "%"})
+legend({'Predicted','Actual'},'Location','southwest');

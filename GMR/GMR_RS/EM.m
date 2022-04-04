@@ -63,50 +63,8 @@ Mu = Mu0;
 Sigma = Sigma0;
 Priors = Priors0;
 
-% %% EM fast matrix computation (see the commented code for a version 
-% %% involving one-by-one computation, which is easier to understand)
-% while 1
-%   %% E-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   for i=1:nbStates
-%     %Compute probability p(x|i)
-%     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
-%   end
-%   %Compute posterior probability p(i|x)
-%   Pix_tmp = repmat(Priors,[nbData 1]).*Pxi;
-%   Pix = Pix_tmp ./ repmat(sum(Pix_tmp,2),[1 nbStates]);
-%   %Compute cumulated posterior probability
-%   E = sum(Pix);
-%   %% M-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   for i=1:nbStates
-%     %Update the priors
-%     Priors(i) = E(i) / nbData;
-%     %Update the centers
-%     Mu(:,i) = Data*Pix(:,i) / E(i);
-%     %Update the covariance matrices
-%     Data_tmp1 = Data - repmat(Mu(:,i),1,nbData);
-%     Sigma(:,:,i) = (repmat(Pix(:,i)',nbVar, 1) .* Data_tmp1*Data_tmp1') / E(i);
-%     %% Add a tiny variance to avoid numerical instability
-%     Sigma(:,:,i) = Sigma(:,:,i) + 1E-5.*diag(ones(nbVar,1));
-%   end
-%   %% Stopping criterion %%%%%%%%%%%%%%%%%%%%
-%   for i=1:nbStates
-%     %Compute the new probability p(x|i)
-%     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
-%   end
-%   %Compute the log likelihood
-%   F = Pxi*Priors';
-%   F(find(F<realmin)) = realmin;
-%   loglik = mean(log(F));
-%   %Stop the process depending on the increase of the log likelihood 
-%   if abs((loglik/loglik_old)-1) < loglik_threshold
-%     break;
-%   end
-%   loglik_old = loglik;
-%   nbStep = nbStep+1;
-% end
-
-%% EM slow one-by-one computation (better suited to understand the
-%% algorithm) 
+%% EM fast matrix computation (see the commented code for a version 
+%% involving one-by-one computation, which is easier to understand)
 while 1
   %% E-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   for i=1:nbStates
@@ -114,9 +72,8 @@ while 1
     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
   end
   %Compute posterior probability p(i|x)
-  for j=1:nbData
-    Pix(j,:) = (Priors.*Pxi(j,:))./(sum(Priors.*Pxi(j,:))+realmin);
-  end
+  Pix_tmp = repmat(Priors,[nbData 1]).*Pxi;
+  Pix = Pix_tmp ./ repmat(sum(Pix_tmp,2),[1 nbStates]);
   %Compute cumulated posterior probability
   E = sum(Pix);
   %% M-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,12 +82,11 @@ while 1
     Priors(i) = E(i) / nbData;
     %Update the centers
     Mu(:,i) = Data*Pix(:,i) / E(i);
-    %Update the covariance matrices 
-    covtmp = zeros(nbVar,nbVar);
-    for j=1:nbData
-      covtmp = covtmp + (Data(:,j)-Mu(:,i))*(Data(:,j)-Mu(:,i))'.*Pix(j,i);
-    end
-    Sigma(:,:,i) = covtmp / E(i);
+    %Update the covariance matrices
+    Data_tmp1 = Data - repmat(Mu(:,i),1,nbData);
+    Sigma(:,:,i) = (repmat(Pix(:,i)',nbVar, 1) .* Data_tmp1*Data_tmp1') / E(i);
+    %% Add a tiny variance to avoid numerical instability
+    Sigma(:,:,i) = Sigma(:,:,i) + 1E-5.*diag(ones(nbVar,1));
   end
   %% Stopping criterion %%%%%%%%%%%%%%%%%%%%
   for i=1:nbStates
@@ -149,8 +105,52 @@ while 1
   nbStep = nbStep+1;
 end
 
-%% Add a tiny variance to avoid numerical instability
-for i=1:nbStates
-  Sigma(:,:,i) = Sigma(:,:,i) + 1E-5.*diag(ones(nbVar,1));
-end
+% %% EM slow one-by-one computation (better suited to understand the
+% %% algorithm) 
+% while 1
+%   %% E-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   for i=1:nbStates
+%     %Compute probability p(x|i)
+%     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
+%   end
+%   %Compute posterior probability p(i|x)
+%   for j=1:nbData
+%     Pix(j,:) = (Priors.*Pxi(j,:))./(sum(Priors.*Pxi(j,:))+realmin);
+%   end
+%   %Compute cumulated posterior probability
+%   E = sum(Pix);
+%   %% M-step %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   for i=1:nbStates
+%     %Update the priors
+%     Priors(i) = E(i) / nbData;
+%     %Update the centers
+%     Mu(:,i) = Data*Pix(:,i) / E(i);
+%     %Update the covariance matrices 
+%     covtmp = zeros(nbVar,nbVar);
+%     for j=1:nbData
+%       covtmp = covtmp + (Data(:,j)-Mu(:,i))*(Data(:,j)-Mu(:,i))'.*Pix(j,i);
+%     end
+%     Sigma(:,:,i) = covtmp / E(i);
+%   end
+%   %% Stopping criterion %%%%%%%%%%%%%%%%%%%%
+%   for i=1:nbStates
+%     %Compute the new probability p(x|i)
+%     Pxi(:,i) = gaussPDF(Data, Mu(:,i), Sigma(:,:,i));
+%   end
+%   %Compute the log likelihood
+%   F = Pxi*Priors';
+%   F(find(F<realmin)) = realmin;
+%   loglik = mean(log(F));
+%   %Stop the process depending on the increase of the log likelihood 
+%   if abs((loglik/loglik_old)-1) < loglik_threshold
+%     break;
+%   end
+%   loglik_old = loglik;
+%   nbStep = nbStep+1;
+% end
+% 
+% %% Add a tiny variance to avoid numerical instability
+% for i=1:nbStates
+%   Sigma(:,:,i) = Sigma(:,:,i) + 1E-5.*diag(ones(nbVar,1));
+% end
 

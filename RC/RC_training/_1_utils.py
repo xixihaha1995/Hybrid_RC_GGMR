@@ -548,7 +548,7 @@ def nrmse(measure, model):
     nom = (sum((measure - model) ** 2) / len(measure)) ** (1 / 2)
     if not isinstance(nom, float):
         nom = nom[0,0]
-    mean = model.mean()
+    mean = abs(model).mean()
     denom = (sum((model - mean) ** 2) / len(model)) ** (1 / 2)
     return nom *100 / denom
 

@@ -74,18 +74,14 @@ nbStates=20;
 [rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
 rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
 
-rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
-mean_measured_gmr = mean(abs(y_test));
-cvrmse_gmr = rmse_gmr*100 / mean_measured_gmr;
+
 %% Flow prediction using Evolving GMR /GGMR
 sum_beta_rs=sum(rs_beta,1);
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,sum_beta_rs);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predicted flow after denormalization
 
-rmse_ggmr = (sum((rs_expData_ggmr - y_test).^2) / length(y_test)).^ (0.5); 
-mean_measured_ggmr = mean(abs(y_test));
-cvrmse_ggmr = rmse_ggmr*100 / mean_measured_ggmr;
+
 
 %% Plot
 figure('position',[10,10,800,500],'name','GMR-GGMR-RS-Load Prediction');
@@ -96,5 +92,33 @@ ylabel('Radiant Slab Loads (W)')
 plot(rs_expData_gmr);
 plot(rs_expData_ggmr);
 plot(y_test);
-title("CVRMSE, GMR:" + cvrmse_gmr + "%, GGMR:"+ cvrmse_ggmr + "%")
+
+rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
+mean_model_gmr = mean(abs(rs_expData_gmr));
+std_model_gmr = (sum((rs_expData_gmr - mean_model_gmr).^2) / length(rs_expData_gmr)) .^ (0.5); 
+nrmse_gmr = rmse_gmr *100 / std_model_gmr;
+mean_measured_gmr = mean(abs(y_test));
+cvrmse_gmr = rmse_gmr*100 / mean_measured_gmr;
+mae_gmr = sum(abs(y_test - rs_expData_gmr)) / length(y_test);
+mape_ratio_gmr = abs(y_test - rs_expData_gmr) ./ abs(y_test);
+mape_ratio_gmr(isinf(mape_ratio_gmr)) = 0;
+mape_gmr = sum(mape_ratio_gmr)*100 / length(y_test);
+
+rmse_ggmr = (sum((rs_expData_ggmr - y_test).^2) / length(y_test)).^ (0.5); 
+mean_model_ggmr = mean(abs(rs_expData_ggmr));
+std_model_ggmr = (sum((rs_expData_ggmr - mean_model_ggmr).^2) / length(rs_expData_ggmr)) .^ (0.5); 
+nrmse_ggmr = rmse_ggmr *100 / std_model_ggmr;
+mean_measured_ggmr = mean(abs(y_test));
+cvrmse_ggmr = rmse_ggmr*100 / mean_measured_ggmr;
+mae_ggmr = sum(abs(y_test - rs_expData_ggmr)) / length(y_test);
+mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
+mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
+mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
+    
+title({"Left: GMR; Right: GGMR ",...
+    "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
+    "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
+    "MAE is " + mae_gmr + "W, "+ mae_ggmr + "W",...
+     "MAPE is " + mape_gmr + "%, "+ mape_ggmr + "%"})
+ 
 legend({'GMR Predicted','GGMR Predicted','Actual'},'Location','southwest')
