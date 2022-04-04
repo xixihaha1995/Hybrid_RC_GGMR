@@ -1,4 +1,4 @@
-clear
+function [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs(nbStates)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -66,8 +66,8 @@ rs_data_var_norm_test = rs_data_var_norm_all(:,training_length+1 :training_lengt
 y_train = y(:,1:training_length);
 y_test = y(:,training_length+1 :training_length+testing_length);
 
-nbStates=20;
-%% Flow prediction using slightly modified GMR
+
+%% RS Load prediction using GMR
 [rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(rs_data_var_norm_train, nbStates);
 [rs_Priors, rs_Mu, rs_Sigma]  = EM(rs_data_var_norm_train, rs_Priors, rs_Mu, rs_Sigma);
 
@@ -75,7 +75,7 @@ nbStates=20;
 rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
 
 
-%% Flow prediction using Evolving GMR /GGMR
+%% RS Load prediction using GGMR
 sum_beta_rs=sum(rs_beta,1);
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,sum_beta_rs);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
@@ -84,14 +84,14 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predic
 
 
 %% Plot
-figure('position',[10,10,800,500],'name','GMR-GGMR-RS-Load Prediction');
-subplot(1,1,1); hold on;
-
-xlabel('Time step, 5 min interval') 
-ylabel('Radiant Slab Loads (W)') 
-plot(rs_expData_gmr);
-plot(rs_expData_ggmr);
-plot(y_test);
+% figure('position',[10,10,800,500],'name','GMR-GGMR-RS-Load Prediction');
+% subplot(1,1,1); hold on;
+% 
+% xlabel('Time step, 5 min interval') 
+% ylabel('Radiant Slab Loads (W)') 
+% plot(rs_expData_gmr);
+% plot(rs_expData_ggmr);
+% plot(y_test);
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -115,10 +115,10 @@ mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
     
-title({"Left: GMR; Right: GGMR ",...
-    "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
-    "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
-    "MAE is " + mae_gmr + "W, "+ mae_ggmr + "W",...
-     "MAPE is " + mape_gmr + "%, "+ mape_ggmr + "%"})
- 
-legend({'GMR Predicted','GGMR Predicted','Actual'},'Location','southwest')
+% title({"Left: GMR; Right: GGMR ",...
+%     "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
+%     "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
+%     "MAE is " + mae_gmr + "W, "+ mae_ggmr + "W",...
+%      "MAPE is " + mape_gmr + "%, "+ mape_ggmr + "%"})
+%  
+% legend({'GMR Predicted','GGMR Predicted','Actual'},'Location','southwest')

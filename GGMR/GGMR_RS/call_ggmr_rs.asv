@@ -1,0 +1,21 @@
+clear
+potential_nbstates = [2, 4, 8, 16, 32, 64];
+nb_row = 1;
+for nbstates = potential_nbstates
+    [cvrmse_gmr, cvrmse_ggmr] = test_function(nbstates);
+    all_cvrmse(nb_row, :) = [cvrmse_gmr, cvrmse_ggmr];
+    nb_row = nb_row + 1;
+end
+subplot(1,2,1);
+plot(potential_nbstates,all_cvrmse(:,1))
+xlabel('Number of Gaussian Components') 
+ylabel('CVRMSE(%)') 
+title('')
+
+subplot(1,2,2);
+plot(potential_nbstates,all_cvrmse(:,2))
+xlabel('Time step, 12 min interval') 
+ylabel('Radiant Slab Heating Loads (W)')
+% A = [1 2 3;4 5 6;7 8 9];
+% A = [A; ones(7,3)*5];
+% [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs();
