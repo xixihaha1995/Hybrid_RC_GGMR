@@ -1,4 +1,4 @@
-function [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs(nbStates)
+function [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs(nbStates, input_case)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -52,8 +52,15 @@ t_water_ret_norm = normalize(t_water_ret);
 vfr_water_norm = normalize(vfr_water);
 y_norm = normalize(y);
 
-rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; t_water_sup_norm;...
-    t_water_ret_norm; vfr_water_norm; y_norm];
+switch (input_case)
+    case 1
+        rs_data_var_norm_all = [t_out_norm; y_norm];
+    case 2
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;y_norm];
+    case 3
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
+            t_water_sup_norm;t_water_ret_norm; vfr_water_norm; y_norm];
+end
 
 total_length = size(rs_data_var_norm_all,2);
 training_length = 4032;
