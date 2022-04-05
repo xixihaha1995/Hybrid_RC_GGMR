@@ -1,12 +1,7 @@
 print("Hello")
-import os
-
-script_path = os.path.abspath( __file__ )
-
-print( script_path )
-# import sys
-# from RC_training import _2_pyswarm as RC_utils
-# from RC_prediction import call_rc_function
+import sys
+from RC_Package.RC_training import _2_pyswarm as RC_utils
+from RC_Package.RC_prediction import call_rc_function
 #
 # def recv_send(target_time_idx):
 #     warming_up_steps = 15
