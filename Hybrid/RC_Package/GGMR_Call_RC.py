@@ -9,6 +9,6 @@ def recv_send(target_time_idx):
     rc_y = rc_function.predict(u_measured)
     return rc_y
 
-target_time_idx = sys.argv[1]
+target_time_idx = int(sys.argv[1])
 rc_y = recv_send(target_time_idx)
 print(f'RC prediction with pre-calcualted abcd:{rc_y} Watts load')
