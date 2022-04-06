@@ -1,5 +1,5 @@
 clear
-potential_nbstates = [4, 80];
+potential_nbstates = [4, 15];
 input_case = 2;
 
 nb_row = 1;

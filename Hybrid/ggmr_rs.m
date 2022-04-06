@@ -103,6 +103,7 @@ end
 
 total_length = size(rs_data_var_norm_all,2);
 training_length = 4032;
+test_initial_time = training_length;
 % testing_length = total_length - training_length;
 testing_length = 1000;
 nbVarAll = size(rs_data_var_norm_all,1);
@@ -124,7 +125,9 @@ rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
 
 %% RS Load prediction using GGMR
 sum_beta_rs=sum(rs_beta,1);
-[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,sum_beta_rs);
+[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
+    Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,...
+    sum_beta_rs, test_initial_time);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predicted flow after denormalization
 

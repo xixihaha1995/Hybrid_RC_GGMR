@@ -1,5 +1,4 @@
-%function [Priors, Mu, Sigma, expData] = Evolving_LW(Priors, Mu, Sigma, Data_Test, L_rate, T_mrg, T_split, T_sigma, sum_beta)
-function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, Data_Test,SumPosterior)
+function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, Data_Test,SumPosterior,test_initial_time)
 L1 = size(Data_Test,1);
 %[m_best_Ts,Post_pr_Ts] = BMC(Data_Test(1:L1,1),Priors,Mu,Sigma);
 
@@ -61,7 +60,8 @@ Fault_ID = [];
 n=0;
 for t = 2:(size(Data_Test,2))  
 %% AFDD algorithm
-    t
+    target_time = t + test_initial_time;
+    res = pyrunfile("GGMR_Call_RC.py","res",target_time_idx=target_time);
     [expData(t,1), cof1]=GMR(Priors, Mu, Sigma,  Data_Test(1:L1-1,t), [1:nes], [nes+1:nbVar]);
     
     n=n+1;
@@ -92,27 +92,9 @@ for m=1:size(Priors,2)
 end
 
 % find the candidates to update the model
-
-
 for m=1:size(Priors,2)   
-%     if (com_dis(m,1)< mean(com_dis))&&(Post_pr (m)> eps)
-%         com_cand(m,1) = 1;   
-%     else
-%         com_cand(m,1) = 0;
-%         Post_pr(m) = 0; 
-%         
-%     end  
-    % if (com_MD(m_best,1)< mean(com_dis))&&(Post_pr (m_best)> eps)
-%     if (com_MD(m_best,1)< T_sigma)&&(Post_pr (m_best)> eps)
-%         com_cand(m_best,1) = 1;   
-%         updateFlag=1;
-%     else
-%         com_cand(m_best,1) = 0;
-%         Post_pr(m_best) = 0; 
-%         updateFlag=1;
-%     end 
-updateFlag=1;
-existFlag=0;
+    updateFlag=1;
+    existFlag=0;
     if (com_MD(m_best,1)< T_sigma)&&(Post_pr (m_best)> eps)
     existFlag=1; %doing nothing
     end

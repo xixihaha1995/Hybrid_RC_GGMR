@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd
-from . import _1_utils
+from RC_Package.RC_training import _1_utils
 import csv, os, random
 from scipy import signal
 import matplotlib.pyplot as plt
