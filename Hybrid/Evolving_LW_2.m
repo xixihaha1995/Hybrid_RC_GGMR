@@ -35,7 +35,7 @@ rej = [];
 buf = 0;
 %C_mat = ones(length(Priors),1); % sum of expected posterior for each component
 C_mat=SumPosterior';
-L_rate = 0.001;%0.001;%0.001; %learning rate 0.01
+L_rate = 0.01;%0.001;%0.001; %learning rate 0.01
 pumax = 0.09;
 M_min = 2; % Minimum number of mixture components
 M_max =50; %20; % Maximum number of mixture components
@@ -45,9 +45,9 @@ T_sigma=2;
 eps = 1e-2;
 T_mrg = 0.000001;%.00000100; % Merge threhsold need to be determined 395
 T_split = 100;%10; % Split threshold  3.8695e-03
-Spl_fac = 0.5; % split factor
+Spl_fac = 0.8; % split factor
 sinit = 300; % initial determinan for genertaed component
-pr_init = 1e-2; % initial prior for genertaed component
+pr_init = mean(Priors); % initial prior for genertaed component
 Sigma = Sigma+0.00000002*eye(size(Data_Test(1:L1,:),1));% Add small white noise to prevent singularity
 
 yest2 = [];
@@ -61,7 +61,7 @@ Fault_ID = [];
 n=0;
 for t = 2:(size(Data_Test,2))  
 %% AFDD algorithm
-
+    t
     [expData(t,1), cof1]=GMR(Priors, Mu, Sigma,  Data_Test(1:L1-1,t), [1:nes], [nes+1:nbVar]);
     
     n=n+1;
