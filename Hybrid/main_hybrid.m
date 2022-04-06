@@ -4,7 +4,7 @@ input_case = 3;
 
 nb_row = 1;
 for nbStates = potential_nbstates
-    [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs(nbStates,input_case);
+    [cvrmse_gmr, cvrmse_ggmr] = gmr_ggmr_rs(nbStates,input_case);
     all_cvrmse(nb_row, :) = [cvrmse_gmr, cvrmse_ggmr];
     nb_row = nb_row + 1;
 end

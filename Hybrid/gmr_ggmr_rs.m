@@ -1,4 +1,4 @@
-function [cvrmse_gmr, cvrmse_ggmr] = ggmr_rs(nbStates, input_case)
+function [cvrmse_gmr, cvrmse_ggmr] = gmr_ggmr_rs(nbStates, input_case)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -104,7 +104,7 @@ scale_rc_y = std(train(nbVarAll - 1,:));
 if talk_to_rc == 1
     for t = 1:size(test_norm,2)
         target_time = t + test_initial_time;
-        result = Hybrid(target_time);
+        result = communication(target_time);
         result_norm = (result - center_rc_y) /  scale_rc_y;
         test_norm(nbVarAll-1,t) = result_norm;
     end

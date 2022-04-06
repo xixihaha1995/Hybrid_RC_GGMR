@@ -64,7 +64,7 @@ for t = 2:(size(Data_Test,2))
     if talk_to_rc == 1
         %Communication with RC
         target_time = t + test_initial_time;
-        result = Hybrid(target_time);
+        result = communication(target_time);
         result_norm = (result - center_rc_y) /  scale_rc_y;
         Data_Test(L1-1,t) = result_norm;
     end
