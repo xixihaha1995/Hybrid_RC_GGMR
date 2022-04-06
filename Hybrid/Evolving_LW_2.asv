@@ -61,7 +61,7 @@ Fault_ID = [];
 n=0;
 for t = 2:(size(Data_Test,2))  
 %% AFDD algorithm
-    t
+t
     if talk_to_rc == 1
         %Communication with RC
         target_time = t + test_initial_time ;

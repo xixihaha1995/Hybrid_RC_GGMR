@@ -99,7 +99,7 @@ def different_warming_up(time_idx, seg_length):
     if not load_all_case_arr:
         script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
         all_case_arr_abs = os.path.join(script_dir, 'inputs', 'case_arr.csv')
-        all_case_arr_arr = pd.read_csv(all_case_arr_abs).to_numpy()
+        all_case_arr_arr = pd.read_csv(all_case_arr_abs,header=None).to_numpy()
         load_all_case_arr = True
 
     sliced_case_arr = all_case_arr_arr[time_idx - seg_length + 1: time_idx + 1]

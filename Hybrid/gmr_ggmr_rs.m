@@ -55,7 +55,7 @@ end
 load('data/case_arr_sim.mat'); %load 'Data'
 total_length = size(y,2);
 training_length = 4032;
-test_initial_time = training_length;
+test_initial_time = training_length -1;
 % testing_length = total_length - training_length;
 testing_length = 1000;
 
@@ -68,13 +68,23 @@ switch (input_case)
     case 2
         talk_to_rc  = 0;
         All_Variables = [t_out; t_slabs;t_cav;...
-            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
-            ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
+           valve_ht;valve_cl;y];
     case 3
         talk_to_rc  = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
-            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
-            ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
+           valve_ht;valve_cl;rc_y;y];
+
+    case 4
+        talk_to_rc  = 0;
+        All_Variables = [t_out; t_slabs;t_cav;...
+           q_solar;q_light;q_inte_heat;valve_ht;valve_cl;y];
+    case 5
+        talk_to_rc  = 1;
+        All_Variables = [t_out; t_slabs;t_cav;...
+           q_solar;q_light;q_inte_heat;valve_ht;valve_cl;rc_y;y];
+%         All_Variables = [t_out; t_slabs;t_cav;...
+%             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
+%             ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
 end
 
 
@@ -104,7 +114,10 @@ scale_rc_y = std(train(nbVarAll - 1,:));
 if talk_to_rc == 1
     for t = 1:size(test_norm,2)
         target_time = t + test_initial_time;
-        result = communication(target_time);
+         result = communication(target_time);
+         real_y(1,t) = result;
+%         real_err = result - test(nbVarAll,t)
+%         one_err = test(nbVarInput,t) - test(nbVarAll,t)
         result_norm = (result - center_rc_y) /  scale_rc_y;
         test_norm(nbVarAll-1,t) = result_norm;
     end
