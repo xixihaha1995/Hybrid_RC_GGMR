@@ -50,8 +50,8 @@ load('data/case_arr_sim.mat'); %load 'Data'
 t_out_norm = normalize(t_out);
 t_slabs_norm = normalize(t_slabs);
 t_cav_norm = normalize(t_cav);
-% t_water_sup_norm = normalize(t_water_sup);
-% t_water_ret_norm = normalize(t_water_ret);
+t_water_sup_norm = normalize(t_water_sup);
+t_water_ret_norm = normalize(t_water_ret);
 % vfr_water_norm = normalize(vfr_water);
 ahu_cfm1_norm = normalize(ahu_cfm1);
 ahu_cfm2_norm = normalize(ahu_cfm2);
@@ -66,22 +66,30 @@ y_norm = normalize(y);
 
 switch (input_case)
     case 1
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; rc_y_norm; y_norm];
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
+            t_water_sup_norm; t_water_ret_norm; y_norm];
     case 2
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm; y_norm];
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
+            t_water_sup_norm; t_water_ret_norm; rc_y_norm; y_norm];
     case 3
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
             q_solar_norm; q_light_norm; q_inte_heat_norm; y_norm];
     case 4
+       rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
+            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
+            q_solar_norm; q_light_norm; q_inte_heat_norm;...
+            t_water_sup_norm; t_water_ret_norm; y_norm];
+    case 5
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
             ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
-            q_solar_norm; q_light_norm; q_inte_heat_norm;rc_y_norm; y_norm];
+            q_solar_norm; q_light_norm; q_inte_heat_norm;...
+            t_water_sup_norm; t_water_ret_norm;rc_y_norm; y_norm];
 end
 
 total_length = size(rs_data_var_norm_all,2);
 training_length = 4032;
-testing_length = total_length - training_length;
+% testing_length = total_length - training_length;
+testing_length = 1000;
 nbVarAll = size(rs_data_var_norm_all,1);
 nbVarInput = nbVarAll - 1;
 

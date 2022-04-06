@@ -1,6 +1,6 @@
 clear
-potential_nbstates = [15, 20];
-input_case = 4;
+potential_nbstates = [15, 20,40,80];
+input_case = 5;
 
 nb_row = 1;
 for nbStates = potential_nbstates
@@ -30,6 +30,8 @@ switch (input_case)
         sgtitle_name = "case 3";
     case 4
         sgtitle_name = "case 4";
+    case 5
+        sgtitle_name = "case 5";
 end
 sgtitle(sgtitle_name); 
 savefig("data/"+input_case +"input_case.fig")
