@@ -1,4 +1,5 @@
-function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, Data_Test,SumPosterior,test_initial_time)
+function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, ...
+    Data_Test,SumPosterior,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y)
 L1 = size(Data_Test,1);
 %[m_best_Ts,Post_pr_Ts] = BMC(Data_Test(1:L1,1),Priors,Mu,Sigma);
 
@@ -60,8 +61,14 @@ Fault_ID = [];
 n=0;
 for t = 2:(size(Data_Test,2))  
 %% AFDD algorithm
-    target_time = t + test_initial_time;
-    res = pyrunfile("GGMR_Call_RC.py","res",target_time_idx=target_time);
+    if talk_to_rc == 1
+        %Communication with RC
+        target_time = t + test_initial_time;
+        result = Hybrid(target_time);
+        result_norm = (result - center_rc_y) /  scale_rc_y;
+        Data_Test(L1-1,t) = result_norm;
+    end
+
     [expData(t,1), cof1]=GMR(Priors, Mu, Sigma,  Data_Test(1:L1-1,t), [1:nes], [nes+1:nbVar]);
     
     n=n+1;

@@ -1,3 +1,5 @@
-disp(["Type the following in Matlab Command Window";...
-    "pyenv('Version', 'C:\Users\[Your User Name]\AppData\Local\Programs\Python\Python38\python.exe')"])
-res = pyrunfile("GGMR_Call_RC.py","res",target_time_idx=782)
+function [res] = Hyrid(target_time)
+% disp(["Type the following in Matlab Command Window";...
+%     "pyenv('Version', 'C:\Users\[Your User Name]\AppData\Local\Programs\Python\Python38\python.exe')"])
+res = pyrunfile("GGMR_Call_RC.py","res",target_time_idx=target_time);
+end

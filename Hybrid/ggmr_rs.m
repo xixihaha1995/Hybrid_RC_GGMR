@@ -66,7 +66,7 @@ ahu_t_sup2_norm = normalize(ahu_t_sup2);
 q_solar_norm = normalize(q_solar);
 q_light_norm = normalize(q_light);
 q_inte_heat_norm = normalize(q_inte_heat);
-rc_y_norm = normalize(rc_y);
+[rc_y_norm, center_rc_y, scale_rc_y] = normalize(rc_y);
 valve_cl_norm = normalize(valve_cl);
 valve_ht_norm = normalize(valve_ht);
 
@@ -74,9 +74,11 @@ y_norm = normalize(y);
 
 switch (input_case)
     case 1
+        talk_to_rc  = 0;
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
              valve_cl_norm; valve_ht_norm; y_norm];
     case 2
+        talk_to_rc  = 1;
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
              valve_cl_norm; valve_ht_norm;rc_y_norm; y_norm];
     case 3
@@ -127,7 +129,7 @@ rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
 sum_beta_rs=sum(rs_beta,1);
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
     Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,...
-    sum_beta_rs, test_initial_time);
+    sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predicted flow after denormalization
 
