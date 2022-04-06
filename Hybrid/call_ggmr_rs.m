@@ -1,6 +1,6 @@
 clear
-potential_nbstates = [4, 10,20,40];
-input_case = 4;
+potential_nbstates = [4, 80];
+input_case = 2;
 
 nb_row = 1;
 for nbStates = potential_nbstates
@@ -20,18 +20,5 @@ xlabel('Number of Gaussian Components')
 ylabel('CVRMSE(%)') 
 title('GGMR')
 
-
-switch (input_case)
-    case 1
-        sgtitle_name = "case 1";
-    case 2
-        sgtitle_name = "case 2";
-    case 3
-        sgtitle_name = "case 3";
-    case 4
-        sgtitle_name = "case 4";
-    case 5
-        sgtitle_name = "case 5";
-end
-sgtitle(sgtitle_name); 
+sgtitle("case "+input_case); 
 savefig("data/"+input_case +"input_case.fig")

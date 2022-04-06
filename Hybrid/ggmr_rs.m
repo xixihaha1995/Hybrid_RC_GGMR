@@ -19,6 +19,8 @@ if ~isfile('data/case_arr_sim.mat')
     q_light = T{:,81}.*0.19;
     q_inte_heat = T{:,79}.*1.52;
     rc_y = T{:,82};
+    valve_ht = T{:,83};
+    valve_cl = T{:,84};
     
     c_water = 4.186;
     rho_water = 997e3;
@@ -39,9 +41,13 @@ if ~isfile('data/case_arr_sim.mat')
     ahu_t_sup2 = ahu_t_sup2.';
     t_out = t_out.';
     rc_y = rc_y.';
+    valve_ht = valve_ht.';
+    valve_cl = valve_cl.';
     y = y.';
-    save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup','t_water_ret','vfr_water','q_solar',...
-        'q_light','q_inte_heat','ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out','rc_y','y');
+    save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup',...
+        't_water_ret','vfr_water','q_solar','q_light','q_inte_heat',...
+        'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out',...
+        'rc_y','valve_ht','valve_cl','y');
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -61,16 +67,18 @@ q_solar_norm = normalize(q_solar);
 q_light_norm = normalize(q_light);
 q_inte_heat_norm = normalize(q_inte_heat);
 rc_y_norm = normalize(rc_y);
-y_norm = normalize(y);
+valve_cl_norm = normalize(valve_cl);
+valve_ht_norm = normalize(valve_ht);
 
+y_norm = normalize(y);
 
 switch (input_case)
     case 1
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
-             y_norm];
+             valve_cl_norm; valve_ht_norm; y_norm];
     case 2
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
-            rc_y_norm; y_norm];
+             valve_cl_norm; valve_ht_norm;rc_y_norm; y_norm];
     case 3
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
             ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...

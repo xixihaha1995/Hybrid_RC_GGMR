@@ -47,7 +47,7 @@ T_mrg = 0.000001;%.00000100; % Merge threhsold need to be determined 395
 T_split = 100;%10; % Split threshold  3.8695e-03
 Spl_fac = 0.8; % split factor
 sinit = 300; % initial determinan for genertaed component
-pr_init = mean(Priors); % initial prior for genertaed component
+pr_init = 1e-2; % initial prior for genertaed component
 Sigma = Sigma+0.00000002*eye(size(Data_Test(1:L1,:),1));% Add small white noise to prevent singularity
 
 yest2 = [];
