@@ -53,98 +53,83 @@ end
 
 %% Flow training
 load('data/case_arr_sim.mat'); %load 'Data'
-t_out_norm = normalize(t_out);
-t_slabs_norm = normalize(t_slabs);
-t_cav_norm = normalize(t_cav);
-t_water_sup_norm = normalize(t_water_sup);
-t_water_ret_norm = normalize(t_water_ret);
-% vfr_water_norm = normalize(vfr_water);
-ahu_cfm1_norm = normalize(ahu_cfm1);
-ahu_cfm2_norm = normalize(ahu_cfm2);
-ahu_t_sup1_norm = normalize(ahu_t_sup1);
-ahu_t_sup2_norm = normalize(ahu_t_sup2);
-q_solar_norm = normalize(q_solar);
-q_light_norm = normalize(q_light);
-q_inte_heat_norm = normalize(q_inte_heat);
-[rc_y_norm, center_rc_y, scale_rc_y] = normalize(rc_y);
-valve_cl_norm = normalize(valve_cl);
-valve_ht_norm = normalize(valve_ht);
-
-y_norm = normalize(y);
-
-switch (input_case)
-    case 1
-        talk_to_rc  = 0;
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
-             valve_cl_norm; valve_ht_norm; y_norm];
-    case 2
-        talk_to_rc  = 1;
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; ...
-             valve_cl_norm; valve_ht_norm;rc_y_norm; y_norm];
-    case 3
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
-            q_solar_norm; q_light_norm; q_inte_heat_norm;...
-            y_norm];
-    case 4
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
-            q_solar_norm; q_light_norm; q_inte_heat_norm;...
-            rc_y_norm;y_norm];
-    case 5
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
-            q_solar_norm; q_light_norm; q_inte_heat_norm;...
-            t_water_sup_norm; t_water_ret_norm; y_norm];
-    case 6
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
-            q_solar_norm; q_light_norm; q_inte_heat_norm;...
-            t_water_sup_norm; t_water_ret_norm;rc_y_norm; y_norm];
-end
-
-total_length = size(rs_data_var_norm_all,2);
+total_length = size(y,2);
 training_length = 4032;
 test_initial_time = training_length;
 % testing_length = total_length - training_length;
 testing_length = 1000;
-nbVarAll = size(rs_data_var_norm_all,1);
+
+switch (input_case)
+    case 1
+        talk_to_rc  = 0;
+        All_Variables = [t_out; t_slabs;t_cav;...
+            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
+            ahu_t_sup2;valve_ht;valve_cl;y];
+    case 2
+        talk_to_rc  = 0;
+        All_Variables = [t_out; t_slabs;t_cav;...
+            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
+            ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
+    case 3
+        talk_to_rc  = 1;
+        All_Variables = [t_out; t_slabs;t_cav;...
+            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
+            ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
+end
+
+
+nbVarAll = size(All_Variables,1);
 nbVarInput = nbVarAll - 1;
 
-rs_data_var_norm_train = rs_data_var_norm_all(:,1:training_length);
-rs_data_var_norm_test = rs_data_var_norm_all(:,training_length+1 :training_length+testing_length);
-y_train = y(:,1:training_length);
-y_test = y(:,training_length+1 :training_length+testing_length);
+for idx = 1:nbVarAll
+    cur_var_train = All_Variables(idx,1:training_length);
+    [cur_var_train_norm, cur_var_train_c, cur_var_train_s] = normalize(cur_var_train);
+    cur_var_test = All_Variables(idx,training_length+1 :training_length+testing_length);
+    cur_var_test_norm = (cur_var_test - cur_var_train_c) ./ cur_var_train_s;
+    train(idx, :) =  cur_var_train;
+    test(idx, :) =  cur_var_test;
+    train_norm(idx, :) =  cur_var_train_norm;
+    test_norm(idx, :) =  cur_var_test_norm;
+end
+
 
 
 %% RS Load prediction using GMR
-[rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(rs_data_var_norm_train, nbStates);
-[rs_Priors, rs_Mu, rs_Sigma]  = EM(rs_data_var_norm_train, rs_Priors, rs_Mu, rs_Sigma);
+center_rc_y = mean(train(nbVarAll - 1,:));
+scale_rc_y = std(train(nbVarAll - 1,:));
 
-[rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
-rs_expData_gmr = rs_expData_gmr_norm * std(y_train)+ mean(y_train);
+[rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(train_norm, nbStates);
+[rs_Priors, rs_Mu, rs_Sigma]  = EM(train_norm, rs_Priors, rs_Mu, rs_Sigma);
+
+if talk_to_rc == 1
+    for t = 1:size(test_norm,2)
+        target_time = t + test_initial_time;
+        result = Hybrid(target_time);
+        result_norm = (result - center_rc_y) /  scale_rc_y;
+        test_norm(nbVarAll-1,t) = result_norm;
+    end
+end
+
+[rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, ...
+    test_norm(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
+
+rs_expData_gmr = rs_expData_gmr_norm * std(train(nbVarAll,:))+ mean(train(nbVarAll,:));
 
 
 %% RS Load prediction using GGMR
 sum_beta_rs=sum(rs_beta,1);
+
+
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
-    Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, rs_data_var_norm_test,...
+    Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
     sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
-rs_expData_ggmr= rs_expData_ggmr_norm*std(y_train)+mean(y_train); %Actual predicted flow after denormalization
+rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
 
 
 
 %% Plot
-% figure('position',[10,10,800,500],'name','GMR-GGMR-RS-Load Prediction');
-% subplot(1,1,1); hold on;
-% 
-% xlabel('Time step, 5 min interval') 
-% ylabel('Radiant Slab Loads (W)') 
-% plot(rs_expData_gmr);
-% plot(rs_expData_ggmr);
-% plot(y_test);
-
+y_test = test(nbVarAll,:);
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
 std_model_gmr = (sum((rs_expData_gmr - mean_model_gmr).^2) / length(rs_expData_gmr)) .^ (0.5); 
