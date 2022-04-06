@@ -11,26 +11,30 @@ if ~isfile('data/case_arr_sim.mat')
     t_out=(T{:,1} - 32) *5/9;
     t_slabs= (T{:,6} - 32 ) * 5/9;
     t_cav = (T{:,50} - 32) * 5/ 9;
-    t_water_sup = (T{:,29}-32)*5/9;
-    t_water_ret = (T{:,30} - 32) *5/9;
-    vfr_water = T{:,28};
+    
     m3_per3_perCFM = 0.00047194745;
+
     ahu_cfm1 = T{:,42} *  m3_per3_perCFM;
     ahu_t_sup1 = (T{:,43}  - 32) * 5/9;
     ahu_cfm2 = T{:,46} * m3_per3_perCFM;
     ahu_t_sup2 = (T{:,47} - 32 ) *5/9;
     
-%     q_solar = T{:,75};
-%     q_light = T{:,81};
-%     q_inte_heat = T{:,79};
+    q_solar = T{:,75};
+    q_light = T{:,81};
+    q_inte_heat = T{:,79};
     
     c_water = 4.186;
     rho_water = 997e3;
     gal_per_min_to_m3 = 6.309e-5;
+    t_water_sup = (T{:,29}-32)*5/9;
+    t_water_ret = (T{:,30} - 32) *5/9;
+    vfr_water = T{:,28};
+    
+
     y= c_water*rho_water*gal_per_min_to_m3*vfr_water.*(t_water_sup - t_water_ret);
     
-    data = [t_slabs,t_cav,t_water_sup,t_water_ret,vfr_water,...
-        ahu_cfm1,ahu_t_sup1,ahu_cfm2,ahu_t_sup2,t_out,y];
+    data = [t_slabs,t_cav,ahu_cfm1,ahu_t_sup1,ahu_cfm2,ahu_t_sup2,t_out,...
+        q_solar, q_light, q_inte_heat, y];
     data = data.';
     save('data/case_arr_sim.mat','data');
 end

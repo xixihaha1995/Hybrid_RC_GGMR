@@ -18,6 +18,7 @@ if ~isfile('data/case_arr_sim.mat')
     q_solar = T{:,75};
     q_light = T{:,81};
     q_inte_heat = T{:,79};
+    rc_y = T{:,82};
     
     c_water = 4.186;
     rho_water = 997e3;
@@ -34,11 +35,13 @@ if ~isfile('data/case_arr_sim.mat')
     q_inte_heat = q_inte_heat.';
     ahu_cfm1 = ahu_cfm1.';
     ahu_cfm2 = ahu_cfm2.';
+    ahu_t_sup1 = ahu_t_sup1.';
     ahu_t_sup2 = ahu_t_sup2.';
     t_out = t_out.';
+    rc_y = rc_y.';
     y = y.';
     save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup','t_water_ret','vfr_water','q_solar',...
-        'q_light','q_inte_heat','ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out','y');
+        'q_light','q_inte_heat','ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out','rc_y','y');
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -47,19 +50,33 @@ load('data/case_arr_sim.mat'); %load 'Data'
 t_out_norm = normalize(t_out);
 t_slabs_norm = normalize(t_slabs);
 t_cav_norm = normalize(t_cav);
-t_water_sup_norm = normalize(t_water_sup);
-t_water_ret_norm = normalize(t_water_ret);
-vfr_water_norm = normalize(vfr_water);
+% t_water_sup_norm = normalize(t_water_sup);
+% t_water_ret_norm = normalize(t_water_ret);
+% vfr_water_norm = normalize(vfr_water);
+ahu_cfm1_norm = normalize(ahu_cfm1);
+ahu_cfm2_norm = normalize(ahu_cfm2);
+ahu_t_sup1_norm = normalize(ahu_t_sup1);
+ahu_t_sup2_norm = normalize(ahu_t_sup2);
+q_solar_norm = normalize(q_solar);
+q_light_norm = normalize(q_light);
+q_inte_heat_norm = normalize(q_inte_heat);
+rc_y_norm = normalize(rc_y);
 y_norm = normalize(y);
+
 
 switch (input_case)
     case 1
-        rs_data_var_norm_all = [t_out_norm; y_norm];
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm; rc_y_norm; y_norm];
     case 2
-        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;y_norm];
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
+            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm; y_norm];
     case 3
         rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
-            t_water_sup_norm;t_water_ret_norm; vfr_water_norm; y_norm];
+            q_solar_norm; q_light_norm; q_inte_heat_norm; y_norm];
+    case 4
+        rs_data_var_norm_all = [t_out_norm; t_slabs_norm; t_cav_norm;...
+            ahu_cfm1_norm; ahu_t_sup1_norm; ahu_cfm2_norm; ahu_t_sup2_norm;...
+            q_solar_norm; q_light_norm; q_inte_heat_norm;rc_y_norm; y_norm];
 end
 
 total_length = size(rs_data_var_norm_all,2);

@@ -1,6 +1,6 @@
 clear
-potential_nbstates = [2, 10, 15, 20, 30];
-input_case = 1;
+potential_nbstates = [15, 20];
+input_case = 4;
 
 nb_row = 1;
 for nbStates = potential_nbstates
@@ -23,12 +23,13 @@ title('GGMR')
 
 switch (input_case)
     case 1
-        sgtitle_name = "t_{out,norm}; y_{norm}";
+        sgtitle_name = "case 1";
     case 2
-        sgtitle_name = "t_{out,norm}; t_{slabs,norm}; t_{cav,norm};y_{norm}";
+        sgtitle_name = "case 2";
     case 3
-        sgtitle_name = "t_{out,norm}; t_{slabs,norm}; t_{cav,norm};"+...
-        "t_{water_{sup,norm}};t_{water_{ret,norm}}; vfr_{water,norm}; y_{norm}";
+        sgtitle_name = "case 3";
+    case 4
+        sgtitle_name = "case 4";
 end
 sgtitle(sgtitle_name); 
 savefig("data/"+input_case +"input_case.fig")
