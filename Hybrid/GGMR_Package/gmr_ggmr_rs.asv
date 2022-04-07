@@ -63,7 +63,7 @@ if ~isfile('data/case_arr_sim.mat')
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Flow training
+%% Load case data
 load('data/case_arr_sim.mat'); %load 'Data'
 % %%Correlation analysis
 % to_do_corr = [t_out; t_slabs;t_cav;...
@@ -87,28 +87,26 @@ rc_warming_step = 14;
 testing_length = total_length - training_length;
 % testing_length = 1000;
 
+talk_to_rc  = 0;
+with_predicted_flow = 0;
+
 switch (input_case)
-    case 1
-        talk_to_rc  = 0;
-        All_Variables = [t_out; t_slabs;t_cav;...
-            q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
-            ahu_t_sup2;valve_ht;valve_cl;y];
-    case 2 %This is reserved case
-        talk_to_rc  = 0;
+    case 1 %This is reserved case
         All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;q_solar;y];
-    case 3 %This is reserved case with RC_y info
+    case 2 %This is reserved case with RC_y info
         talk_to_rc  = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;q_solar;rc_y;y];
+    case 3
+        with_predicted_flow = 1;
+        All_Variables = [t_out; t_slabs;t_cav;...
+           valve_ht;valve_cl;vfr_water; y];
     case 4
-        talk_to_rc  = 0;
-        All_Variables = [t_out; t_slabs;t_cav;...
-           valve_ht;valve_cl;y];
-    case 5
         talk_to_rc  = 1;
-        All_Variables = [t_out; t_slabs;t_cav;...
-           valve_ht;valve_cl;ahu_t_sup1;ahu_t_sup2;q_solar;rc_y;y];
+        with_predicted_flow = 1;
+         All_Variables = [t_out; t_slabs;t_cav;...
+           valve_ht;valve_cl;vfr_water;rc_y; y];
 %         All_Variables = [t_out; t_slabs;t_cav;...
 %             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
 %             ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
@@ -129,7 +127,41 @@ for idx = 1:nbVarAll
     test_norm(idx, :) =  cur_var_test_norm;
 end
 
+%% Predict Flow Information
+if with_predicted_flow == 1
+    flow_All_Variables = [t_out; t_slabs;t_cav;...
+               valve_ht;valve_cl;vfr_water];
+    flow_nbVarAll = size(flow_All_Variables,1);
+    flow_nbVarInput = flow_nbVarAll - 1;
+    
+    for idx = 1:flow_nbVarAll
+        flow_cur_var_train = flow_All_Variables(idx,1:training_length);
+        [flow_cur_var_train_norm, flow_cur_var_train_c, flow_cur_var_train_s]...
+            = normalize(flow_cur_var_train);
+        flow_cur_var_test = flow_All_Variables(idx,training_length+1 :training_length+testing_length);
+        flow_cur_var_test_norm = (flow_cur_var_test - flow_cur_var_train_c) ./ flow_cur_var_train_s;
+        flow_train(idx, :) =  flow_cur_var_train;
+        flow_test(idx, :) =  flow_cur_var_test;
+        flow_train_norm(idx, :) =  flow_cur_var_train_norm;
+        flow_test_norm(idx, :) =  flow_cur_var_test_norm;
+    end
+    
+    [flow_Priors, flow_Mu, flow_Sigma] = EM_init_kmeans(flow_train_norm, nbStates);
+    [flow_Priors, flow_Mu, flow_Sigma]  = EM(flow_train_norm, flow_Priors, flow_Mu, flow_Sigma);
+    [flow_expData_gmr_norm, flow_beta] = GMR(flow_Priors, flow_Mu, flow_Sigma, ...
+        flow_test_norm(1:flow_nbVarInput,:),[1:flow_nbVarInput],[flow_nbVarAll]);
+    
+    center_flow_y = mean(flow_train(flow_nbVarAll - 1,:));
+    scale_flow_y = std(flow_train(flow_nbVarAll - 1,:));
+    [flow_Priors, flow_Mu, flow_Sigma, flow_expData_ggmr_norm] = ...
+    Evolving_LW_2(flow_Priors, flow_Mu, flow_Sigma, flow_test_norm,...
+    sum_beta_rs,talk_to_rc, test_initial_time, center_flow_y, scale_flow_y,...
+    u_measured, rc_warming_step,abcd);
 
+    disp("updating flow")
+    test_norm(nbVarInput - talk_to_rc,:) = flow_expData_gmr_norm;
+
+end
 
 %% RS Load prediction using GMR
 center_rc_y = mean(train(nbVarAll - 1,:));

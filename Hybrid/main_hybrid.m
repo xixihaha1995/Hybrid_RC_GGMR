@@ -1,6 +1,6 @@
 clear
 potential_nbstates = [2,5,10,15];
-input_case = 3;
+input_case = 4;
 
 nb_row = 1;
 for nbStates = potential_nbstates
