@@ -44,10 +44,21 @@ if ~isfile('data/case_arr_sim.mat')
     valve_ht = valve_ht.';
     valve_cl = valve_cl.';
     y = y.';
+    u_measure_table=readtable('data/u_arr_Tran.csv');
+    u_measured = u_measure_table{:,:};
+
+    fname = 'data/abcd.json'; 
+    fid = fopen(fname); 
+    raw = fread(fid,inf); 
+    str = char(raw'); 
+    fclose(fid); 
+    abcd = jsondecode(str);
+
     save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup',...
-        't_water_ret','vfr_water','q_solar','q_light','q_inte_heat',...
-        'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out',...
-        'rc_y','valve_ht','valve_cl','y');
+    't_water_ret','vfr_water','q_solar','q_light','q_inte_heat',...
+    'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out',...
+    'rc_y','valve_ht','valve_cl','y', "u_measured","abcd");
+
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -56,6 +67,7 @@ load('data/case_arr_sim.mat'); %load 'Data'
 total_length = size(y,2);
 training_length = 4032;
 test_initial_time = training_length -1;
+rc_warming_step = 14;
 % testing_length = total_length - training_length;
 testing_length = 1000;
 
@@ -73,7 +85,6 @@ switch (input_case)
         talk_to_rc  = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;rc_y;y];
-
     case 4
         talk_to_rc  = 0;
         All_Variables = [t_out; t_slabs;t_cav;...
@@ -114,8 +125,11 @@ scale_rc_y = std(train(nbVarAll - 1,:));
 if talk_to_rc == 1
     for t = 1:size(test_norm,2)
         target_time = t + test_initial_time;
-         result = communication(target_time);
-         real_y(1,t) = result;
+        u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
+        result = RC_PredictedRealTime(u_arr,abcd);
+%         result = communication(target_time);
+        real_y(1,t) = result;
+%         real_new_y(1,t) = result_new;
 %         real_err = result - test(nbVarAll,t)
 %         one_err = test(nbVarInput,t) - test(nbVarAll,t)
         result_norm = (result - center_rc_y) /  scale_rc_y;
@@ -135,7 +149,8 @@ sum_beta_rs=sum(rs_beta,1);
 
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
     Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
-    sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y);
+    sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y,...
+    u_measured, rc_warming_step,abcd);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
 
