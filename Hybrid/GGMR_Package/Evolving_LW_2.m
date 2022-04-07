@@ -67,10 +67,8 @@ for t = 2:(size(Data_Test,2))
         %Communication with RC
         target_time = t + test_initial_time ;
         u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
-%         u_arr = u_measured(:,target_time -1- rc_warming_step:target_time-1);
         result = RC_PredictedRealTime(u_arr,abcd);
-
-%         result = communication(target_time);
+        %result = communication(target_time);
         result_norm = (result - center_rc_y) /  scale_rc_y;
         Data_Test(L1-1,t) = result_norm;
     end

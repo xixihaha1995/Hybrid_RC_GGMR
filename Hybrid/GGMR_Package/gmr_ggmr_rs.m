@@ -68,8 +68,8 @@ total_length = size(y,2);
 training_length = 4032;
 test_initial_time = training_length -1;
 rc_warming_step = 14;
-% testing_length = total_length - training_length;
-testing_length = 1000;
+testing_length = total_length - training_length;
+% testing_length = 1000;
 
 switch (input_case)
     case 1
@@ -128,7 +128,7 @@ if talk_to_rc == 1
         u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
         result = RC_PredictedRealTime(u_arr,abcd);
 %         result = communication(target_time);
-        real_y(1,t) = result;
+%         real_y(1,t) = result;
 %         real_new_y(1,t) = result_new;
 %         real_err = result - test(nbVarAll,t)
 %         one_err = test(nbVarInput,t) - test(nbVarAll,t)
