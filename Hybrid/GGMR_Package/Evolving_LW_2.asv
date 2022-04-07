@@ -36,10 +36,10 @@ rej = [];
 buf = 0;
 %C_mat = ones(length(Priors),1); % sum of expected posterior for each component
 C_mat=SumPosterior';
-L_rate = 5e-3;%0.001;%0.001; %learning rate 0.01
+L_rate = 0.001;%0.001;%0.001; %learning rate 0.01
 pumax = 0.09;
 M_min = 2; % Minimum number of mixture components
-M_max =30; %20; % Maximum number of mixture components
+M_max =50; %20; % Maximum number of mixture components
 Beta_min = 0.03; % Minimum learning factor
 Beta_max = 0.07; % Maximum learning factor
 T_sigma=2;
@@ -123,7 +123,17 @@ end
 mbest_all(t) = m_best;
 
 
+% Update the model parameters for selected componenets if there is any. If
+% there is no GMM componenet matches the new observation change the GMM
+% structure by means of split operation.
+ 
+%     for i=1:size(Priors,2)
+%     
+%     Pr_Sum = Pr_Sum+gaussPDF(Data_Test(1:L1,t),Mu_L(:,i),Sigma_L(:,:,i));
+%     end
 
+
+% ind_upd = find(com_cand == 1); % Update all matched components
 ind_upd = find(Post_pr == max(Post_pr)& max(Post_pr)~=0 &updateFlag==1); % Update the
 % best mach components
 
@@ -158,7 +168,6 @@ if (length(ind_upd)~= 0 & existFlag~=1) % Update the model parameters
     
     %% Generate a gaussian component 
     elseif (size(Priors,2) < M_max && buf ==0 & existFlag~=1)
-        disp("Generating")
         buf = 0;
         gc(t)=1;
         Priors_j = pr_init;
@@ -186,7 +195,7 @@ for i=1:length(Priors)
 end
 
 if max(Vol) > T_split && size(Priors,2) < M_max 
-    disp("Split")
+    
     mvl(t) = max(Vol);
     vi = find (Vol == max(Vol));
     mvl_ind(t) = vi(1);
@@ -235,7 +244,6 @@ for i=1:length(Mi_r)
 end
 
 if min(abs(Skld_tot)) < T_mrg
-    disp("Merge")
     mc(t)=1;
     Skld_MinInd = find (Skld_tot==min(Skld_tot));
     Max_r = Mi_r(Skld_MinInd);

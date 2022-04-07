@@ -65,6 +65,21 @@ end
 
 %% Flow training
 load('data/case_arr_sim.mat'); %load 'Data'
+% %%Correlation analysis
+% to_do_corr = [t_out; t_slabs;t_cav;...
+%     q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
+%     ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
+% to_do_corr = to_do_corr.';
+% corrcoefs = corrcoef(to_do_corr);
+% 
+% xvalues = {'t_out','t_slabs','t_cav','q_solar','q_light','q_inte_heat',...
+%     'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2',...
+%     'valve_ht','valve_cl','rc_y','y'};
+% yvalues = {'t_out','t_slabs','t_cav','q_solar','q_light','q_inte_heat',...
+%     'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2',...
+%     'valve_ht','valve_cl','rc_y','y'};
+% heat_coef = heatmap(xvalues, yvalues, abs(corrcoefs));
+
 total_length = size(y,2);
 training_length = 4032;
 test_initial_time = training_length -1;
@@ -78,22 +93,22 @@ switch (input_case)
         All_Variables = [t_out; t_slabs;t_cav;...
             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
             ahu_t_sup2;valve_ht;valve_cl;y];
-    case 2
+    case 2 %This is reserved case
         talk_to_rc  = 0;
         All_Variables = [t_out; t_slabs;t_cav;...
-           valve_ht;valve_cl;y];
-    case 3
+           valve_ht;valve_cl;q_solar;y];
+    case 3 %This is reserved case with RC_y info
         talk_to_rc  = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
-           valve_ht;valve_cl;rc_y;y];
+           valve_ht;valve_cl;q_solar;rc_y;y];
     case 4
         talk_to_rc  = 0;
         All_Variables = [t_out; t_slabs;t_cav;...
-           q_solar;q_light;q_inte_heat;valve_ht;valve_cl;y];
+           valve_ht;valve_cl;y];
     case 5
         talk_to_rc  = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
-           q_solar;q_light;q_inte_heat;valve_ht;valve_cl;rc_y;y];
+           valve_ht;valve_cl;ahu_t_sup1;ahu_t_sup2;q_solar;rc_y;y];
 %         All_Variables = [t_out; t_slabs;t_cav;...
 %             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
 %             ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
@@ -160,7 +175,7 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 %% Plot
 y_test = test(nbVarAll,:);
 
-%%To hourly
+%%⬇️To hourly
 test_hours = fix(size(y_test,2) / 12);
 y_test = reshape(y_test, 12, test_hours );
 y_test = sum(y_test);
@@ -170,7 +185,7 @@ rs_expData_gmr = sum(rs_expData_gmr);
 
 rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
 rs_expData_ggmr = sum(rs_expData_ggmr);
-%%⬆️
+%%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
