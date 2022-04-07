@@ -1,4 +1,5 @@
-function [cvrmse_gmr, cvrmse_ggmr] = gmr_ggmr_rs(nbStates, input_case)
+function [nrmse_gmr, cvrmse_gmr, mae_gmr, mape_gmr, ...
+    nrmse_ggmr, cvrmse_ggmr, mae_ggmr, mape_ggmr] = gmr_ggmr_rs(nbStates, input_case)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -158,6 +159,14 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 
 %% Plot
 y_test = test(nbVarAll,:);
+
+%%To hourly
+[test_hours, remaining_mins] = quorem(size(y_test, 2), 12 );
+y_test = reshape(y_test, 12, test_hours );
+y_test = sum(y_test);
+rs_expData_gmr
+rs_expData_ggmr
+
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
 std_model_gmr = (sum((rs_expData_gmr - mean_model_gmr).^2) / length(rs_expData_gmr)) .^ (0.5); 

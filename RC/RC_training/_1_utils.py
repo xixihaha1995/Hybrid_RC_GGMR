@@ -583,10 +583,38 @@ def mean_absolute_percentage_error(measure, model):
             new_nom.append(num)
     return sum(new_nom)*100 / len(measure)
 
+def to_hourly(y_train, y_train_pred, y_test, y_test_pred, ts_sampling):
+    train_interval_steps = int(y_train.shape[0] // (60*60 / ts_sampling))
+    y_train = y_train.to_numpy()
+    y_test = y_test.to_numpy()
+
+    y_train = y_train[:train_interval_steps * int(60 * 60 / ts_sampling) ]
+    y_train = y_train.reshape((train_interval_steps, int(60 * 60 / ts_sampling)))
+    y_train = np.sum(y_train, axis=1)
+
+    y_train_pred = y_train_pred[:train_interval_steps * int(60 * 60 / ts_sampling)]
+    y_train_pred = y_train_pred.reshape((train_interval_steps, int(60 * 60 / ts_sampling)))
+    y_train_pred = np.sum(y_train_pred, axis=1)
+
+    test_interval_steps = int(y_test.shape[0] // (60 * 60 / ts_sampling))
+    y_test = y_test[:test_interval_steps * int(60 * 60 / ts_sampling)]
+    y_test = y_test.reshape((test_interval_steps, int(60 * 60 / ts_sampling)))
+    y_test = np.sum(y_test, axis=1)
+
+    y_test_pred = y_test_pred[:test_interval_steps * int(60 * 60 / ts_sampling)]
+    y_test_pred = y_test_pred.reshape((test_interval_steps, int(60 * 60 / ts_sampling)))
+    y_test_pred = np.sum(y_test_pred, axis=1)
+
+    return y_train, y_train_pred, y_test, y_test_pred
+
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
+    ts_sampling = swarm_constants['ts_sampling']
+    y_train, y_train_pred, y_test, y_test_pred = to_hourly(y_train, y_train_pred, y_test, y_test_pred,ts_sampling)
+
     fig, ax = plt.subplots(2)
     nl = '\n'
     minutes_interval = int(swarm_constants['ts_sampling'] / 60)
+
     start = swarm_constants['start']
     end = swarm_constants['end']
     if swarm_constants['case_nbr'] == -1:
@@ -620,7 +648,7 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ax[1].plot(y_test, label='measured')
     ax[1].plot(y_test_pred, label='modeled')
     ax[1].set_title(
-        figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test) )* minutes_interval}th mins, '
+        figure_title + nl + f'Test, from {start  * minutes_interval}th mins to {(start+ len(y_test)*60 * 60 / ts_sampling )* minutes_interval}th mins, '
                             f'NRMSE:{nrmse(y_test, y_test_pred):.6f}%,CVRMSE:{cv_rmse(y_test, y_test_pred):.2f}%,MAE:{mae(y_test, y_test_pred):.2f}W, MAPE:{mean_absolute_percentage_error(y_test, y_test_pred):.2f}%')
     ax[1].set_ylabel('Load Power (W)')
     ax[1].set_xlabel(f'Time Step, with {minutes_interval} mins interval')
