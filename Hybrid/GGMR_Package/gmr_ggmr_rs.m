@@ -1,5 +1,6 @@
 function [nrmse_gmr, cvrmse_gmr, mae_gmr, mape_gmr, ...
-    nrmse_ggmr, cvrmse_ggmr, mae_ggmr, mape_ggmr] = gmr_ggmr_rs(nbStates, input_case)
+    nrmse_ggmr, cvrmse_ggmr, mae_ggmr, mape_ggmr] = ...
+    gmr_ggmr_rs(nbStates, input_case, L_rate)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -78,7 +79,7 @@ load('data/case_arr_sim.mat'); %load 'Data'
 % yvalues = {'t_out','t_slabs','t_cav','q_solar','q_light','q_inte_heat',...
 %     'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2',...
 %     'valve_ht','valve_cl','rc_y','y'};
-% heat_coef = heatmap(xvalues, yvalues, abs(corrcoefs));
+% heat_coef = heatmap(xvalues, yvalues, corrcoefs);
 
 total_length = size(y,2);
 training_length = 4032;
@@ -107,6 +108,11 @@ switch (input_case)
         with_predicted_flow = 1;
          All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;vfr_water;rc_y; y];
+     case 5 
+        All_Variables = [t_out; t_slabs;t_cav;y];
+     case 6 
+        All_Variables = [t_out; t_slabs;t_cav; ...
+            valve_ht;valve_cl; y];
 %         All_Variables = [t_out; t_slabs;t_cav;...
 %             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
 %             ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
@@ -158,7 +164,7 @@ if with_predicted_flow == 1
     [flow_Priors, flow_Mu, flow_Sigma, flow_expData_ggmr_norm] = ...
     Evolving_LW_2(flow_Priors, flow_Mu, flow_Sigma, flow_test_norm,...
     sum_beta_flow,flow_talk_to_rc, test_initial_time, center_flow_y, scale_flow_y,...
-    u_measured, rc_warming_step,abcd);
+    u_measured, rc_warming_step,abcd,L_rate);
 
     disp("updating flow")
     test_norm(nbVarInput - talk_to_rc,:) = flow_expData_ggmr_norm;
@@ -200,7 +206,7 @@ sum_beta_rs=sum(rs_beta,1);
 [rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
     Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
     sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y,...
-    u_measured, rc_warming_step,abcd);
+    u_measured, rc_warming_step,abcd,L_rate);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
 

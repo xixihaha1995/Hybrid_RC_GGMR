@@ -1,6 +1,6 @@
 function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, ...
     Data_Test,SumPosterior,talk_to_rc, test_initial_time, ...
-    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd)
+    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate)
 L1 = size(Data_Test,1);
 %[m_best_Ts,Post_pr_Ts] = BMC(Data_Test(1:L1,1),Priors,Mu,Sigma);
 
@@ -36,7 +36,7 @@ rej = [];
 buf = 0;
 %C_mat = ones(length(Priors),1); % sum of expected posterior for each component
 C_mat=SumPosterior';
-L_rate = 8e-3;%0.001;%0.001; %learning rate 0.01
+% L_rate = 8e-3;%0.001;%0.001; %learning rate 0.01
 pumax = 0.09;
 M_min = 2; % Minimum number of mixture components
 M_max =30; %20; % Maximum number of mixture components
