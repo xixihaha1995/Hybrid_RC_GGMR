@@ -135,7 +135,7 @@ end
 
 %% Predict Flow Information
 if with_predicted_flow == 1
-    flow_talk_to_rc = 1;
+    flow_talk_to_rc = 0;
     flow_All_Variables = [t_out; t_slabs;t_cav;...
                valve_ht;valve_cl;rc_y;vfr_water];
     flow_nbVarAll = size(flow_All_Variables,1);
