@@ -19,9 +19,9 @@ if __name__ == '__main__':
     rc_obj = RC_package.RC_Class()
     # rc_obj.train(_test_start= 4033, _n_particle=500, _iters=50) #training
     # rc_obj.train(_test_start=4033) #use trained RsCs get predicted
-    rc_obj.train(_test_start= 4033, _state_num=4, _input_num=8,_para_nums=19,_case_nbr=5, _n_particle=1000, _iters=20)
+    # rc_obj.train(_test_start= 4033, _state_num=4, _input_num=8,_para_nums=19,_case_nbr=5, _n_particle=1000, _iters=20)
     # rc_obj.train(_test_start=4033, _state_num=4, _input_num=8, _para_nums=19, _case_nbr=5)
-    # # rc_obj.train(_test_start=4033, _state_num=5,_case_nbr=7, _n_particle=1000, _iters=20)
+    rc_obj.train(_test_start=4033, _state_num=5,_case_nbr=7, _n_particle=1000, _iters=120)
     # rc_obj.train(_test_start=4033, _state_num=5, _case_nbr=7)
 
     '''
