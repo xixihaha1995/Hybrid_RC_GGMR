@@ -297,7 +297,10 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[1:, 7] = (t_slab[1:] - t_slab[0:-1]) / ts
 
 
-        y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+        y_arr_ori = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+
+        slab_sup_filter = (sulp_temp_c - t_slab) >= 0
+        y_arr = slab_sup_filter * abs(y_arr_ori)
 
     elif case_nbr == 6 or case_nbr == 7:
         pass
