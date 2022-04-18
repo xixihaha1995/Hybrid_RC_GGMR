@@ -27,7 +27,8 @@ if ~isfile('data/case_arr_sim.mat')
     c_water = 4.186;
     rho_water = 997e3;
     gal_per_min_to_m3 = 6.309e-5;
-    y= c_water*rho_water*gal_per_min_to_m3*vfr_water.*(t_water_sup - t_water_ret);
+%     y= c_water*rho_water*gal_per_min_to_m3*vfr_water.*(t_water_sup - t_water_ret);
+    y = T{:,end};
     
     t_slabs = t_slabs.';
     t_cav = t_cav.';
@@ -92,27 +93,26 @@ talk_to_rc  = 0;
 with_predicted_flow = 0;
 
 switch (input_case)
-    case 1 %This is reserved case
+    case 1 %GGMR case 1
+        All_Variables = [t_out; t_slabs;t_cav; ...
+            valve_ht;valve_cl; y];
+    case 2 %GGMR case 2
         All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;q_solar;y];
-    case 2 %This is reserved case with RC_y info
-        talk_to_rc  = 1;
-        All_Variables = [t_out; t_slabs;t_cav;...
-           valve_ht;valve_cl;q_solar;rc_y;y];
-    case 3
+    case 3 %GGMR case 3
         with_predicted_flow = 1;
         All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;vfr_water; y];
-    case 4
+    case 4 %Hybrid case 1
+        All_Variables = [t_out; t_slabs;t_cav; ...
+            valve_ht;valve_cl; rc_y;y];
+    case 5 %Hybrid case 2
         talk_to_rc  = 1;
         with_predicted_flow = 1;
          All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;vfr_water;rc_y; y];
-     case 5 
-        All_Variables = [t_out; t_slabs;t_cav;y];
-     case 6 
-        All_Variables = [t_out; t_slabs;t_cav; ...
-            valve_ht;valve_cl; y];
+
+
 %         All_Variables = [t_out; t_slabs;t_cav;...
 %             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
 %             ahu_t_sup2;valve_ht;valve_cl;rc_y;y];
@@ -215,17 +215,17 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 %% Plot
 y_test = test(nbVarAll,:);
 
-%%⬇️To hourly
-test_hours = fix(size(y_test,2) / 12);
-y_test = reshape(y_test, 12, test_hours );
-y_test = sum(y_test);
-
-rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-rs_expData_gmr = sum(rs_expData_gmr);
-
-rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
-rs_expData_ggmr = sum(rs_expData_ggmr);
-%%⬆️To hourly
+% %%⬇️To hourly
+% test_hours = fix(size(y_test,2) / 12);
+% y_test = reshape(y_test, 12, test_hours );
+% y_test = sum(y_test);
+% 
+% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+% rs_expData_gmr = sum(rs_expData_gmr);
+% 
+% rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
+% rs_expData_ggmr = sum(rs_expData_ggmr);
+% %%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));

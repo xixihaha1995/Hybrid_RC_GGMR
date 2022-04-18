@@ -312,17 +312,17 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[:-1, 8] =  (u_arr[1:,3] - u_arr[:-1, 3] ) /ts
         u_arr[-1, 8] = 0
 
-        y_arr_ori = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
-        ht_cl_filter = case_arr[:, 3] - case_arr[:, 4]
-        ht_cl_filter = ht_cl_filter >= 0
-        slab_sup_filter = (sulp_temp_c - t_slab) >= 0
-        y_filter = y_arr_ori >= 0
-
-        y_filter = -(-1) ** (y_filter)
-        ht_cl_filter = -(-1) ** (ht_cl_filter)
-        slab_sup_filter = -(-1) ** (slab_sup_filter)
-        y_arr = slab_sup_filter * abs(y_arr_ori)
-        y_arr_valves_filter = ht_cl_filter  * abs(y_arr_ori)
+        y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+        # ht_cl_filter = case_arr[:, 3] - case_arr[:, 4]
+        # ht_cl_filter = ht_cl_filter >= 0
+        # slab_sup_filter = (sulp_temp_c - t_slab) >= 0
+        # y_filter = y_arr_ori >= 0
+        #
+        # y_filter = -(-1) ** (y_filter)
+        # ht_cl_filter = -(-1) ** (ht_cl_filter)
+        # slab_sup_filter = -(-1) ** (slab_sup_filter)
+        # y_arr = slab_sup_filter * abs(y_arr_ori)
+        # y_arr_valves_filter = ht_cl_filter  * abs(y_arr_ori)
 
         # plt.plot(y_arr_ori, label="y_arr_ori", linewidth = 3)
         # plt.plot(y_arr, label="y_arr_slab_filter", linewidth = 3)
