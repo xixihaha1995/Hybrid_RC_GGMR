@@ -290,10 +290,14 @@ mape_hybrid = sum(mape_ratio_hybrid)*100 / length(y_test);
 
 hold on;
 
-plot(y_test, '-o','Color',[97 65 36], LineWidth=3)
-plot(rc_y_test,':x','Color',[204 112 75],LineWidth=3)
-plot(ggmr,'--s','Color',[232 192 125],LineWidth=3)
-plot(rs_expData_hybrid,'--s','Color',[159 192 136],LineWidth=3)
+p1 = plot(y_test, '-o', LineWidth=3);
+p2 = plot(rc_y_test,':x',LineWidth=3);
+p3 = plot(ggmr,'--s',LineWidth=3);
+p4 = plot(rs_expData_hybrid,'--s',LineWidth=3);
+p1.Color = '#614124';
+p2.Color = '#CC704B';
+p3.Color = '#E8C07D';
+p4.Color = '#9FC088';
 
 title({"5-min Sampling prediction performance:"...
     "RC CVRMSE is " + cvrmse_rc + "%,  "...
