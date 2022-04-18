@@ -1,6 +1,6 @@
 function [nrmse_gmr, cvrmse_gmr, mae_gmr, mape_gmr, ...
     nrmse_ggmr, cvrmse_ggmr, mae_ggmr, mape_ggmr] = ...
-    gmr_ggmr_rs(nbStates, input_case, L_rate)
+    rc_ggmr_hybrid_rs(nbStates, input_case, L_rate)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('data/case_arr_sim.mat')
@@ -188,11 +188,6 @@ if talk_to_rc == 1
         target_time = t + test_initial_time;
         u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
         result = RC_PredictedRealTime(u_arr,abcd);
-%         result = communication(target_time);
-%         real_y(1,t) = result;
-%         real_new_y(1,t) = result_new;
-%         real_err = result - test(nbVarAll,t)
-%         one_err = test(nbVarInput,t) - test(nbVarAll,t)
         result_norm = (result - center_rc_y) /  scale_rc_y;
         test_norm(nbVarAll-1,t) = result_norm;
     end
@@ -205,6 +200,45 @@ rs_expData_gmr = rs_expData_gmr_norm * std(train(nbVarAll,:))+ mean(train(nbVarA
 
 
 %% RS Load prediction using GGMR
+
+
+center_rc_y = mean(train(nbVarAll - 1,:));
+scale_rc_y = std(train(nbVarAll - 1,:));
+
+train_norm_ggmr = train_norm
+
+[rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(train_norm, nbStates);
+[rs_Priors, rs_Mu, rs_Sigma]  = EM(train_norm, rs_Priors, rs_Mu, rs_Sigma);
+
+if talk_to_rc == 1
+    for t = 1:size(test_norm,2)
+        target_time = t + test_initial_time;
+        u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
+        result = RC_PredictedRealTime(u_arr,abcd);
+        result_norm = (result - center_rc_y) /  scale_rc_y;
+        test_norm(nbVarAll-1,t) = result_norm;
+    end
+end
+
+[rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, ...
+    test_norm(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
+
+rs_expData_gmr = rs_expData_gmr_norm * std(train(nbVarAll,:))+ mean(train(nbVarAll,:));
+
+
+
+sum_beta_rs=sum(rs_beta,1);
+ggmr_talk_rc = 0;
+
+[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
+    Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
+    sum_beta_rs, ggmr_talk_rc, test_initial_time, center_rc_y, scale_rc_y,...
+    u_measured, rc_warming_step,abcd,L_rate);
+rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
+rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
+
+
+%% RS Load prediction using Hybrid
 sum_beta_rs=sum(rs_beta,1);
 
 
@@ -214,8 +248,6 @@ sum_beta_rs=sum(rs_beta,1);
     u_measured, rc_warming_step,abcd,L_rate);
 rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
 rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
-
-
 
 %% Plot
 y_test = test(nbVarAll,:);
@@ -265,9 +297,9 @@ cvrmse_rc = rmse_rc*100 / mean_measured_ggmr;
 
 hold on;
 
-plot(y_test, '-o','Color',[0 0 0], LineWidth=1)
-plot(rc_y_test,':x',LineWidth=1)
-plot(rs_expData_ggmr,'--s',LineWidth=1)
+plot(y_test, '-o','Color',[0 0 0], LineWidth=5)
+plot(rc_y_test,':x',LineWidth=5)
+plot(rs_expData_ggmr,'--s',LineWidth=5)
 
 title({"RC CVRMSE is " + cvrmse_rc + "%,  "...
     "Hybrid CVRMSE is " + cvrmse_ggmr + "%"}, fontsize = 30)
