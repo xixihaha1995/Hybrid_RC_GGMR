@@ -223,19 +223,19 @@ rc_y_test = rc_y(training_length+1 :training_length+testing_length);
 
 
 %%⬇️To hourly
-% test_hours = fix(size(y_test,2) / 12);
-% y_test = reshape(y_test, 12, test_hours );
-% y_test = sum(y_test);
-% 
-% rc_y_test = reshape(rc_y_test, 12, test_hours );
-% rc_y_test = sum(rc_y_test);
-% 
-% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-% rs_expData_gmr = sum(rs_expData_gmr);
-% 
-% rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
-% rs_expData_ggmr = sum(rs_expData_ggmr);
-% %%⬆️To hourly
+test_hours = fix(size(y_test,2) / 12);
+y_test = reshape(y_test, 12, test_hours );
+y_test = sum(y_test);
+
+rc_y_test = reshape(rc_y_test, 12, test_hours );
+rc_y_test = sum(rc_y_test);
+
+rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+rs_expData_gmr = sum(rs_expData_gmr);
+
+rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
+rs_expData_ggmr = sum(rs_expData_ggmr);
+%%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -258,14 +258,10 @@ mae_ggmr = sum(abs(y_test - rs_expData_ggmr)) / length(y_test);
 mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
-
+%% Plot
 hold on;
 plot(rs_expData_ggmr)
 plot(y_test)
-plot(rc_y_test)
-legend({'hybrid', 'measure','rc'})
-hold off;
-pause
 % title({"Left: GMR; Right: GGMR ",...
 %     "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
 %     "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
