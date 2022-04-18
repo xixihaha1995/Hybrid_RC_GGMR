@@ -259,17 +259,25 @@ mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
 
+
+rmse_rc= (sum((rc_y_test - y_test).^2) / length(y_test)).^ (0.5); 
+cvrmse_rc = rmse_rc*100 / mean_measured_ggmr;
+
 hold on;
-plot(rs_expData_ggmr)
-plot(y_test)
-plot(rc_y_test)
-legend({'hybrid', 'measure','rc'})
+
+plot(y_test, '-o','Color',[0 0 0], LineWidth=1)
+plot(rc_y_test,':x',LineWidth=1)
+plot(rs_expData_ggmr,'--s',LineWidth=1)
+
+title({"RC CVRMSE is " + cvrmse_rc + "%,  "...
+    "Hybrid CVRMSE is " + cvrmse_ggmr + "%"}, fontsize = 30)
+
+legend({'measure','rc','hybrid'},FontSize=30)
+
+
+
 hold off;
 pause
-% title({"Left: GMR; Right: GGMR ",...
-%     "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
-%     "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
-%     "MAE is " + mae_gmr + "W, "+ mae_ggmr + "W",...
-%      "MAPE is " + mape_gmr + "%, "+ mape_ggmr + "%"})
+
 %  
 % legend({'GMR Predicted','GGMR Predicted','Actual'},'Location','southwest')
