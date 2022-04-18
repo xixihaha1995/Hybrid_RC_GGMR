@@ -1,7 +1,7 @@
 clear
 potential_nbstates = [2,5,10,15];
 
-input_case = 5;
+input_case = 4;
 potential_L_rate = [5e-3, 8e-3];
 
 

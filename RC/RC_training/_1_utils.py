@@ -631,7 +631,7 @@ def to_hourly(y_train, y_train_pred, y_test, y_test_pred, ts_sampling):
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ts_sampling = swarm_constants['ts_sampling']
-    # y_train, y_train_pred, y_test, y_test_pred = to_hourly(y_train, y_train_pred, y_test, y_test_pred,ts_sampling)
+    y_train, y_train_pred, y_test, y_test_pred = to_hourly(y_train, y_train_pred, y_test, y_test_pred,ts_sampling)
 
     fig, ax = plt.subplots(2)
     nl = '\n'

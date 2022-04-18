@@ -50,7 +50,7 @@ if ~isfile('data/case_arr_sim.mat')
     u_measure_table=readtable('data/u_arr_Tran.csv');
     u_measured = u_measure_table{:,:};
 
-    fname = 'data/abcd.json'; 
+    fname = 'data/new_abcd.json'; 
     fid = fopen(fname); 
     raw = fread(fid,inf); 
     str = char(raw'); 
@@ -215,17 +215,17 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 %% Plot
 y_test = test(nbVarAll,:);
 
-% %%⬇️To hourly
-% test_hours = fix(size(y_test,2) / 12);
-% y_test = reshape(y_test, 12, test_hours );
-% y_test = sum(y_test);
-% 
-% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-% rs_expData_gmr = sum(rs_expData_gmr);
-% 
-% rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
-% rs_expData_ggmr = sum(rs_expData_ggmr);
-% %%⬆️To hourly
+%%⬇️To hourly
+test_hours = fix(size(y_test,2) / 12);
+y_test = reshape(y_test, 12, test_hours );
+y_test = sum(y_test);
+
+rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+rs_expData_gmr = sum(rs_expData_gmr);
+
+rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
+rs_expData_ggmr = sum(rs_expData_ggmr);
+%%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
