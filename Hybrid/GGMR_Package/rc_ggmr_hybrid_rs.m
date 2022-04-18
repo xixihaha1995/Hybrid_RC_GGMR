@@ -201,53 +201,42 @@ rs_expData_gmr = rs_expData_gmr_norm * std(train(nbVarAll,:))+ mean(train(nbVarA
 
 %% RS Load prediction using GGMR
 
-
 center_rc_y = mean(train(nbVarAll - 1,:));
 scale_rc_y = std(train(nbVarAll - 1,:));
 
-train_norm_ggmr = train_norm
+train_norm_ggmr = [train_norm(1:nbVarAll-2,:);train_norm(nbVarAll,:)];
+test_norm_ggmr = [test_norm(1:nbVarAll-2,:);test_norm(nbVarAll,:)];
+nbVarAll_ggmr = size(train_norm_ggmr,1);
+nbVarInput_ggmr =  nbVarAll_ggmr - 1;
 
-[rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(train_norm, nbStates);
-[rs_Priors, rs_Mu, rs_Sigma]  = EM(train_norm, rs_Priors, rs_Mu, rs_Sigma);
-
-if talk_to_rc == 1
-    for t = 1:size(test_norm,2)
-        target_time = t + test_initial_time;
-        u_arr = u_measured(:,target_time + 1- rc_warming_step:target_time+1);
-        result = RC_PredictedRealTime(u_arr,abcd);
-        result_norm = (result - center_rc_y) /  scale_rc_y;
-        test_norm(nbVarAll-1,t) = result_norm;
-    end
-end
-
-[rs_expData_gmr_norm, rs_beta] = GMR(rs_Priors, rs_Mu, rs_Sigma, ...
-    test_norm(1:nbVarInput,:),[1:nbVarInput],[nbVarAll]);
-
-rs_expData_gmr = rs_expData_gmr_norm * std(train(nbVarAll,:))+ mean(train(nbVarAll,:));
+[rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr] = EM_init_kmeans(train_norm_ggmr, nbStates);
+[rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr]  = EM(train_norm_ggmr, rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr);
 
 
+[unused_ggmr_method_gmr_data, rs_beta_ggmr] = GMR(rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr, ...
+    test_norm_ggmr(1:nbVarInput_ggmr,:),[1:nbVarInput_ggmr],[nbVarAll_ggmr]);
 
-sum_beta_rs=sum(rs_beta,1);
+sum_beta_rs_ggmr=sum(rs_beta_ggmr,1);
 ggmr_talk_rc = 0;
 
-[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
-    Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
-    sum_beta_rs, ggmr_talk_rc, test_initial_time, center_rc_y, scale_rc_y,...
+[rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr, ggmr_norm] = ...
+    Evolving_LW_2(rs_Priors_ggmr, rs_Mu_ggmr, rs_Sigma_ggmr, test_norm_ggmr,...
+    sum_beta_rs_ggmr, ggmr_talk_rc, test_initial_time, center_rc_y, scale_rc_y,...
     u_measured, rc_warming_step,abcd,L_rate);
-rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
-rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
+ggmr_norm = ggmr_norm.';
+ggmr= ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
 
 
 %% RS Load prediction using Hybrid
 sum_beta_rs=sum(rs_beta,1);
 
 
-[rs_Priors, rs_Mu, rs_Sigma, rs_expData_ggmr_norm] = ...
+[rs_Priors, rs_Mu, rs_Sigma, rs_expData_hybrid_norm] = ...
     Evolving_LW_2(rs_Priors, rs_Mu, rs_Sigma, test_norm,...
     sum_beta_rs,talk_to_rc, test_initial_time, center_rc_y, scale_rc_y,...
     u_measured, rc_warming_step,abcd,L_rate);
-rs_expData_ggmr_norm = rs_expData_ggmr_norm.';
-rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
+rs_expData_hybrid_norm = rs_expData_hybrid_norm.';
+rs_expData_hybrid= rs_expData_hybrid_norm*std(train(nbVarAll,:))+mean(train(nbVarAll,:)); %Actual predicted flow after denormalization
 
 %% Plot
 y_test = test(nbVarAll,:);
@@ -273,38 +262,45 @@ rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5);
 mean_model_gmr = mean(abs(rs_expData_gmr));
 std_model_gmr = (sum((rs_expData_gmr - mean_model_gmr).^2) / length(rs_expData_gmr)) .^ (0.5); 
 nrmse_gmr = rmse_gmr *100 / std_model_gmr;
-mean_measured_gmr = mean(abs(y_test));
-cvrmse_gmr = rmse_gmr*100 / mean_measured_gmr;
+mean_measured_test = mean(abs(y_test));
+cvrmse_gmr = rmse_gmr*100 / mean_measured_test;
 mae_gmr = sum(abs(y_test - rs_expData_gmr)) / length(y_test);
 mape_ratio_gmr = abs(y_test - rs_expData_gmr) ./ abs(y_test);
 mape_ratio_gmr(isinf(mape_ratio_gmr)) = 0;
 mape_gmr = sum(mape_ratio_gmr)*100 / length(y_test);
 
-rmse_ggmr = (sum((rs_expData_ggmr - y_test).^2) / length(y_test)).^ (0.5); 
-mean_model_ggmr = mean(abs(rs_expData_ggmr));
-std_model_ggmr = (sum((rs_expData_ggmr - mean_model_ggmr).^2) / length(rs_expData_ggmr)) .^ (0.5); 
-nrmse_ggmr = rmse_ggmr *100 / std_model_ggmr;
-mean_measured_ggmr = mean(abs(y_test));
-cvrmse_ggmr = rmse_ggmr*100 / mean_measured_ggmr;
-mae_ggmr = sum(abs(y_test - rs_expData_ggmr)) / length(y_test);
-mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
-mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
-mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
-
-
 rmse_rc= (sum((rc_y_test - y_test).^2) / length(y_test)).^ (0.5); 
-cvrmse_rc = rmse_rc*100 / mean_measured_ggmr;
+cvrmse_rc = rmse_rc*100 / mean_measured_test;
+
+rmse_ggmr= (sum((ggmr - y_test).^2) / length(y_test)).^ (0.5); 
+cvrmse_ggmr = rmse_ggmr*100 / mean_measured_test;
+
+rmse_hybrid = (sum((rs_expData_hybrid - y_test).^2) / length(y_test)).^ (0.5); 
+mean_model_hybrid = mean(abs(rs_expData_hybrid));
+std_model_hybrid = (sum((rs_expData_hybrid - mean_model_hybrid).^2) / length(rs_expData_hybrid)) .^ (0.5); 
+nrmse_hybrid = rmse_hybrid *100 / std_model_hybrid;
+cvrmse_hybrid = rmse_hybrid*100 / mean_measured_test;
+mae_hybrid = sum(abs(y_test - rs_expData_hybrid)) / length(y_test);
+mape_ratio_hybrid = abs(y_test - rs_expData_hybrid) ./ abs(y_test);
+mape_ratio_hybrid(isinf(mape_ratio_hybrid)) = 0;
+mape_hybrid = sum(mape_ratio_hybrid)*100 / length(y_test);
+
+
+
 
 hold on;
 
-plot(y_test, '-o','Color',[0 0 0], LineWidth=5)
-plot(rc_y_test,':x',LineWidth=5)
-plot(rs_expData_ggmr,'--s',LineWidth=5)
+plot(y_test, '-o','Color',[97 65 36], LineWidth=3)
+plot(rc_y_test,':x','Color',[204 112 75],LineWidth=3)
+plot(ggmr,'--s','Color',[232 192 125],LineWidth=3)
+plot(rs_expData_hybrid,'--s','Color',[159 192 136],LineWidth=3)
 
-title({"RC CVRMSE is " + cvrmse_rc + "%,  "...
-    "Hybrid CVRMSE is " + cvrmse_ggmr + "%"}, fontsize = 30)
+title({"5-min Sampling prediction performance:"...
+    "RC CVRMSE is " + cvrmse_rc + "%,  "...
+    "GGMR CVRMSE is " + cvrmse_ggmr + "%,  "...
+    "Hybrid CVRMSE is " + cvrmse_hybrid + "%"}, fontsize = 15)
 
-legend({'measure','rc','hybrid'},FontSize=30)
+legend({'Measured','RC','GGMR','Hybrid'},FontSize=15)
 
 
 
