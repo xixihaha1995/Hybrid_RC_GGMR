@@ -187,6 +187,13 @@ def obj_func(params, constants, train=True):
     else:
         u_arr, y_arr = u_test, y_test
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
+
+    abcd = {}
+    abcd['a'] = a.tolist()
+    abcd['b'] = b.tolist()
+    abcd['c'] = c.tolist()
+    abcd['d'] = d.tolist()
+    _1_utils.saveJSON(abcd, "new_abcd")
     y_model = np.zeros_like(y_arr)
 
     if constants['case_nbr'] == -1:
