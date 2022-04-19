@@ -28,7 +28,7 @@
 % ylabel('Radiant Slab Heating Load (kW)')
 % savefig("data/hourly_comparison.fig")
 % 
-load("outputs/_saved4l_rate0.005.mat");
+load("outputs/_saved4l_rate0.001.mat");
 
 hold on;
 ylabel(y_label)
