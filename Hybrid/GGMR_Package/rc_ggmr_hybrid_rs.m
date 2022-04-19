@@ -1,4 +1,4 @@
-function [] = rc_ggmr_hybrid_rs(nbStates, input_case, L_rate)
+function [] = rc_ggmr_hybrid_rs(nbStates, input_case, L_rate, to_hour)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfile('outputs/case_arr_sim.mat')
@@ -240,22 +240,25 @@ y_test = test(nbVarAll,:);
 rc_y_test = rc_y(training_length+1 :training_length+testing_length);
 test_hours = fix(size(y_test,2) / 12);
 
-% %⬇️To hourly
-% y_test = reshape(y_test, 12, test_hours );
-% y_test = sum(y_test);
-% 
-% rc_y_test = reshape(rc_y_test, 12, test_hours );
-% rc_y_test = sum(rc_y_test);
-% 
-% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-% rs_expData_gmr = sum(rs_expData_gmr);
-% 
-% ggmr = reshape(ggmr, 12, test_hours );
-% ggmr = sum(ggmr);
-% 
-% rs_expData_hybrid = reshape(rs_expData_hybrid, 12, test_hours );
-% rs_expData_hybrid = sum(rs_expData_hybrid);
-% %%⬆️To hourly
+if to_hour == 1
+    %⬇️To hourly
+    y_test = reshape(y_test, 12, test_hours );
+    y_test = sum(y_test);
+    
+    rc_y_test = reshape(rc_y_test, 12, test_hours );
+    rc_y_test = sum(rc_y_test);
+    
+    rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+    rs_expData_gmr = sum(rs_expData_gmr);
+    
+    ggmr = reshape(ggmr, 12, test_hours );
+    ggmr = sum(ggmr);
+    
+    rs_expData_hybrid = reshape(rs_expData_hybrid, 12, test_hours );
+    rs_expData_hybrid = sum(rs_expData_hybrid);
+    %%⬆️To hourly
+end
+
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -308,16 +311,18 @@ comments = "Hybrid case 1";
 x_axis = x_date;
 y_label = "kW";
 title_str = sprintf("%s\n" + ...
+    "nbStates%.2f, learning rate:%.2f\n" + ...
     "RC CVRMSE is %.2f%%\n" + ...
     "GGMR CVRMSE is %.2f%%\n" + ...
-    "Hybrid CVRMSE is %.2f%%",titleheader,cvrmse_rc, cvrmse_ggmr, cvrmse_hybrid);
+    "Hybrid CVRMSE is %.2f%%",titleheader, nbStates, L_rate,cvrmse_rc, ...
+    cvrmse_ggmr, cvrmse_hybrid);
 p_line(1,:) =  y_test./1000;
 p_line(2,:) =  rc_y_test./1000;
 p_line(3,:)=  ggmr./1000;
 p_line(4,:) =  rs_expData_hybrid./1000;
 legend_str = {'Measured','RC','GGMR','Hybrid'};
 
-save("outputs/_saved"+input_case+"l_rate"+L_rate,"comments","x_axis","y_label","title_str", ...
+save("outputs/_saved"+input_case+"l_rate"+L_rate+".mat","comments","x_axis","y_label","title_str", ...
     "p_line","legend_str");
 
 hold on;

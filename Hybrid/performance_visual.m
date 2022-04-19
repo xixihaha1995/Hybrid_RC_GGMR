@@ -28,16 +28,15 @@
 % ylabel('Radiant Slab Heating Load (kW)')
 % savefig("data/hourly_comparison.fig")
 % 
-% save("outputs/_saved"+outputs,"comments","x_axis","y_label","title_str", ...
-%     "p","legend_str");
+load("outputs/_saved4l_rate0.005.mat");
 
 hold on;
 ylabel(y_label)
 
-p1 = plot(x_axis, p(1), '-o', LineWidth=2);
-p2 = plot(x_axis, p(2),':x',LineWidth=2);
-p3 = plot(x_axis, p(3),'--s',LineWidth=2);
-p4 = plot(x_axis, p(4),'-.^',LineWidth=2);
+p1 = plot(x_axis, p_line(1,:), '-o', LineWidth=2);
+p2 = plot(x_axis, p_line(2,:),':x',LineWidth=2);
+p3 = plot(x_axis, p_line(3,:),'--s',LineWidth=2);
+p4 = plot(x_axis, p_line(4,:),'-.^',LineWidth=2);
 p1.Color = '#614124';
 p2.Color = '#CC704B';
 p3.Color = '#E8C07D';
@@ -49,4 +48,3 @@ title(title_str,fontsize=15)
 legend(legend_str,FontSize=15)
 
 hold off;
-pause;
