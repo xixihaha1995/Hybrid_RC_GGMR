@@ -241,22 +241,22 @@ y_test = test(nbVarAll,:);
 rc_y_test = rc_y(training_length+1 :training_length+testing_length);
 test_hours = fix(size(y_test,2) / 12);
 
-%⬇️To hourly
-y_test = reshape(y_test, 12, test_hours );
-y_test = sum(y_test);
-
-rc_y_test = reshape(rc_y_test, 12, test_hours );
-rc_y_test = sum(rc_y_test);
-
-rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-rs_expData_gmr = sum(rs_expData_gmr);
-
-ggmr = reshape(ggmr, 12, test_hours );
-ggmr = sum(ggmr);
-
-rs_expData_hybrid = reshape(rs_expData_hybrid, 12, test_hours );
-rs_expData_hybrid = sum(rs_expData_hybrid);
-%%⬆️To hourly
+% %⬇️To hourly
+% y_test = reshape(y_test, 12, test_hours );
+% y_test = sum(y_test);
+% 
+% rc_y_test = reshape(rc_y_test, 12, test_hours );
+% rc_y_test = sum(rc_y_test);
+% 
+% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+% rs_expData_gmr = sum(rs_expData_gmr);
+% 
+% ggmr = reshape(ggmr, 12, test_hours );
+% ggmr = sum(ggmr);
+% 
+% rs_expData_hybrid = reshape(rs_expData_hybrid, 12, test_hours );
+% rs_expData_hybrid = sum(rs_expData_hybrid);
+% %%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -285,9 +285,6 @@ mape_ratio_hybrid = abs(y_test - rs_expData_hybrid) ./ abs(y_test);
 mape_ratio_hybrid(isinf(mape_ratio_hybrid)) = 0;
 mape_hybrid = sum(mape_ratio_hybrid)*100 / length(y_test);
 
-hold on;
-
-
 x_date_start = 1642204800+training_length*5*60;
 if size(y_test,2) < 1000
     time_inter = 60*60;
@@ -308,13 +305,23 @@ else
 
 end
 
+comments = "Hybrid case 1";
+x_axis = x_date;
+y_label = "kW";
+
+
+hold on;
+
+
+
+
 
 ylabel("kW")
 
 p1 = plot(x_date, y_test./1000, '-o', LineWidth=2);
 p2 = plot(x_date, rc_y_test./1000,':x',LineWidth=2);
 p3 = plot(x_date, ggmr./1000,'--s',LineWidth=2);
-p4 = plot(x_date, rs_expData_hybrid./1000,'--s',LineWidth=2);
+p4 = plot(x_date, rs_expData_hybrid./1000,'-.^',LineWidth=2);
 p1.Color = '#614124';
 p2.Color = '#CC704B';
 p3.Color = '#E8C07D';

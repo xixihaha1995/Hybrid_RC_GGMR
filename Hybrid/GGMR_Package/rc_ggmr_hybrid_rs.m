@@ -1,8 +1,8 @@
 function [] = rc_ggmr_hybrid_rs(nbStates, input_case, L_rate)
 %% Convert RC training data to GMR/GGMR training data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfile('data/case_arr_sim.mat')
-    T=readtable('data/case_arr.csv');
+if ~isfile('outputs/case_arr_sim.mat')
+    T=readtable('inputs/case_arr.csv');
     t_out=(T{:,1} - 32) *5/9;
     t_slabs= (T{:,6} - 32 ) * 5/9;
     t_cav = (T{:,50} - 32) * 5/ 9;
@@ -50,17 +50,17 @@ if ~isfile('data/case_arr_sim.mat')
     valve_ht = valve_ht.';
     valve_cl = valve_cl.';
     y = y.';
-    u_measure_table=readtable('data/u_arr_Tran.csv');
+    u_measure_table=readtable('inputs/u_arr_Tran.csv');
     u_measured = u_measure_table{:,:};
 
-    fname = 'data/new_abcd.json'; 
+    fname = 'inputs/new_abcd.json'; 
     fid = fopen(fname); 
     raw = fread(fid,inf); 
     str = char(raw'); 
     fclose(fid); 
     abcd = jsondecode(str);
 
-    save('data/case_arr_sim.mat','t_slabs','t_cav','t_water_sup',...
+    save('outputs/case_arr_sim.mat','t_slabs','t_cav','t_water_sup',...
     't_water_ret','vfr_water','q_solar','q_light','q_inte_heat',...
     'ahu_cfm1','ahu_t_sup1','ahu_cfm2','ahu_t_sup2','t_out',...
     'rc_y','valve_ht','valve_cl','y', "u_measured","abcd");
@@ -69,7 +69,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Load case data
-load('data/case_arr_sim.mat'); %load 'Data'
+load('outputs/case_arr_sim.mat'); %load 'Data'
 % %%Correlation analysis
 % to_do_corr = [t_out; t_slabs;t_cav;...
 %     q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
@@ -115,7 +115,6 @@ switch (input_case)
         with_predicted_flow = 1;
          All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;vfr_water;rc_y; y];
-
 
 %         All_Variables = [t_out; t_slabs;t_cav;...
 %             q_solar;q_light;q_inte_heat;ahu_cfm1;ahu_t_sup1;ahu_cfm2;...
@@ -285,9 +284,6 @@ mape_ratio_hybrid = abs(y_test - rs_expData_hybrid) ./ abs(y_test);
 mape_ratio_hybrid(isinf(mape_ratio_hybrid)) = 0;
 mape_hybrid = sum(mape_ratio_hybrid)*100 / length(y_test);
 
-hold on;
-
-
 x_date_start = 1642204800+training_length*5*60;
 if size(y_test,2) < 1000
     time_inter = 60*60;
@@ -308,13 +304,29 @@ else
 
 end
 
+comments = "Hybrid case 1";
+x_axis = x_date;
+y_label = "kW";
+title_str = sprintf("%s\n" + ...
+    "RC CVRMSE is %.2f%%\n" + ...
+    "GGMR CVRMSE is %.2f%%\n" + ...
+    "Hybrid CVRMSE is %.2f%%",titleheader,cvrmse_rc, cvrmse_ggmr, cvrmse_hybrid);
+p(1) =  y_test./1000;
+p(2) =  rc_y_test./1000;
+p(3) =  ggmr./1000;
+p(4) =  rs_expData_hybrid./1000;
+legend_str = {'Measured','RC','GGMR','Hybrid'};
 
-ylabel("kW")
+save("outputs/_saved"+outputs,"comments","x_axis","y_label","title_str", ...
+    "p","legend_str");
 
-p1 = plot(x_date, y_test./1000, '-o', LineWidth=2);
-p2 = plot(x_date, rc_y_test./1000,':x',LineWidth=2);
-p3 = plot(x_date, ggmr./1000,'--s',LineWidth=2);
-p4 = plot(x_date, rs_expData_hybrid./1000,'-.^',LineWidth=2);
+hold on;
+ylabel(y_label)
+
+p1 = plot(x_axis, p(1), '-o', LineWidth=2);
+p2 = plot(x_axis, p(2),':x',LineWidth=2);
+p3 = plot(x_axis, p(3),'--s',LineWidth=2);
+p4 = plot(x_axis, p(4),'-.^',LineWidth=2);
 p1.Color = '#614124';
 p2.Color = '#CC704B';
 p3.Color = '#E8C07D';
@@ -322,13 +334,8 @@ p4.Color = '#9FC088';
 
 set(gca,'FontSize',20)
 
-title(sprintf("%s\n" + ...
-    "RC CVRMSE is %.2f%%\n" + ...
-    "GGMR CVRMSE is %.2f%%\n" + ...
-    "Hybrid CVRMSE is %.2f%%",titleheader,cvrmse_rc, cvrmse_ggmr, cvrmse_hybrid),fontsize=15)
-legend({'Measured','RC','GGMR','Hybrid'},FontSize=15)
-
-
+title(title_str,fontsize=15)
+legend(legend_str,FontSize=15)
 
 hold off;
 pause;
