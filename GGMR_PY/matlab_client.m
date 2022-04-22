@@ -1,7 +1,16 @@
-function [res] = matlab_client(client_said)
+
 % 'Type the following in Matlab Command Window' 
 %     pyenv('Version', 'C:\Users\[Your User Name]\AppData\Local\Programs\Python\Python38\python.exe')
 %     Example: pyenv('Version', 'C:\Users\wulic\AppData\Local\Programs\Python\Python38\python.exe')
+%       pyenv('Version', 'C:\ProgramData\Miniconda3\python.exe')
 %     res = pyrunfile("python_server.py","res",client_msg="Hello Python server")
-res = pyrunfile("python_server.py","res",client_msg=client_said);
-end
+% res = pyrunfile("python_server.py","res",client_msg="nihao");
+
+load('outputs/evolving_inputs.mat');
+res = pyrunfile("evolving_python.py","res",rs_Priors_ggmr=rs_Priors_ggmr,...
+    rs_Mu_ggmr = rs_Mu_ggmr, rs_Sigma_ggmr =rs_Sigma_ggmr, test_norm_ggmr =test_norm_ggmr,...
+    sum_beta_rs_ggmr = sum_beta_rs_ggmr, ggmr_talk_rc = ggmr_talk_rc, ...
+    test_initial_time = test_initial_time, center_rc_y = center_rc_y, ...
+    scale_rc_y = scale_rc_y, u_measured = u_measured, ...
+    rc_warming_step = rc_warming_step,abcd = abcd,L_rate = L_rate);
+

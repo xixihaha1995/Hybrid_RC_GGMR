@@ -1,10 +1,9 @@
-function [Priors, Mu, Sigma, expData] = Evolving_LW_2(Priors, Mu, Sigma, ...
+function [Priors, Mu, Sigma, expData] = changing_Evolving_LW_2(Priors, Mu, Sigma, ...
     Data_Test,SumPosterior,talk_to_rc, test_initial_time, ...
     center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate)
 L1 = size(Data_Test,1);
-%[m_best_Ts,Post_pr_Ts] = BMC(Data_Test(1:L1,1),Priors,Mu,Sigma);
 
-% variables to store the model parameters during adaptation
+
 Priors_all = [];
 Mu_all = [];
 Sigma_all = [];
@@ -12,7 +11,7 @@ M_comp_all = [];
 PostPr_all = [];
 dis_comp_all = [];
 MDdis_all = [];
-%PostPr_all = Post_pr_Ts';
+
 Priors_all(:,:,1) = Priors;
 Mu_all(:,:,1) = Mu;
 Sigma_all(:,:,:,1) = Sigma;
