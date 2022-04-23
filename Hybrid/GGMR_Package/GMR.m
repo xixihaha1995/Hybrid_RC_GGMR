@@ -55,14 +55,7 @@ function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
 %   pages="286--298",
 % }
 
-%nbData = length(x);
-disp("I'm here at GMR of matlab")
-Priors
-Mu
-Sigma
-x
-in
-out
+
 [temp,nbData] = size(x);
 nbVar = size(Mu,1);
 nbStates = size(Sigma,3);
