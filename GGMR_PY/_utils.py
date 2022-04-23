@@ -49,3 +49,12 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
     # Sigma_y;
 
     return y, beta
+
+def BMC_Func(Data_in,Priors_in,Mu_in,Sigma_in):
+    Post_pr_lst =[]
+    for m in range(Priors_in.shape[1]):
+        this_post_pr = Priors_in[0, m].reshape(1) @ gaussPDF_Func(Data_in, Mu_in[:,m], Sigma_in[:,:,m])
+        Post_pr_lst.append(this_post_pr)
+    Post_pr = np.array(Post_pr_lst).reshape(-1,1)
+    m_best = np.argmax(Post_pr)
+    return m_best, Post_pr

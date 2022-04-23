@@ -9,8 +9,9 @@ def Evolving_LW_2(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, test_ini
     in_out_split = nbVar - 1
     expData = []
     for t in range(1, Data_Test.shape[1]):
-        _utils.GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
-        
+        this_exp_y, dummy_Gaus_weights = _utils.GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
+        expData.append(this_exp_y)
+
     Priors, Mu , Sigma, expData = 0, 0 ,0,0
     return [Priors, Mu, Sigma, expData]
 
