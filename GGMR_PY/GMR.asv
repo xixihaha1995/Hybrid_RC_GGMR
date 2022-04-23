@@ -1,5 +1,5 @@
 %function [y, Sigma_y] = GMR(Priors, Mu, Sigma, x, in, out)
-function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
+function y = GMR(Priors, Mu, Sigma, x, in, out)
 %
 % Gaussian Mixture Regression.
 % This source code is the implementation of the algorithms described in 
@@ -56,13 +56,15 @@ function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
 % }
 
 %nbData = length(x);
-disp("I'm here at GMR of matlab")
+disp("I'm here at GMR of GGMR_py")
 Priors
 Mu
 Sigma
+
 x
 in
 out
+
 [temp,nbData] = size(x);
 nbVar = size(Mu,1);
 nbStates = size(Sigma,3);
@@ -93,7 +95,7 @@ beta_tmp = reshape(beta,[1 1 size(beta)]);
 Sigma_y_tmp2 = repmat(beta_tmp.*beta_tmp, [length(out) length(out) 1 1]) .* repmat(Sigma_y_tmp,[1 1 nbData 1]);
 Sigma_y = sum(Sigma_y_tmp2,4);
 Sigma_y;
-
+end
 
 % %% Slow one-by-one computation (better suited to understand the algorithm) 
 % %%

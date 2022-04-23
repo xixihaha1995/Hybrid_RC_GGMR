@@ -4,9 +4,6 @@ script_dir = os.path.dirname(__file__)
 mat_fname = os.path.join(script_dir,'inputs','evolving_inputs.mat')
 mat_contents = sio.loadmat(mat_fname)
 
-
-
-
 rs_Priors_ggmr = mat_contents['rs_Priors_ggmr']
 rs_Mu_ggmr = mat_contents['rs_Mu_ggmr']
 rs_Sigma_ggmr = mat_contents['rs_Sigma_ggmr']

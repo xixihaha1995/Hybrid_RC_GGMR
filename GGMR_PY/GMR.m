@@ -1,5 +1,5 @@
 %function [y, Sigma_y] = GMR(Priors, Mu, Sigma, x, in, out)
-function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
+function y = GMR(Priors, Mu, Sigma, x, in, out)
 %
 % Gaussian Mixture Regression.
 % This source code is the implementation of the algorithms described in 
@@ -56,16 +56,18 @@ function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
 % }
 
 %nbData = length(x);
-disp("I'm here at GMR of matlab")
+disp("I'm here at GMR of GGMR_py")
 Priors
 Mu
 Sigma
+
 x
 in
 out
-[temp,nbData] = size(x);
-nbVar = size(Mu,1);
-nbStates = size(Sigma,3);
+
+[temp,nbData] = size(x)
+nbVar = size(Mu,1)
+nbStates = size(Sigma,3)
 
 %% Fast matrix computation (see the commented code for a version involving 
 %% one-by-one computation, which is easier to understand).
@@ -73,17 +75,19 @@ nbStates = size(Sigma,3);
 %% Compute the influence of each GMM component, given input x
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i=1:nbStates
-  Pxi(:,i) = Priors(i).*gaussPDF(x, Mu(in,i), Sigma(in,in,i));
+    Priors(i)
+    gaussPDF(x, Mu(in,i), Sigma(in,in,i))
+  Pxi(:,i) = Priors(i).*gaussPDF(x, Mu(in,i), Sigma(in,in,i))
 end
-beta = Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates);
+beta = Pxi./repmat(sum(Pxi,2)+realmin,1,nbStates)
 %% Compute expected means y, given input x
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for j=1:nbStates
   y_tmp(:,:,j) = repmat(Mu(out,j),1,nbData) + Sigma(out,in,j)*inv(Sigma(in,in,j)) * (x-repmat(Mu(in,j),1,nbData));
 end
-beta_tmp = reshape(beta,[1 size(beta)]);
-y_tmp2 = repmat(beta_tmp,[length(out) 1 1]) .* y_tmp;
-y = sum(y_tmp2,3);
+beta_tmp = reshape(beta,[1 size(beta)])
+y_tmp2 = repmat(beta_tmp,[length(out) 1 1]) .* y_tmp
+y = sum(y_tmp2,3)
 %% Compute expected covariance matrices Sigma_y, given input x
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for j=1:nbStates
@@ -93,7 +97,7 @@ beta_tmp = reshape(beta,[1 1 size(beta)]);
 Sigma_y_tmp2 = repmat(beta_tmp.*beta_tmp, [length(out) length(out) 1 1]) .* repmat(Sigma_y_tmp,[1 1 nbData 1]);
 Sigma_y = sum(Sigma_y_tmp2,4);
 Sigma_y;
-
+end
 
 % %% Slow one-by-one computation (better suited to understand the algorithm) 
 % %%
