@@ -12,7 +12,5 @@ nbVar = mat_contents['L1'][0,0]
 t = mat_contents['t'][0,0]
 in_out_split = nbVar - 1
 
-# in_range = range(0, in_out_split )
-# out_range = range(in_out_split,in_out_split + 1)
 
 print(_utils.GMR_Func(Priors, Mu, Sigma,Data_Test[:in_out_split,t], in_out_split))
