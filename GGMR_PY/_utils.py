@@ -1,4 +1,5 @@
 import sys, numpy as np
+
 def gaussPDF_Func(Data, Mu, Sigma):
     if Data.ndim == 1:
         nbVar, nbData = Data.shape[0], 1
@@ -58,3 +59,9 @@ def BMC_Func(Data_in,Priors_in,Mu_in,Sigma_in):
     Post_pr = np.array(Post_pr_lst).reshape(-1,1)
     m_best = np.argmax(Post_pr)
     return m_best, Post_pr
+
+def Mahal_dis_Func(Data,Mu,Cov):
+    pass
+    # Md = sqrt(abs((Data - Mu)'*inv(Cov)*(Data-Mu)));
+    Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
+    return Md
