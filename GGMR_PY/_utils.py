@@ -78,7 +78,8 @@ def EM_Init_Func(Data, nbStates):
         this_var_ran = np.arange(minc[idx_var], maxc[idx_var], step)
         all_var_ran.append(this_var_ran)
     all_var_cen = np.array(all_var_ran).T
-    kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
+    # kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
+    kmeans = KMeans(n_clusters=nbStates, random_state=0).fit(Data_tran)
     Mu = kmeans.cluster_centers_.T
     Priors_lst = []
     Sigma_lst = []
@@ -131,8 +132,10 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
             this_px = gaussPDF_Func(Data, Mu[:, i], Sigma[:, :, i])
             Pxi_lst.append(this_px)
         Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
-        F = Pxi @ Priors.T
+        F_nan = Pxi @ Priors.T
+        F = np.nan_to_num(F_nan, nan=sys.float_info.min)
         loglik = np.log(F).mean()
+        print(abs((loglik/loglik_old)-1))
 
         if abs((loglik / loglik_old) - 1) < loglik_threshold:
             break
