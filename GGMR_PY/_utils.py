@@ -146,7 +146,7 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
 
 def Evolving_LW_2_Func(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, test_initial_time,
     center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate):
-    C_mat = SumPosterior.T;
+    C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     expData = []
@@ -181,8 +181,8 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
         '''
         q_j = Post_pr[m_best, 0] / np.sum(Post_pr, axis= 0 )
         C_mat[m_best, 0] += q_j
-        tau_j = (1 - L_rate) @ Priors[m_best, 0] + L_rate @ q_j
-        Priors[m_best, 0] = min(tau_j, pumax)
+        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0,0]
+        Priors[0,m_best] = min(tau_j, pumax)
         eta_j = q_j @ ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
         Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
         Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * \
