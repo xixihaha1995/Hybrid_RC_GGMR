@@ -1,4 +1,4 @@
-import os, _1_gmr_ggmr_hybrid_utils, matlab.engine
+import os, _1_gmr_ggmr_hybrid_utils as gaussian_tools
 import scipy.io as sio
 script_dir = os.path.dirname(__file__)
 mat_fname = os.path.join(script_dir,'inputs','_gmr_inputs.mat')
@@ -13,4 +13,4 @@ t = mat_contents['t'][0,0]
 in_out_split = nbVar - 1
 
 
-print(_utils.GMR_Func(Priors, Mu, Sigma,Data_Test[:in_out_split,t], in_out_split))
+print(gaussian_tools.GMR_Func(Priors, Mu, Sigma,Data_Test[:in_out_split,t], in_out_split))

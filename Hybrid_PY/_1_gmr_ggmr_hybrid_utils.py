@@ -12,13 +12,14 @@ def gaussPDF_Func(Data, Mu, Sigma):
     return prob
 
 def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
-    input_x = input_x.reshape(-1,1)
-
+    nbVar = Mu.shape[0]
+    nbVarInput = nbVar - 1
+    input_x = input_x.reshape(nbVarInput,-1)
     if input_x.ndim == 1:
         temp, nbData = input_x.shape[0], 1
     else:
         [temp, nbData] = input_x.shape
-    nbVar = Mu.shape[0]
+
     nbStates = Sigma.shape[2]
 
     Px = []
@@ -26,7 +27,7 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
         this_Pxi = Priors[0, i] * gaussPDF_Func(input_x, Mu[:in_out_split,i], Sigma[:in_out_split, :in_out_split, i])
         Px.append(this_Pxi)
     Px_reshape = np.array(Px).T
-    beta = Px_reshape / np.tile(np.sum(Px_reshape, axis= 1) + sys.float_info.min,[1, nbStates])
+    beta = Px_reshape / np.tile(np.sum(Px_reshape, axis= 1).reshape(-1,1) + sys.float_info.min,[1, nbStates])
 
     y_temp_lst = []
     for j in range(nbStates):
@@ -35,8 +36,8 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
                      (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
         y_temp_lst.append(this_y_tmp)
 
-    y_tmp = np.array(y_temp_lst).reshape(1,1,-1)
-    beta_tmp = beta.reshape(1,1,-1)
+    y_tmp = np.array(y_temp_lst).reshape(-1,nbData,nbStates)
+    beta_tmp = beta.reshape(-1,nbData,nbStates)
     y_tmp2 = np.tile(beta_tmp,[nbVar - in_out_split, 1,1]) * y_tmp
     y = np.sum(y_tmp2, axis=2)
 
@@ -135,7 +136,7 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         F_nan = Pxi @ Priors.T
         F = np.nan_to_num(F_nan, nan=sys.float_info.min)
         loglik = np.log(F).mean()
-        print(abs((loglik/loglik_old)-1))
+        # print(abs((loglik/loglik_old)-1))
 
         if abs((loglik / loglik_old) - 1) < loglik_threshold:
             break
