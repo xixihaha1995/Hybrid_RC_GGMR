@@ -1,4 +1,5 @@
 import sys, numpy as np
+from sklearn.cluster import KMeans
 
 def gaussPDF_Func(Data, Mu, Sigma):
     if Data.ndim == 1:
@@ -65,3 +66,19 @@ def Mahal_dis_Func(Data,Mu,Cov):
     # Md = sqrt(abs((Data - Mu)'*inv(Cov)*(Data-Mu)));
     Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
     return Md
+
+def EM_Init_Func(Data, nbStates):
+    Data_tran = Data.T
+    nbVar = Data_tran.shape[1]
+    kmeans = KMeans(n_clusters=nbStates, random_state=0).fit(Data_tran)
+    Mu = kmeans.cluster_centers_.T
+    Priors_lst = []
+    Sigma_lst = []
+    for cluster_idx in range(nbStates):
+        Priors_lst.append(Data_tran[np.where(kmeans.labels_ == cluster_idx)].shape[0])
+        this_cluster_samps = Data_tran[np.where(kmeans.labels_ == cluster_idx)]
+        this_cluster_sigma = np.cov(this_cluster_samps.T) + 1e-5*np.identity(nbVar)
+        Sigma_lst.append(this_cluster_sigma)
+    Priors = np.array(Priors_lst) / np.sum(Priors_lst).reshape(1,-1)
+    Sigma = np.array(Sigma_lst).reshape(nbVar,nbVar,-1)
+    return Priors, Mu, Sigma
