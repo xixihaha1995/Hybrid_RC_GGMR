@@ -70,7 +70,15 @@ def Mahal_dis_Func(Data,Mu,Cov):
 def EM_Init_Func(Data, nbStates):
     Data_tran = Data.T
     nbVar = Data_tran.shape[1]
-    kmeans = KMeans(n_clusters=nbStates, random_state=0).fit(Data_tran)
+    minc = np.min(Data_tran, axis = 1)
+    maxc = np.max(Data_tran, axis=1)
+    all_var_ran = []
+    for idx_var in range(nbVar):
+        step = (maxc[idx_var] - minc[idx_var]) / (nbStates)
+        this_var_ran = np.arange(minc[idx_var], maxc[idx_var], step)
+        all_var_ran.append(this_var_ran)
+    all_var_cen = np.array(all_var_ran).T
+    kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
     Mu = kmeans.cluster_centers_.T
     Priors_lst = []
     Sigma_lst = []
@@ -82,3 +90,57 @@ def EM_Init_Func(Data, nbStates):
     Priors = np.array(Priors_lst) / np.sum(Priors_lst).reshape(1,-1)
     Sigma = np.array(Sigma_lst).reshape(nbVar,nbVar,-1)
     return Priors, Mu, Sigma
+
+def EM_Func(Data, Priors0, Mu0, Sigma0):
+    # for i=1:nbStates
+    #     Sigma(:,:, i) = Sigma(:,:, i) + 1E-5. * diag(ones(nbVar, 1))
+    loglik_threshold = 1e-10
+    (nbVar, nbData) = Data.shape
+    nbStates = Sigma0.shape[2]
+    loglik_old = - sys.float_info.max
+    nbStep = 0
+    Mu = Mu0
+    Sigma = Sigma0
+    Priors = Priors0
+    while 1:
+        pass
+        '''E-step'''
+        Pxi_lst = []
+        for i in range(nbStates):
+            # compute probability p(x|i)
+            this_px = gaussPDF_Func(Data, Mu[:,i],Sigma[:,:,i])
+            Pxi_lst.append(this_px)
+        Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
+        # compute posterior probability p(i|x)
+        Pix_tmp = np.tile(Priors,[nbData, 1]) * Pxi
+        Pix_nan = Pix_tmp / np.tile(np.sum(Pix_tmp, axis=1).reshape(-1,1),[1, nbStates])
+
+        Pix = np.nan_to_num(Pix_nan, nan=0)
+        # compute the cumulated posterior probability
+        E = np.sum(Pix, axis = 0).reshape(1,-1)
+        '''M-step'''
+        for i in range(nbStates):
+            Priors[0,i] = E[0,i] / nbData
+            Mu[:,i] = Data @ Pix[:,i] / E[0,i]
+            Data_tmp1 = Data - np.tile(Mu[:, i].reshape(-1,1), [1, nbData])
+            Sigma[:,:, i] = (np.tile(Pix[:, i].T,[nbVar, 1]) * Data_tmp1 @ Data_tmp1.T) / E[0,i] + 1e-5*np.identity(nbVar)
+        '''Stopping criterion'''
+        Pxi_lst = []
+        for i in range(nbStates):
+            # compute probability p(x|i)
+            this_px = gaussPDF_Func(Data, Mu[:, i], Sigma[:, :, i])
+            Pxi_lst.append(this_px)
+        Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
+        F = Pxi @ Priors.T
+        loglik = np.log(F).mean()
+
+        if abs((loglik / loglik_old) - 1) < loglik_threshold:
+            break
+        loglik_old = loglik
+
+    Sigma[:, :, :] += 1e-5 * np.identity(nbVar).reshape(nbVar,nbVar,-1)
+
+
+
+
+    return Priors, Mu, Sigma, Pix
