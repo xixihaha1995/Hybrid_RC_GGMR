@@ -8,5 +8,5 @@ train_norm = mat_contents['train_norm']
 nbStates = mat_contents['nbStates'][0,0]
 
 init_Priors, init_Mu, init_Sigma = _utils.EM_Init_Func(train_norm, nbStates)
-em_Priors, em_Mu, em_Sigma, Pix  = _utils.EM_Func(train_norm, init_Priors, init_Mu, init_Sigma)
-print(em_Priors, em_Mu, em_Sigma, Pix )
+em_Priors, em_Mu, em_Sigma  = _utils.EM_Func(train_norm, init_Priors, init_Mu, init_Sigma)
+print(em_Priors, em_Mu, em_Sigma)

@@ -49,11 +49,3 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
         Priors = Priors / np.sum(Post_pr, axis= 0 )
 
     return [Priors, Mu, Sigma, C_mat]
-
-
-
-
-
-
-
-
