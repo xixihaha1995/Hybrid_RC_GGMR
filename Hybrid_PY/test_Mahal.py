@@ -1,4 +1,4 @@
-import os, _utils, matlab.engine
+import os, _1_gmr_ggmr_hybrid_utils, matlab.engine
 import scipy.io as sio
 script_dir = os.path.dirname(__file__)
 mat_fname = os.path.join(script_dir,'inputs','_mahal_inputs.mat')

@@ -1,4 +1,4 @@
-import os, _utils
+import os, _1_gmr_ggmr_hybrid_utils
 import scipy.io as sio
 script_dir = os.path.dirname(__file__)
 mat_fname = os.path.join(script_dir,'inputs','_gaussPDF_inputs.mat')

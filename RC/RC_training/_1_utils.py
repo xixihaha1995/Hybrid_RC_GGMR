@@ -7,7 +7,6 @@ import os, json
 from datetime import datetime
 from csv import writer
 
-
 def append_list_as_row(file_name, list_of_elem):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
     file_name_abs = os.path.join(script_dir, 'outputs', file_name)
