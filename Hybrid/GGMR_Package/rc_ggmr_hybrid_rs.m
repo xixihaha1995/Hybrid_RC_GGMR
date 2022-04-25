@@ -178,8 +178,8 @@ end
 center_rc_y = mean(train(nbVarAll - 1,:));
 scale_rc_y = std(train(nbVarAll - 1,:));
 
-[rs_Priors, rs_Mu, rs_Sigma] = EM_init_kmeans(train_norm, nbStates);
-[rs_Priors, rs_Mu, rs_Sigma]  = EM(train_norm, rs_Priors, rs_Mu, rs_Sigma);
+[init_Priors, init_Mu, init_Sigma] = EM_init_kmeans(train_norm, nbStates);
+[rs_Priors, rs_Mu, rs_Sigma]  = EM(train_norm, init_Priors, init_Mu, init_Sigma);
 
 if talk_to_rc == 1
     for t = 1:size(test_norm,2)

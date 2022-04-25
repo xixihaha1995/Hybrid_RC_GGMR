@@ -1,4 +1,4 @@
-import sys, numpy as np
+import sys, numpy as np, copy
 from sklearn.cluster import KMeans
 
 def gaussPDF_Func(Data, Mu, Sigma):
@@ -76,18 +76,18 @@ def EM_Init_Func(Data, nbStates):
     all_var_ran = []
     for idx_var in range(nbVar):
         step = (maxc[idx_var] - minc[idx_var]) / (nbStates)
-        this_var_ran = np.arange(minc[idx_var], maxc[idx_var], step)
+        this_var_ran = np.arange(minc[idx_var], maxc[idx_var] - 1e-5, step)
         all_var_ran.append(this_var_ran)
     all_var_cen = np.array(all_var_ran).T
-    # kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
-    kmeans = KMeans(n_clusters=nbStates, random_state=0).fit(Data_tran)
+    kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
+    # kmeans = KMeans(n_clusters=nbStates, random_state=0).fit(Data_tran)
     Mu = kmeans.cluster_centers_.T
     Priors_lst = []
     Sigma_lst = []
     for cluster_idx in range(nbStates):
         Priors_lst.append(Data_tran[np.where(kmeans.labels_ == cluster_idx)].shape[0])
-        this_cluster_samps = Data_tran[np.where(kmeans.labels_ == cluster_idx)]
-        this_cluster_sigma = np.cov(this_cluster_samps.T) + 1e-5*np.identity(nbVar)
+        this_cluster_samps = Data_tran[np.where(kmeans.labels_ == cluster_idx)].T
+        this_cluster_sigma = np.cov(this_cluster_samps) + 1e-5*np.identity(nbVar)
         Sigma_lst.append(this_cluster_sigma)
     Priors = np.array(Priors_lst) / np.sum(Priors_lst).reshape(1,-1)
     Sigma = np.array(Sigma_lst).reshape(nbVar,nbVar,-1)
@@ -101,9 +101,9 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
     nbStates = Sigma0.shape[2]
     loglik_old = - sys.float_info.max
     nbStep = 0
-    Mu = Mu0
-    Sigma = Sigma0
-    Priors = Priors0
+    Mu = copy.deepcopy(Mu0)
+    Sigma = copy.deepcopy(Sigma0)
+    Priors =copy.deepcopy(Priors0)
     while 1:
         pass
         '''E-step'''
@@ -136,7 +136,7 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         F_nan = Pxi @ Priors.T
         F = np.nan_to_num(F_nan, nan=sys.float_info.min)
         loglik = np.log(F).mean()
-        # print(abs((loglik/loglik_old)-1))
+        print(abs((loglik/loglik_old)-1))
 
         if abs((loglik / loglik_old) - 1) < loglik_threshold:
             break
