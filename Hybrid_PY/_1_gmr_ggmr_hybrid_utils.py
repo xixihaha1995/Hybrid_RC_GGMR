@@ -151,7 +151,7 @@ def Evolving_LW_2_Func(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, tes
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     expData = []
-    for t in range(1, Data_Test.shape[1]):
+    for t in range(Data_Test.shape[1]):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
@@ -184,7 +184,8 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
         C_mat[m_best, 0] += q_j
         tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0]
         Priors[0,m_best] = min(tau_j, pumax)
-        eta_j = q_j @ ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
+        eta_j = q_j * ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
+        eta_j = eta_j[0]
         Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
         Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * \
                             ((Data_Test[:,t] - Mu[:, m_best]) @ (Data_Test[:,t] - Mu[:, m_best]).T)

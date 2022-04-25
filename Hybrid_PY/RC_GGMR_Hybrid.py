@@ -51,6 +51,9 @@ unused_ggmr_method_gmr_data, ggmr_beta = gaussian_tools.GMR_Func(
 sum_beta_rs_ggmr=sum(ggmr_beta,1).reshape(1,-1)
 ggmr_talk_rc = 0
 L_rate = 5e-3
+
+
+
 ggmr_norm = gaussian_tools.Evolving_LW_2_Func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
                                                              test_norm_ggmr,sum_beta_rs_ggmr, ggmr_talk_rc,
                                                              test_initial_time, center_rc_y, scale_rc_y,
@@ -70,7 +73,8 @@ center_y, scale_y = train[-1,:].mean(), train[-1,:].std()
 rmse_rc= (sum((y_test - rc_y) ** 2) / len(y_test)) ** (1 / 2)
 cvrmse_rc = rmse_rc*100 / mean_measured
 
-ggmr_predict = ggmr_norm * scale_y + center_y
+ggmr_norm_tmp = np.array(ggmr_norm).reshape(-1)
+ggmr_predict = ggmr_norm_tmp * scale_y + center_y
 ggmr_predict = ggmr_predict.reshape(-1)
 rmse_ggmr = (sum((y_test - ggmr_predict) ** 2) / len(y_test)) ** (1 / 2)
 cvrmse_ggmr = rmse_ggmr * 100 / mean_measured
