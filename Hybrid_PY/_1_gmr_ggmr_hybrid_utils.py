@@ -151,7 +151,16 @@ def Evolving_LW_2_Func(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, tes
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     expData = []
+
+    rc_real_pre = RC_Prediction(abcd)
+
     for t in range(Data_Test.shape[1]):
+        target_time = t +test_initial_time
+        u_arr = u_measured[:,target_time - rc_warming_step:target_time+1]
+        rc_result = rc_real_pre.predict(u_arr)
+        rc_result_norm = (rc_result - center_rc_y) / scale_rc_y
+        Data_Test[-2,t] = rc_result_norm
+
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
@@ -193,3 +202,15 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
     Priors = Priors / np.sum(Priors)
 
     return [Priors, Mu, Sigma, C_mat]
+
+class RC_Prediction():
+    def __init__(self, pre_abcd):
+        self.abcd = pre_abcd
+
+    def predict(self, u_arr):
+        y_model = np.zeros((u_arr.shape[1],))
+        x_discrete = np.array([[0], [10], [22], [21], [23], [21]])
+        for i in range(u_arr.shape[1]):
+            y_model[i] = (self.abcd['c'] @ x_discrete + self.abcd['d'] @ u_arr[:, i])[0, 0]
+            x_discrete = self.abcd['a'] @ x_discrete + (self.abcd['b'] @ u_arr[:, i]).reshape((6, 1))
+        return y_model[-1]
