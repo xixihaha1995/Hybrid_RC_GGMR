@@ -71,16 +71,16 @@ def Mahal_dis_Func(Data,Mu,Cov):
 def EM_Init_Func(Data, nbStates):
     Data_tran = Data.T
     nbVar = Data_tran.shape[1]
-    minc = np.min(Data_tran, axis = 1)
-    maxc = np.max(Data_tran, axis=1)
+    minc = np.min(Data_tran, axis = 0)
+    maxc = np.max(Data_tran, axis=0)
     all_var_ran = []
     for idx_var in range(nbVar):
         step = (maxc[idx_var] - minc[idx_var]) / (nbStates)
         this_var_ran = np.arange(minc[idx_var], maxc[idx_var] - 1e-5, step)
         all_var_ran.append(this_var_ran)
     all_var_cen = np.array(all_var_ran).T
-    # kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
-    kmeans = KMeans(n_clusters=nbStates, algorithm="elkan").fit(Data_tran)
+    kmeans = KMeans(n_clusters=nbStates, init=all_var_cen,random_state=0).fit(Data_tran)
+    # kmeans = KMeans(n_clusters=nbStates, algorithm="elkan").fit(Data_tran)
     Mu = kmeans.cluster_centers_.T
     Priors_lst = []
     Sigma_lst = []
@@ -90,7 +90,7 @@ def EM_Init_Func(Data, nbStates):
         this_cluster_sigma = np.cov(this_cluster_samps) + 1e-5*np.identity(nbVar)
         Sigma_lst.append(this_cluster_sigma)
     Priors = np.array(Priors_lst) / np.sum(Priors_lst).reshape(1,-1)
-    Sigma = np.array(Sigma_lst).reshape(nbVar,nbVar,-1)
+    Sigma = np.array(Sigma_lst).T
     return Priors, Mu, Sigma
 
 def EM_Func(Data, Priors0, Mu0, Sigma0):

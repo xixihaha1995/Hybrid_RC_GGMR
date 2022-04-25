@@ -1,7 +1,7 @@
-import os, _1_gmr_ggmr_hybrid_utils as gaussian_tools
+import os, Hybrid_PY._1_gmr_ggmr_hybrid_utils as gaussian_tools
 import scipy.io as sio
 script_dir = os.path.dirname(__file__)
-mat_fname = os.path.join(script_dir,'inputs','_em_init_inputs.mat')
+mat_fname = os.path.join(script_dir,'..','inputs','_em_init_inputs.mat')
 mat_contents = sio.loadmat(mat_fname)
 
 train_norm = mat_contents['train_norm']
