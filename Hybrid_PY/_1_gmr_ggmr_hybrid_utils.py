@@ -164,7 +164,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
     pumax = 0.09
     existFlag_up_sig = 0
 
-    m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma, )
+    m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
     com_MD_lst = []
 
     for m in range(Priors.shape[1]):
@@ -187,9 +187,9 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
         eta_j = q_j * ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
         eta_j = eta_j[0]
         Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
-        Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * \
-                            ((Data_Test[:,t] - Mu[:, m_best]) @ (Data_Test[:,t] - Mu[:, m_best]).T)
+        x_min_mu = (Data_Test[:, t] - Mu[:, m_best]).reshape(-1, 1)
+        Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * x_min_mu @ x_min_mu.T
 
-        Priors = Priors / np.sum(Post_pr, axis= 0 )
+    Priors = Priors / np.sum(Priors)
 
     return [Priors, Mu, Sigma, C_mat]
