@@ -182,7 +182,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
         '''
         q_j = Post_pr[m_best, 0] / np.sum(Post_pr, axis= 0 )
         C_mat[m_best, 0] += q_j
-        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0,0]
+        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0]
         Priors[0,m_best] = min(tau_j, pumax)
         eta_j = q_j @ ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
         Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]

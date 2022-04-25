@@ -6,11 +6,15 @@ Hybrid
 '''
 import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_tools
 import matplotlib.pyplot as plt, os, scipy.io as sio
+import numpy as np
 nbStates = 15
 
 
-All_Variables_obj = general_tools.switch_case(0)
+All_Variables_obj, u_measured_obj, abcd_obj = general_tools.switch_case(0)
 All_Variables = All_Variables_obj.astype('float64')
+u_measured = u_measured_obj.astype('float64')
+abcd = abcd_obj
+
 total_length = All_Variables.shape[1]
 training_length = 4032
 test_initial_time = training_length -1
@@ -25,32 +29,60 @@ nbVarInput = nbVarAll - 1
 train, test, train_norm, test_norm = general_tools.split_train_test_norm(
     nbVarAll, All_Variables,training_length, testing_length)
 
+'''GMR'''
+
+# init_Priors_gmr, init_gmr, init_Sigma_gmr = gaussian_tools.EM_Init_Func(train_norm, nbStates)
+# em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr  = gaussian_tools.EM_Func(train_norm, init_Priors_gmr, init_gmr, init_Sigma_gmr )
+# gmr_norm, gmr_beta = gaussian_tools.GMR_Func(em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr, test_norm[:nbVarInput,:], nbVarInput)
+
+'''GGMR'''
 center_rc_y, scale_rc_y = train[-2,:].mean(), train[-2,:].std()
-# init_Priors, init_Mu, init_Sigma = gaussian_tools.EM_Init_Func(train_norm, nbStates)
-# em_Priors_py, em_Mu_py, em_Sigma_py  = gaussian_tools.EM_Func(train_norm, init_Priors, init_Mu, init_Sigma)
+train_norm_ggmr = np.delete(train_norm, -2, axis=0) #delete rc_y information
+test_norm_ggmr = np.delete(test_norm, -2, axis=0) #delete rc_y information
+nbVarAll_ggmr = train_norm_ggmr.shape[0]
+nbVarInput_ggmr = nbVarAll_ggmr - 1
 
-script_dir = os.path.dirname(__file__)
-mat_fname = os.path.join(script_dir,'inputs','_skip_em.mat')
-mat_contents = sio.loadmat(mat_fname)
-em_Priors = mat_contents['rs_Priors']
-em_Mu = mat_contents['rs_Mu']
-em_Sigma = mat_contents['rs_Sigma']
-test_norm = mat_contents['test_norm']
+init_Priors_ggmr, init_Mu_ggmr, init_Sigma_ggmr = gaussian_tools.EM_Init_Func(train_norm_ggmr, nbStates)
+em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr  = gaussian_tools.EM_Func(
+    train_norm_ggmr, init_Priors_ggmr, init_Mu_ggmr, init_Sigma_ggmr)
+unused_ggmr_method_gmr_data, ggmr_beta = gaussian_tools.GMR_Func(
+    em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr, test_norm_ggmr[:nbVarInput_ggmr,:], nbVarInput_ggmr)
 
-gmr_norm, gmr_beta = gaussian_tools.GMR_Func(em_Priors,em_Mu, em_Sigma, test_norm[:nbVarInput,:], nbVarInput)
-center_y, scale_y = train[-1,:].mean(), train[-1,:].std()
-gmr_predict = gmr_norm * scale_y + center_y
-gmr_predict = gmr_predict.reshape(-1)
+sum_beta_rs_ggmr=sum(ggmr_beta,1).reshape(1,-1)
+ggmr_talk_rc = 0
+L_rate = 5e-3
+ggmr_norm = gaussian_tools.Evolving_LW_2_Func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
+                                                             test_norm_ggmr,sum_beta_rs_ggmr, ggmr_talk_rc,
+                                                             test_initial_time, center_rc_y, scale_rc_y,
+                                                             u_measured, rc_warming_step,abcd,L_rate)
 
+'''De-normalization'''
 y_test = test[-1,:]
 rc_y = test[-2,:]
-rmse_gmr = (sum((y_test - gmr_predict) ** 2) / len(y_test)) ** (1 / 2)
-fig, ax = plt.subplots(2)
+mean_measured = abs(y_test).mean()
+center_y, scale_y = train[-1,:].mean(), train[-1,:].std()
 
-ax[0].plot(y_test, label = "Measured")
-ax[0].plot(rc_y, label = "RC")
-ax[0].plot(gmr_predict, label = "GMR")
-ax[0].legend()
+# gmr_predict = gmr_norm * scale_y + center_y
+# gmr_predict = gmr_predict.reshape(-1)
+# rmse_gmr = (sum((y_test - gmr_predict) ** 2) / len(y_test)) ** (1 / 2)
+# cvrmse_gmr = rmse_gmr * 100 / mean_measured
+
+rmse_rc= (sum((y_test - rc_y) ** 2) / len(y_test)) ** (1 / 2)
+cvrmse_rc = rmse_rc*100 / mean_measured
+
+ggmr_predict = ggmr_norm * scale_y + center_y
+ggmr_predict = ggmr_predict.reshape(-1)
+rmse_ggmr = (sum((y_test - ggmr_predict) ** 2) / len(y_test)) ** (1 / 2)
+cvrmse_ggmr = rmse_ggmr * 100 / mean_measured
+
+
+fig, ax = plt.subplots(1)
+newline = '\n'
+ax.plot(y_test, label = "Measured")
+ax.plot(rc_y, label = "RC")
+ax.plot(ggmr_predict, label = "GGMR")
+ax.legend()
+ax.set_title(f'RCCVRMSE:{cvrmse_rc}%{newline}GGMR CVRMSE:{cvrmse_ggmr}% ')
 plt.show()
 
 pass
