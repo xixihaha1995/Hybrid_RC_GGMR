@@ -34,9 +34,9 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
         this_y_tmp = np.tile(Mu[in_out_split:, j], [1, nbData]) + Sigma[in_out_split:,:in_out_split, j] \
                      @ np.linalg.inv(Sigma[:in_out_split,:in_out_split, j]) @ \
                      (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
-        y_temp_lst.append(this_y_tmp)
+        y_temp_lst.append(np.array(this_y_tmp).T.reshape(-1))
 
-    y_tmp = np.array(y_temp_lst).reshape(-1,nbData,nbStates)
+    y_tmp = np.array(y_temp_lst).T.reshape(-1,nbData,nbStates)
     beta_tmp = beta.reshape(-1,nbData,nbStates)
     y_tmp2 = np.tile(beta_tmp,[nbVar - in_out_split, 1,1]) * y_tmp
     y = np.sum(y_tmp2, axis=2)
