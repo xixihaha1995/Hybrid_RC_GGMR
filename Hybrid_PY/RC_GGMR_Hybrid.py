@@ -35,10 +35,12 @@ gmr_predict = gmr_norm * scale_y + center_y
 gmr_predict = gmr_predict.reshape(-1)
 
 y_test = test[-1,:]
+rc_y = test[-2,:]
 rmse_gmr = (sum((y_test - gmr_predict) ** 2) / len(y_test)) ** (1 / 2)
 fig, ax = plt.subplots(2)
 
 ax[0].plot(y_test, label = "Measured")
+ax[0].plot(rc_y, label = "RC")
 ax[0].plot(gmr_predict, label = "GMR")
 ax[0].legend()
 plt.show()
