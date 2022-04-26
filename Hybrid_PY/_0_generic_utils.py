@@ -6,6 +6,17 @@ def loadJSON(name):
         testDict = json.loads(f.read())
     return testDict
 
+def loadJSONFromOutputs(name):
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    with open(os.path.join(script_dir, 'outputs',name + '.json'), 'r') as f:
+        testDict = json.loads(f.read())
+    return testDict
+
+def saveJSON(data, name):
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    with open(os.path.join(script_dir, 'outputs',name + '.json'), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 def load_csv():
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
     case_arr_abs = os.path.join(script_dir, 'inputs', 'case_arr.csv')
