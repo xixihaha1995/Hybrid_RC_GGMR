@@ -25,25 +25,12 @@ y_test = test[-1,:]
 rc_y = test[-2,:]
 mean_measured = abs(y_test).mean()
 center_y, scale_y = train[-1,:].mean(), train[-1,:].std()
-cvrmse_rc = general_tools.cvrmse_cal(y_test,rc_y,mean_measured)
-'''GGMR'''
-ggmr_norm = all_predict.GGMR_prediction(train_norm, test_norm, nbStates)
-ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
-cvrmse_ggmr = general_tools.cvrmse_cal(y_test,ggmr_predict,mean_measured)
 '''Hybrid No Flow Information'''
-hybrid_norm = all_predict.Hybrid_prediction(train_norm, test_norm, nbStates, nbVarInput,test_initial_time,
+hybrid_flow_norm = all_predict.Hybrid_prediction(train_norm, test_norm, nbStates, nbVarInput,test_initial_time,
                       center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd,L_rate)
-hybrid_predict = general_tools.de_norm(hybrid_norm, scale_y, center_y)
-cvrmse_hybrid = general_tools.cvrmse_cal(y_test,hybrid_predict,mean_measured)
 '''Save results'''
 results = {}
-results['y_test'] = y_test.tolist()
-results['rc_y'] = rc_y.tolist()
-results['cvrmse_rc'] = cvrmse_rc
-results['ggmr_predict'] = ggmr_predict.tolist()
-results['cvrmse_ggmr'] = cvrmse_ggmr
-results['hybrid_predict'] = hybrid_predict.tolist()
-results['cvrmse_hybrid'] = cvrmse_hybrid
-general_tools.saveJSON(results, "results")
+results['hybrid_flow_norm'] = np.array(hybrid_flow_norm).reshape(-1).tolist()
+general_tools.saveJSON(results, "_flow_norm_results")
 
 
