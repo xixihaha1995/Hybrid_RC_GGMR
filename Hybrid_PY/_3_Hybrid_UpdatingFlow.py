@@ -7,7 +7,7 @@ L_rate = 5e-3
 training_length = 4032
 rc_warming_step = 15
 
-All_Variables_obj, u_measured_obj, abcd = general_tools.switch_case(0)
+All_Variables_obj, u_measured_obj, abcd = general_tools.switch_case(1)
 All_Variables = All_Variables_obj.astype('float64')
 u_measured = u_measured_obj.astype('float64')
 total_length = All_Variables.shape[1]

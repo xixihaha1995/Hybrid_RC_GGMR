@@ -50,7 +50,9 @@ def switch_case(case_nb):
     if case_nb == 0:
         All_Variables = np.array([t_out, t_slab, t_cav,valve_ht,valve_cl, rc_y, y])
     if case_nb == 1:
-        All_Variables = [t_out,t_slab, t_cav,valve_ht,valve_cl, rc_y, vfr_water]
+        All_Variables = np.array([t_out,t_slab, t_cav,valve_ht,valve_cl, rc_y, vfr_water])
+    if case_nb == 2:
+            All_Variables = np.array([t_out, t_slab, t_cav, valve_ht, valve_cl,vfr_water, rc_y, vfr_water])
     return All_Variables, u_measured, abcd
 
 def split_train_test_norm(nbVarAll, All_Variables,training_length,testing_length):
