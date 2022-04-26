@@ -2,7 +2,7 @@ clear
 % potential_nbstates = [2,5,10,15];
 selected_nbStates = 15;
 
-input_case = 4;
+input_case = 5;
 potential_L_rate = [1e-3, 5e-3];
 
 nb_row = 1;
