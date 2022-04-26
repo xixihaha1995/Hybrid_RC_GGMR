@@ -22,27 +22,23 @@ def GGMR_prediction(train_norm, test_norm, nbStates):
     unused_ggmr_method_gmr_data, ggmr_beta = gaussian_tools.GMR_Func(
         em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr, test_norm_ggmr[:nbVarInput_ggmr,:], nbVarInput_ggmr)
     sum_beta_rs_ggmr=sum(ggmr_beta,1).reshape(1,-1)
-    ggmr_talk_rc = 0
     L_rate = 5e-3
-
-    ggmr_norm = gaussian_tools.Evolving_LW_2_Func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
-                                                                 test_norm_ggmr,sum_beta_rs_ggmr, ggmr_talk_rc,
-                                                                 test_initial_time, center_rc_y, scale_rc_y,
-                                                                 u_measured, rc_warming_step,abcd,L_rate)
+    ggmr_norm = gaussian_tools.ggmr_func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
+                                         test_norm_ggmr,sum_beta_rs_ggmr,L_rate)
     return ggmr_norm
 
 '''Hybrid'''
-init_Priors_gmr, init_gmr, init_Sigma_gmr = gaussian_tools.EM_Init_Func(train_norm, nbStates)
-em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr  = gaussian_tools.EM_Func(train_norm, init_Priors_gmr, init_gmr, init_Sigma_gmr )
-gmr_norm, gmr_beta = gaussian_tools.GMR_Func(em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr, test_norm[:nbVarInput,:], nbVarInput)
+def Hybrid_prediction(train_norm, test_norm, nbStates, nbVarInput,test_initial_time,
+                      center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd,L_rate):
+    init_Priors_gmr, init_gmr, init_Sigma_gmr = gaussian_tools.EM_Init_Func(train_norm, nbStates)
+    em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr  = gaussian_tools.EM_Func(train_norm, init_Priors_gmr, init_gmr, init_Sigma_gmr )
+    gmr_norm, gmr_beta = gaussian_tools.GMR_Func(em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr, test_norm[:nbVarInput,:], nbVarInput)
+    sum_beta_rs=sum(gmr_beta,1).reshape(1,-1)
 
-sum_beta_rs=sum(gmr_beta,1).reshape(1,-1)
-
-hybrid_norm = gaussian_tools.Evolving_LW_2_Func(em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr,
-                                                test_norm,sum_beta_rs,real_time_talk_to_rc,
-                                                test_initial_time, center_rc_y, scale_rc_y,
-                                                u_measured, rc_warming_step,abcd,L_rate)
-
+    hybrid_norm = gaussian_tools.hybrid_func(em_Priors_gmr, em_Mu_gmr, em_Sigma_gmr,
+                                             test_norm,sum_beta_rs,test_initial_time, center_rc_y,
+                                             scale_rc_y,u_measured, rc_warming_step,abcd,L_rate)
+    return hybrid_norm
 
 '''De-normalization'''
 y_test = test[-1,:]

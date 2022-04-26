@@ -94,8 +94,6 @@ def EM_Init_Func(Data, nbStates):
     return Priors, Mu, Sigma
 
 def EM_Func(Data, Priors0, Mu0, Sigma0):
-    # for i=1:nbStates
-    #     Sigma(:,:, i) = Sigma(:,:, i) + 1E-5. * diag(ones(nbVar, 1))
     loglik_threshold = 1e-10
     (nbVar, nbData) = Data.shape
     nbStates = Sigma0.shape[2]
@@ -145,7 +143,7 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
     Sigma[:, :, :] += 1e-5 * np.identity(nbVar).reshape(nbVar,nbVar,-1)
     return Priors, Mu, Sigma
 
-def Evolving_LW_2_Func(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, test_initial_time,
+def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
     center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate):
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
@@ -153,14 +151,24 @@ def Evolving_LW_2_Func(Priors, Mu, Sigma, Data_Test,SumPosterior,talk_to_rc, tes
     expData = []
 
     rc_real_pre = RC_Prediction(abcd)
-
     for t in range(Data_Test.shape[1]):
         target_time = t +test_initial_time
         u_arr = u_measured[:,target_time - rc_warming_step:target_time+1]
         rc_result = rc_real_pre.predict(u_arr)
         rc_result_norm = (rc_result - center_rc_y) / scale_rc_y
         Data_Test[-2,t] = rc_result_norm
+        this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
+        expData.append(this_exp_y)
+        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
 
+    return expData
+
+def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate):
+    C_mat = SumPosterior.T
+    nbVar = Data_Test.shape[0]
+    in_out_split = nbVar - 1
+    expData = []
+    for t in range(Data_Test.shape[1]):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)

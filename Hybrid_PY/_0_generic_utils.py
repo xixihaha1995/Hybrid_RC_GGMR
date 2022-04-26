@@ -58,3 +58,14 @@ def split_train_test_norm(nbVarAll, All_Variables,training_length,testing_length
     train_norm = np.array(train_norm_lst)
     test_norm = np.array(test_norm_lst)
     return train, test, train_norm, test_norm
+
+def cvrmse_cal(measure, predict, mean_measured):
+    rmse = (sum((measure - predict) ** 2) / len(measure)) ** (1 / 2)
+    cvrmse = rmse * 100 / mean_measured
+    return cvrmse
+
+def de_norm(norm, scale_y, center_y):
+    norm_tmp = np.array(norm).reshape(-1)
+    predict_temp = norm_tmp * scale_y + center_y
+    predict = predict_temp.reshape(-1)
+    return predict
