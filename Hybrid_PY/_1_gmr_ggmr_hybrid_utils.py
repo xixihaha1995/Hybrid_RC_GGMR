@@ -11,63 +11,6 @@ def gaussPDF_Func(Data, Mu, Sigma):
     prob = np.exp(-0.5 * prob )/ np.sqrt((2 * np.pi) ** nbVar * (abs(np.linalg.det(Sigma)) + sys.float_info.min) )
     return prob
 
-def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
-    nbVar = Mu.shape[0]
-    nbVarInput = nbVar - 1
-    input_x = input_x.reshape(nbVarInput,-1)
-    if input_x.ndim == 1:
-        temp, nbData = input_x.shape[0], 1
-    else:
-        [temp, nbData] = input_x.shape
-
-    nbStates = Sigma.shape[2]
-
-    Px = []
-    for i in range(nbStates):
-        this_Pxi = Priors[0, i] * gaussPDF_Func(input_x, Mu[:in_out_split,i], Sigma[:in_out_split, :in_out_split, i])
-        Px.append(this_Pxi)
-    Px_reshape = np.array(Px).T
-    beta = Px_reshape / np.tile(np.sum(Px_reshape, axis= 1).reshape(-1,1) + sys.float_info.min,[1, nbStates])
-
-    y_temp_lst = []
-    for j in range(nbStates):
-        this_y_tmp = np.tile(Mu[in_out_split:, j], [1, nbData]) + Sigma[in_out_split:,:in_out_split, j] \
-                     @ np.linalg.inv(Sigma[:in_out_split,:in_out_split, j]) @ \
-                     (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
-        y_temp_lst.append(np.array(this_y_tmp).T.reshape(-1))
-
-    y_tmp = np.array(y_temp_lst).T.reshape(-1,nbData,nbStates)
-    beta_tmp = beta.reshape(-1,nbData,nbStates)
-    y_tmp2 = np.tile(beta_tmp,[nbVar - in_out_split, 1,1]) * y_tmp
-    y = np.sum(y_tmp2, axis=2)
-
-    # % % Compute expected covariance matrices Sigma_y, given input x
-    # % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-    # for j=1:nbStates
-    # Sigma_y_tmp(:,:, 1, j) = Sigma(out, out, j) - (Sigma(out, in, j) * inv(Sigma( in, in, j))*Sigma( in, out, j));
-    # end
-    # beta_tmp = reshape(beta, [1 1 size(beta)]);
-    # Sigma_y_tmp2 = repmat(beta_tmp. * beta_tmp, [length(out) length(out) 1 1]). * repmat(Sigma_y_tmp, [1 1 nbData 1]);
-    # Sigma_y = sum(Sigma_y_tmp2, 4);
-    # Sigma_y;
-
-    return y, beta
-
-def BMC_Func(Data_in,Priors_in,Mu_in,Sigma_in):
-    Post_pr_lst =[]
-    for m in range(Priors_in.shape[1]):
-        this_post_pr = Priors_in[0, m].reshape(1) @ gaussPDF_Func(Data_in, Mu_in[:,m], Sigma_in[:,:,m])
-        Post_pr_lst.append(this_post_pr)
-    Post_pr = np.array(Post_pr_lst).reshape(-1,1)
-    m_best = np.argmax(Post_pr)
-    return m_best, Post_pr
-
-def Mahal_dis_Func(Data,Mu,Cov):
-    pass
-    # Md = sqrt(abs((Data - Mu)'*inv(Cov)*(Data-Mu)));
-    Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
-    return Md
-
 def EM_Init_Func(Data, nbStates):
     Data_tran = Data.T
     nbVar = Data_tran.shape[1]
@@ -143,25 +86,88 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
     Sigma[:, :, :] += 1e-5 * np.identity(nbVar).reshape(nbVar,nbVar,-1)
     return Priors, Mu, Sigma
 
-def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
-    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate):
-    C_mat = SumPosterior.T
-    nbVar = Data_Test.shape[0]
-    in_out_split = nbVar - 1
-    expData = []
+def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
+    nbVar = Mu.shape[0]
+    nbVarInput = nbVar - 1
+    input_x = input_x.reshape(nbVarInput,-1)
+    if input_x.ndim == 1:
+        temp, nbData = input_x.shape[0], 1
+    else:
+        [temp, nbData] = input_x.shape
 
-    rc_real_pre = RC_Prediction(abcd)
-    for t in range(Data_Test.shape[1]):
-        target_time = t +test_initial_time
-        u_arr = u_measured[:,target_time - rc_warming_step:target_time+1]
-        rc_result = rc_real_pre.predict(u_arr)
-        rc_result_norm = (rc_result - center_rc_y) / scale_rc_y
-        Data_Test[-2,t] = rc_result_norm
-        this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
-        expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
+    nbStates = Sigma.shape[2]
 
-    return expData
+    Px = []
+    for i in range(nbStates):
+        this_Pxi = Priors[0, i] * gaussPDF_Func(input_x, Mu[:in_out_split,i], Sigma[:in_out_split, :in_out_split, i])
+        Px.append(this_Pxi)
+    Px_reshape = np.array(Px).T
+    beta = Px_reshape / np.tile(np.sum(Px_reshape, axis= 1).reshape(-1,1) + sys.float_info.min,[1, nbStates])
+
+    y_temp_lst = []
+    for j in range(nbStates):
+        this_y_tmp = np.tile(Mu[in_out_split:, j], [1, nbData]) + Sigma[in_out_split:,:in_out_split, j] \
+                     @ np.linalg.inv(Sigma[:in_out_split,:in_out_split, j]) @ \
+                     (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
+        y_temp_lst.append(np.array(this_y_tmp).T.reshape(-1))
+
+    y_tmp = np.array(y_temp_lst).T.reshape(-1,nbData,nbStates)
+    beta_tmp = beta.reshape(-1,nbData,nbStates)
+    y_tmp2 = np.tile(beta_tmp,[nbVar - in_out_split, 1,1]) * y_tmp
+    y = np.sum(y_tmp2, axis=2)
+    return y, beta
+
+def BMC_Func(Data_in,Priors_in,Mu_in,Sigma_in):
+    Post_pr_lst =[]
+    for m in range(Priors_in.shape[1]):
+        this_post_pr = Priors_in[0, m].reshape(1) @ gaussPDF_Func(Data_in, Mu_in[:,m], Sigma_in[:,:,m])
+        Post_pr_lst.append(this_post_pr)
+    Post_pr = np.array(Post_pr_lst).reshape(-1,1)
+    m_best = np.argmax(Post_pr)
+    return m_best, Post_pr
+
+def Mahal_dis_Func(Data,Mu,Cov):
+    pass
+    # Md = sqrt(abs((Data - Mu)'*inv(Cov)*(Data-Mu)));
+    Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
+    return Md
+
+def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
+    T_sigma = 2
+    eps_thres_best_priors = 1e-2
+    tau_min_thres = 0.09
+    existFlag_sig = 0
+
+    m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
+    com_MD_lst = []
+
+    for m in range(Priors.shape[1]):
+        this_com_MD = Mahal_dis_Func(Data_Test[:, t], Mu[:, m], Sigma[:, :, m])
+        com_MD_lst.append(this_com_MD)
+    com_MD = np.array(com_MD_lst).reshape(-1, 1)
+
+    if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
+        existFlag_sig = 1
+
+    if existFlag_sig != 1:
+        pass
+        '''
+        Only update one best Gaussian
+        '''
+        q_j = Post_pr[m_best, 0] / np.sum(Post_pr, axis= 0 )
+        C_mat[m_best, 0] += q_j
+        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0]
+        Priors[0,m_best] = min(tau_j, tau_min_thres)
+        eta_j = q_j * ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
+        eta_j = eta_j[0]
+        Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
+        x_min_mu = (Data_Test[:, t] - Mu[:, m_best]).reshape(-1, 1)
+        Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * x_min_mu @ x_min_mu.T
+
+    Priors = Priors / np.sum(Priors)
+
+    return [Priors, Mu, Sigma, C_mat]
+
 
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate):
     C_mat = SumPosterior.T
@@ -175,41 +181,27 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate):
 
     return expData
 
-def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
-    T_sigma = 2
-    eps_thres_best_priors = 1e-2
-    pumax = 0.09
-    existFlag_up_sig = 0
+def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
+    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate):
+    C_mat = SumPosterior.T
+    nbVar = Data_Test.shape[0]
+    in_out_split = nbVar - 1
+    expData = []
 
-    m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
-    com_MD_lst = []
+    rc_real_pre = RC_Prediction(abcd)
+    for t in range(Data_Test.shape[1]):
+        '''⬇️Updating rc load information'''
+        target_time = t +test_initial_time
+        u_arr = u_measured[:,target_time - rc_warming_step:target_time+1]
+        rc_result = rc_real_pre.predict(u_arr)
+        rc_result_norm = (rc_result - center_rc_y) / scale_rc_y
+        Data_Test[-2,t] = rc_result_norm
+        '''⬆️Updating rc load information'''
+        this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
+        expData.append(this_exp_y)
+        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
 
-    for m in range(Priors.shape[1]):
-        this_com_MD = Mahal_dis_Func(Data_Test[:, t], Mu[:, m], Sigma[:, :, m])
-        com_MD_lst.append(this_com_MD)
-    com_MD = np.array(com_MD_lst).reshape(-1, 1)
-
-    if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
-        existFlag_up_sig = 1
-
-    if existFlag_up_sig != 1:
-        pass
-        '''
-        Only update one best Gaussian
-        '''
-        q_j = Post_pr[m_best, 0] / np.sum(Post_pr, axis= 0 )
-        C_mat[m_best, 0] += q_j
-        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0]
-        Priors[0,m_best] = min(tau_j, pumax)
-        eta_j = q_j * ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
-        eta_j = eta_j[0]
-        Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
-        x_min_mu = (Data_Test[:, t] - Mu[:, m_best]).reshape(-1, 1)
-        Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * x_min_mu @ x_min_mu.T
-
-    Priors = Priors / np.sum(Priors)
-
-    return [Priors, Mu, Sigma, C_mat]
+    return expData
 
 class RC_Prediction():
     def __init__(self, pre_abcd):
