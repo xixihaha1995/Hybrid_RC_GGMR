@@ -149,19 +149,20 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
     if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
         existFlag_sig = 1
 
-    if existFlag_sig == 1:
+    if existFlag_sig == 0:
         '''
-        Only update one best Gaussian
+        Update all Gaussians
         '''
-        q_j = Post_pr[m_best, 0] / np.sum(Post_pr, axis= 0 )
-        C_mat[m_best, 0] += q_j
-        tau_j =( (1 - L_rate) * Priors[0,m_best] + L_rate * q_j)[0]
-        Priors[0,m_best] = min(tau_j, tau_min_thres)
-        eta_j = q_j * ((1 - L_rate) / C_mat[m_best, 0] + L_rate)
-        eta_j = eta_j[0]
-        Mu[:, m_best] = (1 - eta_j) * Mu[:, m_best] + eta_j * Data_Test[:,t]
-        x_min_mu = (Data_Test[:, t] - Mu[:, m_best]).reshape(-1, 1)
-        Sigma[:,:,m_best] = (1 - eta_j) * Sigma[:,:,m_best] + eta_j * x_min_mu @ x_min_mu.T
+        for nb_com in range(Post_pr.shape[0]):
+            q_j = Post_pr[nb_com, 0] / np.sum(Post_pr, axis= 0 )
+            C_mat[nb_com, 0] += q_j
+            tau_j =( (1 - L_rate) * Priors[0,nb_com] + L_rate * q_j)[0]
+            Priors[0,nb_com] = min(tau_j, tau_min_thres)
+            eta_j = q_j * ((1 - L_rate) / C_mat[nb_com, 0] + L_rate)
+            eta_j = eta_j[0]
+            Mu[:, nb_com] = (1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t]
+            x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
+            Sigma[:,:,nb_com] = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
 
     Priors = Priors / np.sum(Priors)
 

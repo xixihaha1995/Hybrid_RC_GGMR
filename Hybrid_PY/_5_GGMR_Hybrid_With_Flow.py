@@ -7,7 +7,7 @@ L_rate = 5e-3
 T_Sigma = 2
 nbStates_candidates = [5,10,15] #5
 T_Sigma_candidates = [2e-1, 2, 5] #2
-L_rate_candidates = [5e-3, 5e-2, 9e-2]
+L_rate_candidates = [5e-3, 3e-2, 6e-2]
 training_length = 4032
 rc_warming_step = 15
 
