@@ -132,6 +132,40 @@ def Mahal_dis_Func(Data,Mu,Cov):
     Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
     return Md
 
+def split_func(Priors, Mu, Sigma, t_split, time_stam):
+    split_factor = 8e-1
+    # can volume be negative
+    cannot_merge_link = -1
+    if min(np.linalg.det(Sigma.T)) < 0:
+        print("Sigma volumes can be negative")
+    if max(np.linalg.det(Sigma.T)) < t_split:
+        return Priors, Mu, Sigma,cannot_merge_link
+    cannot_merge_link = time_stam
+    largst_comp = np.argmax(np.linalg.det(Sigma.T))
+    lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
+    dpc_idx = np.argmax(lamdas)
+    lamda = lamdas[dpc_idx]
+    eigen_vec = eigen_vecs[:, dpc_idx]
+    delta_eigen_vect = (split_factor * lamda)**(0.5) * eigen_vec
+    tau_prev = Priors[0, largst_comp]
+    tau_one = tau_two =  np.array([[tau_prev / 2]])
+    mu_prev = Mu[:, largst_comp]
+    mu_one = mu_prev + delta_eigen_vect
+    mu_two = mu_prev - delta_eigen_vect
+    sigma_one = sigma_two = Sigma.T[largst_comp,:,:] - delta_eigen_vect @ delta_eigen_vect.T
+
+    Priors[0, largst_comp] = copy.deepcopy(tau_one)
+    Mu[:, largst_comp] = copy.deepcopy(mu_one)
+    Sigma[:,:,largst_comp] = copy.deepcopy(sigma_one)
+
+    Priors = np.hstack((Priors, tau_two))
+    Mu = np.hstack((Mu, mu_two.reshape(-1,1)))
+    Sigma = np.vstack((Sigma.T,sigma_two[None]))
+    Sigma = Sigma.T
+    return Priors, Mu, Sigma, cannot_merge_link
+
+def merge_func(Priors, Mu, Sigma)
+
 def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
     # T_sigma = 2
     # eps_thres_best_priors = 1e-6
@@ -167,11 +201,10 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
             Sigma[:,:,nb_com] = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
 
     Priors = Priors / np.sum(Priors)
-
     return [Priors, Mu, Sigma, C_mat]
 
-
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
+    t_split = 5e-1
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -180,12 +213,12 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
+        Priors, Mu, Sigma,cannot_merge_link = split_func(Priors, Mu, Sigma,t_split)
+        Priors, Mu, Sigma = merge_func(Priors, Mu, Sigma,cannot_merge_link)
 
     return expData
 
-def split_func(Sigma):
-    pass
-    np.linalg.det(Sigma)
+
 
 def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
     center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate,T_Sigma):
