@@ -132,8 +132,8 @@ def Mahal_dis_Func(Data,Mu,Cov):
     Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
     return Md
 
-def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
-    T_sigma = 2
+def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
+    # T_sigma = 2
     eps_thres_best_priors = 1e-2
     tau_min_thres = 0.09
     existFlag_sig = 0
@@ -149,8 +149,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
     if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
         existFlag_sig = 1
 
-    if existFlag_sig != 1:
-        pass
+    if existFlag_sig == 1:
         '''
         Only update one best Gaussian
         '''
@@ -169,7 +168,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate):
     return [Priors, Mu, Sigma, C_mat]
 
 
-def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate):
+def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -177,12 +176,12 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate):
     for t in range(Data_Test.shape[1]):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
+        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
 
     return expData
 
 def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
-    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate):
+    center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate,T_Sigma):
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -199,7 +198,7 @@ def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
         '''⬆️Updating rc load information'''
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate)
+        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_Sigma)
 
     return expData
 
