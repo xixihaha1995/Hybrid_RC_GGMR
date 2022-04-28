@@ -134,6 +134,7 @@ def Mahal_dis_Func(Data,Mu,Cov):
 
 def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
     # T_sigma = 2
+    # eps_thres_best_priors = 1e-6
     eps_thres_best_priors = 1e-2
     tau_min_thres = 0.09
     existFlag_sig = 0
@@ -153,6 +154,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
         '''
         Update all Gaussians
         '''
+        # print("Updating")
         for nb_com in range(Post_pr.shape[0]):
             q_j = Post_pr[nb_com, 0] / np.sum(Post_pr, axis= 0 )
             C_mat[nb_com, 0] += q_j
@@ -180,6 +182,10 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
 
     return expData
+
+def split_func(Sigma):
+    pass
+    np.linalg.det(Sigma)
 
 def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
     center_rc_y, scale_rc_y,u_measured, rc_warming_step,abcd, L_rate,T_Sigma):
