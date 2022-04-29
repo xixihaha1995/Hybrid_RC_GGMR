@@ -173,11 +173,12 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split, time_stam, max_nbStates):
     # can volume be negative
     cannot_merge_link = -1
     largst_comp = -1
-    if max(np.linalg.det(Sigma.T)) < 0:
-        print("Sigma volumes can be negative")
-    max_volumes = max(np.linalg.det(Sigma.T))
+    # if max(abs(np.linalg.det(Sigma.T))) < 0:
+    #     print("Sigma volumes can be negative")
+    max_volumes = max(abs(np.linalg.det(Sigma.T)))
     if max_volumes < t_split or Priors.shape[1] >= max_nbStates:
         return Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_comp
+    print(f'Spliting based on t_split{t_split}')
     cannot_merge_link = time_stam
     largst_comp = np.argmax(np.linalg.det(Sigma.T))
     lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
@@ -208,10 +209,10 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split, time_stam, max_nbStates):
 
 def skld_func(sig_one, sig_two, mu_one, mu_two):
     D = sig_one.shape[0]
-    kld_one = 1/2 * (np.log(np.linalg.det(sig_one) / np.linalg.det(sig_two)) \
+    kld_one = 1/2 * (np.log(abs(np.linalg.det(sig_one) / np.linalg.det(sig_two))) \
               + np.trace(np.linalg.inv(sig_two) @ sig_one) \
               + (mu_two - mu_one).reshape(-1,1).T @ np.linalg.inv(sig_one) @ (mu_two - mu_one).reshape(-1,1) - D)
-    kld_two =1/2 * (np.log(np.linalg.det(sig_two) / np.linalg.det(sig_one)) \
+    kld_two =1/2 * (np.log(abs(np.linalg.det(sig_two) / np.linalg.det(sig_one))) \
               + np.trace(np.linalg.inv(sig_one) @ sig_two) \
               + (mu_one - mu_two).reshape(-1,1).T @ np.linalg.inv(sig_two) @ (mu_one - mu_two).reshape(-1,1) - D)
     skld = 1/2 * (kld_one + kld_two)
@@ -227,11 +228,14 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge, cannot_merge_link, largst_comp):
             sig_A, sig_B = Sigma[:,:,ind_i],Sigma[:,:,ind_j]
             mu_A, mu_B = Mu[:,ind_i], Mu[:,ind_j]
             this_skld = skld_func(sig_A, sig_B, mu_A, mu_B)
-            skld_dict[(f'{ind_i}',f'{ind_j}')] = this_skld[0,0]
+            skld_dict[(f'{ind_i}',f'{ind_j}')] = abs(this_skld[0,0])
     ind_one, ind_two = min(skld_dict, key = skld_dict.get)
     ind_one, ind_two = int(ind_one), int(ind_two)
     '''⬇️cannot/shouldn't merge'''
     min_skld = min(skld_dict.values())
+    # if min_skld < 0:
+    #     print("minimum skld can be negative")
+
     if min_skld > t_merge:
         return Priors, Mu, Sigma,C_mat
     if cannot_merge_link != -1 and \
@@ -239,6 +243,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge, cannot_merge_link, largst_comp):
              (ind_one == nbComp - 1 or  ind_two == largst_comp)):
         return Priors, Mu, Sigma,C_mat
     '''⬆️cannot/shouldn't merge'''
+    print(f'Merging based on t_merge{t_merge}')
+
     tau_one, tau_two = Priors[0, ind_one], Priors[0, ind_two]
     tau_merged = tau_one + tau_two
 
