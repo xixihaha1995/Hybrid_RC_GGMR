@@ -168,7 +168,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
 
     return [Priors, Mu, Sigma, C_mat]
 
-def split_func(Priors, Mu, Sigma,C_mat, t_split, time_stam, max_nbStates):
+def split_func(Priors, Mu, Sigma,C_mat, t_split_fac, time_stam, max_nbStates):
     split_factor = 8e-1
     # can volume be negative
     cannot_merge_link = -1
@@ -176,9 +176,11 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split, time_stam, max_nbStates):
     # if max(abs(np.linalg.det(Sigma.T))) < 0:
     #     print("Sigma volumes can be negative")
     max_volumes = max(abs(np.linalg.det(Sigma.T)))
-    if max_volumes < t_split or Priors.shape[1] >= max_nbStates:
+    mean_volumes = abs(np.linalg.det(Sigma.T)).mean()
+    print(f'max_volumes:{max_volumes}, mean_volumes:{mean_volumes}')
+    if_large = max_volumes > 1.2 * mean_volumes
+    if max_volumes < t_split_fac * mean_volumes or Priors.shape[1] >= max_nbStates:
         return Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_comp
-    print(f'Spliting based on t_split{t_split}')
     cannot_merge_link = time_stam
     largst_comp = np.argmax(np.linalg.det(Sigma.T))
     lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
@@ -218,7 +220,7 @@ def skld_func(sig_one, sig_two, mu_one, mu_two):
     skld = 1/2 * (kld_one + kld_two)
     return skld
 
-def merge_func(Priors, Mu, Sigma,C_mat,t_merge, cannot_merge_link, largst_comp):
+def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_comp):
     skld_dict = {}
     nbComp = Sigma.shape[-1]
     if nbComp <= 3:
@@ -231,20 +233,19 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge, cannot_merge_link, largst_comp):
             skld_dict[(f'{ind_i}',f'{ind_j}')] = abs(this_skld[0,0])
     ind_one, ind_two = min(skld_dict, key = skld_dict.get)
     ind_one, ind_two = int(ind_one), int(ind_two)
-    '''⬇️cannot/shouldn't merge'''
-    min_skld = min(skld_dict.values())
-    # if min_skld < 0:
-    #     print("minimum skld can be negative")
 
-    if min_skld > t_merge:
+    min_skld = min(skld_dict.values())
+    mean_skld = np.mean(list(skld_dict.values()))
+    print(f'min_skld:{min_skld}, mean_skld:{mean_skld}')
+    if_small = min_skld < 0.8 * mean_skld
+    '''⬇️cannot/shouldn't merge'''
+    if min_skld > t_merge_fac * mean_skld:
         return Priors, Mu, Sigma,C_mat
     if cannot_merge_link != -1 and \
             ((ind_one == largst_comp or ind_two == nbComp - 1) or
              (ind_one == nbComp - 1 or  ind_two == largst_comp)):
         return Priors, Mu, Sigma,C_mat
     '''⬆️cannot/shouldn't merge'''
-    print(f'Merging based on t_merge{t_merge}')
-
     tau_one, tau_two = Priors[0, ind_one], Priors[0, ind_two]
     tau_merged = tau_one + tau_two
 
@@ -277,8 +278,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge, cannot_merge_link, largst_comp):
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     nbStates = Priors.shape[1]
     max_nbStates = nbStates + 2
-    t_split = 5e-3
-    t_merge = 5e-2
+    t_split_fac = 1.2
+    t_merge_fac = 0.8
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -287,8 +288,8 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
-        Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split, t_stamp, max_nbStates)
-        Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge, cannot_merge_link, largst_volume_ind)
+        Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
+        Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
         Priors = Priors / np.sum(Priors)
 
     return expData
