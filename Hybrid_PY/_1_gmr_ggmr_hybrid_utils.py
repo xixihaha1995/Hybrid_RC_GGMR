@@ -161,6 +161,7 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
             tau_j =( (1 - L_rate) * Priors[0,nb_com] + L_rate * q_j)[0]
             Priors[0,nb_com] = min(tau_j, tau_min_thres)
             eta_j = q_j * ((1 - L_rate) / C_mat[nb_com, 0] + L_rate)
+            eta_j = np.nan_to_num(eta_j, nan= L_rate)
             eta_j = eta_j[0]
             Mu[:, nb_com] = (1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t]
             x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
@@ -177,8 +178,7 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split_fac, time_stam, max_nbStates):
     #     print("Sigma volumes can be negative")
     max_volumes = max(abs(np.linalg.det(Sigma.T)))
     mean_volumes = abs(np.linalg.det(Sigma.T)).mean()
-    print(f'max_volumes:{max_volumes}, mean_volumes:{mean_volumes}')
-    if_large = max_volumes > 1.2 * mean_volumes
+    # print(f'max_volumes:{max_volumes}, mean_volumes:{mean_volumes}')
     if max_volumes < t_split_fac * mean_volumes or Priors.shape[1] >= max_nbStates:
         return Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_comp
     cannot_merge_link = time_stam
@@ -236,8 +236,7 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 
     min_skld = min(skld_dict.values())
     mean_skld = np.mean(list(skld_dict.values()))
-    print(f'min_skld:{min_skld}, mean_skld:{mean_skld}')
-    if_small = min_skld < 0.8 * mean_skld
+    # print(f'min_skld:{min_skld}, mean_skld:{mean_skld}')
     '''⬇️cannot/shouldn't merge'''
     if min_skld > t_merge_fac * mean_skld:
         return Priors, Mu, Sigma,C_mat
@@ -278,13 +277,14 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     nbStates = Priors.shape[1]
     max_nbStates = nbStates + 2
-    t_split_fac = 1.2
-    t_merge_fac = 0.8
+    t_split_fac = 1.5
+    t_merge_fac = 0.5
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     expData = []
     for t_stamp in range(Data_Test.shape[1]):
+        # print(t_stamp)
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
