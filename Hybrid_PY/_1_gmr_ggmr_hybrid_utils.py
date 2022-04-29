@@ -132,40 +132,6 @@ def Mahal_dis_Func(Data,Mu,Cov):
     Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
     return Md
 
-def split_func(Priors, Mu, Sigma, t_split, time_stam):
-    split_factor = 8e-1
-    # can volume be negative
-    cannot_merge_link = -1
-    if min(np.linalg.det(Sigma.T)) < 0:
-        print("Sigma volumes can be negative")
-    if max(np.linalg.det(Sigma.T)) < t_split:
-        return Priors, Mu, Sigma,cannot_merge_link
-    cannot_merge_link = time_stam
-    largst_comp = np.argmax(np.linalg.det(Sigma.T))
-    lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
-    dpc_idx = np.argmax(lamdas)
-    lamda = lamdas[dpc_idx]
-    eigen_vec = eigen_vecs[:, dpc_idx]
-    delta_eigen_vect = (split_factor * lamda)**(0.5) * eigen_vec
-    tau_prev = Priors[0, largst_comp]
-    tau_one = tau_two =  np.array([[tau_prev / 2]])
-    mu_prev = Mu[:, largst_comp]
-    mu_one = mu_prev + delta_eigen_vect
-    mu_two = mu_prev - delta_eigen_vect
-    sigma_one = sigma_two = Sigma.T[largst_comp,:,:] - delta_eigen_vect @ delta_eigen_vect.T
-
-    Priors[0, largst_comp] = copy.deepcopy(tau_one)
-    Mu[:, largst_comp] = copy.deepcopy(mu_one)
-    Sigma[:,:,largst_comp] = copy.deepcopy(sigma_one)
-
-    Priors = np.hstack((Priors, tau_two))
-    Mu = np.hstack((Mu, mu_two.reshape(-1,1)))
-    Sigma = np.vstack((Sigma.T,sigma_two[None]))
-    Sigma = Sigma.T
-    return Priors, Mu, Sigma, cannot_merge_link
-
-def merge_func(Priors, Mu, Sigma)
-
 def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
     # T_sigma = 2
     # eps_thres_best_priors = 1e-6
@@ -200,21 +166,106 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
             x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
             Sigma[:,:,nb_com] = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
 
-    Priors = Priors / np.sum(Priors)
     return [Priors, Mu, Sigma, C_mat]
+
+def split_func(Priors, Mu, Sigma, t_split, time_stam):
+    split_factor = 8e-1
+    # can volume be negative
+    cannot_merge_link = -1
+    if min(np.linalg.det(Sigma.T)) < 0:
+        print("Sigma volumes can be negative")
+    if max(np.linalg.det(Sigma.T)) < t_split:
+        return Priors, Mu, Sigma,cannot_merge_link
+    cannot_merge_link = time_stam
+    largst_comp = np.argmax(np.linalg.det(Sigma.T))
+    lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
+    dpc_idx = np.argmax(lamdas)
+    lamda = lamdas[dpc_idx]
+    eigen_vec = eigen_vecs[:, dpc_idx]
+    delta_eigen_vect = (split_factor * lamda)**(0.5) * eigen_vec
+    tau_prev = Priors[0, largst_comp]
+    tau_one = tau_two =  np.array([[tau_prev / 2]])
+    mu_prev = Mu[:, largst_comp]
+    mu_one = mu_prev + delta_eigen_vect
+    mu_two = mu_prev - delta_eigen_vect
+    sigma_one = sigma_two = Sigma.T[largst_comp,:,:] - delta_eigen_vect @ delta_eigen_vect.T
+
+    Priors[0, largst_comp] = copy.deepcopy(tau_one)
+    Mu[:, largst_comp] = copy.deepcopy(mu_one)
+    Sigma[:,:,largst_comp] = copy.deepcopy(sigma_one)
+
+    Priors = np.hstack((Priors, tau_two))
+    Mu = np.hstack((Mu, mu_two.reshape(-1,1)))
+    Sigma = np.vstack((Sigma.T,sigma_two[None]))
+    Sigma = Sigma.T
+    return Priors, Mu, Sigma, cannot_merge_link, largst_comp
+
+def skld_func(sig_one, sig_two, mu_one, mu_two):
+    D = sig_one.shape[0]
+    kld_one = 1/2 * (np.log(np.linalg.det(sig_one) / np.linalg.det(sig_two)) \
+              + np.trace(np.linalg.inv(sig_two) @ sig_one) \
+              + (mu_two - mu_one).reshape(-1,1).T @ np.linalg.inv(sig_one) @ (mu_two - mu_one).reshape(-1,1) - D)
+    kld_two =1/2 * (np.log(np.linalg.det(sig_two) / np.linalg.det(sig_one)) \
+              + np.trace(np.linalg.inv(sig_one) @ sig_two) \
+              + (mu_one - mu_two).reshape(-1,1).T @ np.linalg.inv(sig_two) @ (mu_one - mu_two).reshape(-1,1) - D)
+    skld = 1/2 * (kld_one + kld_two)
+    return skld
+
+def merge_func(Priors, Mu, Sigma,t_merge, cannot_merge_link, largst_comp):
+    skld_2d = []
+    nbComp = Sigma.shape[0]
+    for ind_i in range(nbComp):
+        skld_level = []
+        for ind_j in range(ind_i + 1, nbComp):
+            sig_A, sig_B = Sigma[:,:,ind_i],Sigma[:,:,ind_j]
+            mu_A, mu_B = Mu[:,ind_i], Mu[:,ind_j]
+            this_skld = skld_func(sig_A, sig_B, mu_A, mu_B)
+            skld_level.append(this_skld)
+        skld_2d.append(skld_level)
+    skld_2d = abs(np.array(skld_2d))
+    (ind_one, ind_two) = np.unravel_index(skld_2d.argmin(), skld_2d.shape)
+    '''⬇️cannot/shouldn't merge'''
+    if cannot_merge_link != -1 and \
+            ((ind_one == largst_comp and ind_two == nbComp - 1) or
+             (ind_one == nbComp - 1 and largst_comp)):
+        return Mu, Sigma
+
+    if skld_2d.min() > t_merge:
+        return Mu, Sigma
+    '''⬆️cannot/shouldn't merge'''
+    tau_one, tau_two = Priors[0, ind_one], Priors[0, ind_two]
+    tau_merged = tau_one + tau_two
+    f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
+    mu_one, mu_two = Mu[:, ind_one], Mu[:, ind_two]
+    mu_merged = f_one * mu_one + f_two * mu_two
+    sig_one, sig_two = Sigma[ind_one, :, :], Sigma[ind_two, :, :]
+    sig_merged = f_one * sig_one + f_two * sig_two + \
+                 f_one * f_two * (mu_one - mu_two).reshape(-1,1) @ (mu_one - mu_two).reshape(-1,1).T
+
+    Priors[0, largst_comp] = copy.deepcopy(tau_merged)
+    Mu[:, largst_comp] = copy.deepcopy(mu_merged)
+    Sigma[:,:,largst_comp] = copy.deepcopy(sig_merged)
+
+    
+
+    return Priors, Mu, Sigma
+
+
 
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     t_split = 5e-1
+    t_merge = 5
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     expData = []
-    for t in range(Data_Test.shape[1]):
-        this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
+    for t_stamp in range(Data_Test.shape[1]):
+        this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
-        Priors, Mu, Sigma,cannot_merge_link = split_func(Priors, Mu, Sigma,t_split)
-        Priors, Mu, Sigma = merge_func(Priors, Mu, Sigma,cannot_merge_link)
+        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
+        Priors, Mu, Sigma,cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,t_split, t_stamp)
+        Mu, Sigma = merge_func(Priors, Mu, Sigma,t_merge, cannot_merge_link, largst_volume_ind)
+        Priors = Priors / np.sum(Priors)
 
     return expData
 
