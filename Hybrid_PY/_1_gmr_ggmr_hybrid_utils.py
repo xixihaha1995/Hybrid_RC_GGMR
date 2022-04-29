@@ -1,12 +1,12 @@
-import sys, numpy as np, copy
+import sys, numpy as np, copy, math
 from sklearn.cluster import KMeans
 
-def gaussPDF_Func(Data, Mu, Sigma):
-    if Data.ndim == 1:
-        nbVar, nbData = Data.shape[0], 1
+def gaussPDF_Func(Data_ori, Mu, Sigma):
+    if Data_ori.ndim == 1:
+        nbVar, nbData = Data_ori.shape[0], 1
     else:
-        nbVar, nbData = Data.shape
-    Data = Data.T - np.tile(Mu.T, [nbData, 1])
+        nbVar, nbData = Data_ori.shape
+    Data = Data_ori.T - np.tile(Mu.T, [nbData, 1])
     prob = np.sum(Data @ np.linalg.inv(Sigma) * Data, axis=1)
     prob = np.exp(-0.5 * prob )/ np.sqrt((2 * np.pi) ** nbVar * (abs(np.linalg.det(Sigma)) + sys.float_info.min) )
     return prob
@@ -120,7 +120,7 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
 def BMC_Func(Data_in,Priors_in,Mu_in,Sigma_in):
     Post_pr_lst =[]
     for m in range(Priors_in.shape[1]):
-        this_post_pr = Priors_in[0, m].reshape(1) @ gaussPDF_Func(Data_in, Mu_in[:,m], Sigma_in[:,:,m])
+        this_post_pr = Priors_in[0, m].reshape(1) @ gaussPDF_Func(Data_in, Mu_in[:,m], Sigma_in[:,:,m]) + sys.float_info.min
         Post_pr_lst.append(this_post_pr)
     Post_pr = np.array(Post_pr_lst).reshape(-1,1)
     m_best = np.argmax(Post_pr)
@@ -165,7 +165,8 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
             eta_j = eta_j[0]
             Mu[:, nb_com] = (1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t]
             x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
-            Sigma[:,:,nb_com] = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
+            update_sigma = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
+            Sigma[:,:,nb_com] = update_sigma
 
     return [Priors, Mu, Sigma, C_mat]
 
@@ -181,6 +182,7 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split_fac, time_stam, max_nbStates):
     # print(f'max_volumes:{max_volumes}, mean_volumes:{mean_volumes}')
     if max_volumes < t_split_fac * mean_volumes or Priors.shape[1] >= max_nbStates:
         return Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_comp
+    print("Spliting")
     cannot_merge_link = time_stam
     largst_comp = np.argmax(np.linalg.det(Sigma.T))
     lamdas, eigen_vecs = np.linalg.eig(Sigma.T[largst_comp,:,:])
@@ -191,8 +193,8 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split_fac, time_stam, max_nbStates):
     tau_prev = Priors[0, largst_comp]
     tau_one = tau_two =  np.array([[tau_prev / 2]])
     mu_prev = Mu[:, largst_comp]
-    c_mat_prev = C_mat[largst_comp,0]
-    c_mat_one = c_mat_two = c_mat_prev / 2
+    # c_mat_prev = C_mat[largst_comp,0]
+    c_mat_one = c_mat_two = 1
     mu_one = mu_prev + delta_eigen_vect
     mu_two = mu_prev - delta_eigen_vect
     sigma_one = sigma_two = Sigma.T[largst_comp,:,:] - delta_eigen_vect @ delta_eigen_vect.T
@@ -206,7 +208,7 @@ def split_func(Priors, Mu, Sigma,C_mat, t_split_fac, time_stam, max_nbStates):
     Mu = np.hstack((Mu, mu_two.reshape(-1,1)))
     Sigma = np.vstack((Sigma.T,sigma_two[None]))
     Sigma = Sigma.T
-    C_mat = np.vstack((C_mat, c_mat_two[None]))
+    C_mat = np.vstack((C_mat, c_mat_two))
     return Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_comp
 
 def skld_func(sig_one, sig_two, mu_one, mu_two):
@@ -245,11 +247,12 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
              (ind_one == nbComp - 1 or  ind_two == largst_comp)):
         return Priors, Mu, Sigma,C_mat
     '''⬆️cannot/shouldn't merge'''
+    print("Merging")
     tau_one, tau_two = Priors[0, ind_one], Priors[0, ind_two]
     tau_merged = tau_one + tau_two
 
-    c_mat_one, c_mat_two = C_mat[ind_one,0], C_mat[ind_two,0]
-    c_mat_merged = c_mat_one + c_mat_two
+    # c_mat_one, c_mat_two = C_mat[ind_one,0], C_mat[ind_two,0]
+    c_mat_merged = 1
 
     f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
     mu_one, mu_two = Mu[:, ind_one], Mu[:, ind_two]
@@ -277,8 +280,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     nbStates = Priors.shape[1]
     max_nbStates = nbStates + 2
-    t_split_fac = 1.5
-    t_merge_fac = 0.5
+    t_split_fac = 2
+    t_merge_fac = 1e-1
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
