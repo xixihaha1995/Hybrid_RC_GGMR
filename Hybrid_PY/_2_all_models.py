@@ -16,6 +16,7 @@ def GGMR_prediction(train_norm, test_norm, nbStates, T_sigma):
         em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr, test_norm_ggmr[:nbVarInput_ggmr,:], nbVarInput_ggmr)
     sum_beta_rs_ggmr=sum(ggmr_beta,1).reshape(1,-1)
     L_rate = 5e-3
+
     ggmr_norm = gaussian_tools.ggmr_func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
                                          test_norm_ggmr,sum_beta_rs_ggmr,L_rate,T_sigma)
     return ggmr_norm
