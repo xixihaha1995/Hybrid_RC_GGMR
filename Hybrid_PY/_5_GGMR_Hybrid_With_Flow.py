@@ -4,7 +4,7 @@ import numpy as np
 
 nbStates = 5
 L_rate = 5e-3
-T_Sigma = 2
+T_Sigma = 5
 nbStates_candidates = [5,10,15] #5
 T_Sigma_candidates = [2e-1, 2, 5] #2
 L_rate_candidates = [1e-3, 3e-2, 6e-2]

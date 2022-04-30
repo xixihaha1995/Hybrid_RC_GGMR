@@ -132,7 +132,61 @@ def Mahal_dis_Func(Data,Mu,Cov):
     Md = np.sqrt(abs((Data - Mu).T @ np.linalg.inv(Cov) @ (Data - Mu)))
     return Md
 
-def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
+def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
+    # T_sigma = 2
+    # eps_thres_best_priors = 1e-6
+    eps_thres_best_priors = 1e-2
+    tau_min_thres = 0.09
+    existFlag_sig = 0
+    k_o_init_sigma = 300
+
+    m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
+    com_MD_lst = []
+
+    for m in range(Priors.shape[1]):
+        this_com_MD = Mahal_dis_Func(Data_Test[:, t], Mu[:, m], Sigma[:, :, m])
+        com_MD_lst.append(this_com_MD)
+    com_MD = np.array(com_MD_lst).reshape(-1, 1)
+
+    if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
+        existFlag_sig = 1
+
+    if existFlag_sig == 0:
+        '''create new gaussian'''
+        pass
+        print("create new")
+        for nb_com in range(Priors.shape[1]):
+            Priors[0, nb_com] = (1- L_rate) * Priors[0, nb_com]
+        # _least_contr_gau = np.argmin(Priors)
+
+        Priors = np.hstack((Priors, np.array([[L_rate]])))
+        C_mat = np.vstack((C_mat, 1))
+        Mu = np.hstack((Mu, Data_Test[:, t].reshape(-1,1)))
+        Sigma = np.vstack((Sigma.T, k_o_init_sigma*np.identity(Sigma.shape[0])[None]))
+        Sigma = Sigma.T
+
+
+    if existFlag_sig == 1:
+        '''
+        Update all Gaussians
+        '''
+        print("Updating")
+        for nb_com in range(Post_pr.shape[0]):
+            q_j = Post_pr[nb_com, 0] / np.sum(Post_pr, axis= 0 )
+            C_mat[nb_com, 0] += q_j
+            tau_j =( (1 - L_rate) * Priors[0,nb_com] + L_rate * q_j)[0]
+            Priors[0,nb_com] = min(tau_j, tau_min_thres)
+            eta_j = q_j * ((1 - L_rate) / C_mat[nb_com, 0] + L_rate)
+            eta_j = np.nan_to_num(eta_j, nan= L_rate)
+            eta_j = eta_j[0]
+            Mu[:, nb_com] = (1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t]
+            x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
+            update_sigma = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
+            Sigma[:,:,nb_com] = update_sigma
+
+    return [Priors, Mu, Sigma, C_mat]
+
+def hybrid_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma):
     # T_sigma = 2
     # eps_thres_best_priors = 1e-6
     eps_thres_best_priors = 1e-2
@@ -152,9 +206,10 @@ def ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_sigma)
 
     if existFlag_sig == 0:
         '''
+        Old Update strategy: No best gaussian -> Update all gaussians
         Update all Gaussians
         '''
-        # print("Updating")
+        print("Updating")
         for nb_com in range(Post_pr.shape[0]):
             q_j = Post_pr[nb_com, 0] / np.sum(Post_pr, axis= 0 )
             C_mat[nb_com, 0] += q_j
@@ -240,8 +295,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
     mean_skld = np.mean(list(skld_dict.values()))
     # print(f'min_skld:{min_skld}, mean_skld:{mean_skld}')
     '''⬇️cannot/shouldn't merge'''
-    if min_skld > t_merge_fac * mean_skld:
-        return Priors, Mu, Sigma,C_mat
+    # if min_skld > t_merge_fac * mean_skld:
+    #     return Priors, Mu, Sigma,C_mat
     if cannot_merge_link != -1 and \
             ((ind_one == largst_comp or ind_two == nbComp - 1) or
              (ind_one == nbComp - 1 or  ind_two == largst_comp)):
@@ -280,8 +335,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     nbStates = Priors.shape[1]
     max_nbStates = nbStates + 2
-    t_split_fac = 2
-    t_merge_fac = 1e-1
+    t_split_fac = 2e10
+    t_merge_fac = 4e-1
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -290,7 +345,7 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         # print(t_stamp)
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
+        [Priors, Mu, Sigma, C_mat] = ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
         Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
         Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
         Priors = Priors / np.sum(Priors)
@@ -317,7 +372,7 @@ def hybrid_func(Priors, Mu, Sigma, Data_Test,SumPosterior, test_initial_time,
         '''⬆️Updating rc load information'''
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_Sigma)
+        [Priors, Mu, Sigma, C_mat] = hybrid_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T_Sigma)
 
     return expData
 
