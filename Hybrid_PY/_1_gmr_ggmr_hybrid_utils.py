@@ -330,6 +330,32 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 
     return Priors, Mu, Sigma,C_mat
 
+def fit_batch(_batch, max_nbStates):
+    pass
+
+
+def online_ggmr(Data_Test,max_nbStates):
+    '''
+    BIC -> EM -> new_gmm
+    if not old_gmm:
+        old_gmm = new_gmm
+    else
+        merge new_gmm -> old_gmm to maintain the max_nb_states
+    '''
+    nbVar = Data_Test.shape[0]
+    in_out_split = nbVar - 1
+    _batch_size = 5
+    old_prior, old_mu, old_sigma = None, None, None
+    expData = []
+    for t_stamp in range(0, Data_Test.shape[1], _batch_size):
+        _batch = Data_Test[:in_out_split, t_stamp: t_stamp+_batch_size]
+        new_prior, new_mu, new_sigma = fit_batch(_batch, max_nbStates)
+        old_prior, old_mu, old_sigma = merge_new_to_old(old_prior, old_mu, old_sigma,
+                                                        new_prior, new_mu, new_sigma)
+        this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
+                                                  _batch, in_out_split)
+        expData.append(this_exp_y)
+    return expData
 
 
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
