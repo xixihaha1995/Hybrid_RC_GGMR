@@ -2,8 +2,8 @@ import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_t
 import _2_all_models as all_predict
 import numpy as np
 
-max_nbStates = 5
-L_rate = 5e-3
+max_nbStates = 6
+L_rate = 2e-1
 L_rate_candidates = [1e-3]
 training_length = 4032
 rc_warming_step = 15
@@ -13,8 +13,8 @@ All_Variables = All_Variables_obj.astype('float64')
 u_measured = u_measured_obj.astype('float64')
 total_length = All_Variables.shape[1]
 test_initial_time = training_length
-testing_length = total_length - training_length
-# testing_length = 1000
+# testing_length = total_length - training_length
+testing_length = 200
 nbVarAll = All_Variables.shape[0]
 nbVarInput = nbVarAll - 1
 
@@ -36,7 +36,7 @@ test_norm[-3,:] = np.array(hybrid_flow_norm)[:testing_length]
 results = {}
 for L_rate in L_rate_candidates:
     '''GGMR'''
-    ggmr_norm = gaussian_tools.online_ggmr(test_norm,max_nbStates,L_rate)
+    ggmr_norm = gaussian_tools.online_ggmr(train_norm,test_norm,max_nbStates,L_rate)
     ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
     cvrmse_ggmr = general_tools.cvrmse_cal(y_test, ggmr_predict, mean_measured)
 '''Save results'''

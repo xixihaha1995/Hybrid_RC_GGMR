@@ -11,10 +11,10 @@ def gaussPDF_Func(Data_ori, Mu, Sigma):
     prob = np.exp(-0.5 * prob )/ np.sqrt((2 * np.pi) ** nbVar * (abs(np.linalg.det(Sigma)) + sys.float_info.min) )
     return prob
 
-def EM_Init_Func(Data, nbStates, online_=False):
+def EM_Init_Func(Data, nbStates, kmean_init_=False):
     Data_tran = Data.T
     nbVar = Data_tran.shape[1]
-    if not online_:
+    if not kmean_init_:
         minc = np.min(Data_tran, axis=0)
         maxc = np.max(Data_tran, axis=0)
         all_var_ran = []
@@ -65,11 +65,13 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
         # compute posterior probability p(i|x)
         Pix_tmp = np.tile(Priors,[nbData, 1]) * Pxi
-        Pix_nan = Pix_tmp / np.tile(np.sum(Pix_tmp, axis=1).reshape(-1,1),[1, nbStates])
+        denom = np.tile(np.sum(Pix_tmp, axis=1).reshape(-1, 1), [1, nbStates])
+        denom[denom == 0] = sys.float_info.min
+        Pix_nan = Pix_tmp /denom
 
         Pix = np.nan_to_num(Pix_nan, nan=0)
         # compute the cumulated posterior probability
-        E = np.sum(Pix, axis = 0).reshape(1,-1)
+        E = np.sum(Pix, axis = 0).reshape(1,-1) + sys.float_info.min
         '''M-step'''
         for i in range(nbStates):
             Priors[0,i] = E[0,i] / nbData
@@ -85,11 +87,12 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
         F_nan = Pxi @ Priors.T
         F = np.nan_to_num(F_nan, nan=sys.float_info.min)
+        F[F==0] = sys.float_info.min
         loglik = np.log(F).mean()
         # print(abs((loglik/loglik_old)-1))
 
         if abs((loglik / loglik_old) - 1) < loglik_threshold\
-                or nbStep > 300:
+                or nbStep > 100:
             break
         loglik_old = loglik
         nbStep += 1
@@ -360,7 +363,7 @@ def fit_batch(_batch, max_nbStates):
     _all_nbStates = []
     for nb_states in range(2, max_nbStates):
         _all_nbStates.append(nb_states)
-        Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, nb_states, False)
+        Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, nb_states, True)
         em_Priors, em_Mu, em_Sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
         this_bic = _bic_func(_batch,nb_states, em_Priors, em_Mu, em_Sigma )
         _all_bic.append(this_bic)
@@ -370,10 +373,6 @@ def fit_batch(_batch, max_nbStates):
 
 def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
                      new_prior, new_mu, new_sigma):
-    pass
-    if old_prior is None:
-        old_prior, old_mu, old_sigma = new_prior, new_mu, new_sigma
-        return old_prior, old_mu, old_sigma
     '''⬇️update the old, new gmms'''
     for nb_com in range(new_prior.shape[1]):
         new_prior[0, nb_com] = lrn_rate * new_prior[0, nb_com]
@@ -426,36 +425,43 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
 
     return old_prior, old_mu, old_sigma
 
+def online_init(train_norm, max_nbStates):
+    best_nbstate = fit_batch(train_norm, max_nbStates)
+    Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
+    old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
+    return old_prior, old_mu, old_sigma
 
-def online_ggmr(Data_Test,max_nbStates, lrn_rate):
+def online_update(Data_Test, t_stamp, _batch_size, max_nbStates,lrn_rate,
+                  old_prior, old_mu, old_sigma):
+    _batch = Data_Test[:, t_stamp - _batch_size: t_stamp]
+    best_nbstate = fit_batch(_batch, max_nbStates)
+    Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, True)
+    new_prior, new_mu, new_sigma = EM_Func(_batch, Priors_init, Mu_init, Sigma_init)
+    old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
+                                                      old_prior, old_mu, old_sigma,
+                                                      new_prior, new_mu, new_sigma)
+    return old_prior, old_mu, old_sigma
+
+def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate):
+    train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
     Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
+
+    old_prior, old_mu, old_sigma = online_init(train_norm, max_nbStates)
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     _batch_size = 5
-    old_prior, old_mu, old_sigma = None, None, None
+
     expData = np.array([])
     for t_stamp in range(0, Data_Test.shape[1], _batch_size):
         print(t_stamp)
-        if t_stamp < 500:
-            _batch = Data_Test[:, t_stamp: t_stamp+_batch_size]
-            best_nbstate = fit_batch(_batch, max_nbStates)
-
-            Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, False)
-            new_prior, new_mu, new_sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
-
-            old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
-                                                            old_prior, old_mu, old_sigma,
-                                                            new_prior, new_mu, new_sigma)
-            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma,
-                                                      _batch[:in_out_split, :], in_out_split)
-            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
-        else:
-            _batch = Data_Test[:, t_stamp:]
-            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
-                                                      _batch[:in_out_split,:], in_out_split)
-            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
-            break
+        if t_stamp % _batch_size == 0 and t_stamp != 0 :
+            old_prior, old_mu, old_sigma = online_update(Data_Test,t_stamp,_batch_size,max_nbStates,lrn_rate,
+                                                         old_prior, old_mu, old_sigma)
+        _batch = Data_Test[:, t_stamp: t_stamp + _batch_size]
+        this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
+                                                  _batch[:in_out_split,:], in_out_split)
+        expData = np.concatenate((expData, this_exp_y.reshape(-1)))
     return expData
 
 
