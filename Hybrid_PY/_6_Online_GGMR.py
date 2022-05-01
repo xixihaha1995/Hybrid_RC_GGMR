@@ -2,8 +2,8 @@ import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_t
 import _2_all_models as all_predict
 import numpy as np
 
-max_nbStates = 6
-L_rate_candidates = [8.5e-1]
+max_nbStates = 4
+L_rate_candidates = [1e-2]
 training_length = 4032
 rc_warming_step = 15
 
@@ -12,8 +12,8 @@ All_Variables = All_Variables_obj.astype('float64')
 u_measured = u_measured_obj.astype('float64')
 total_length = All_Variables.shape[1]
 test_initial_time = training_length
-# testing_length = total_length - training_length
-testing_length = 200
+testing_length = total_length - training_length
+testing_length = 500
 nbVarAll = All_Variables.shape[0]
 nbVarInput = nbVarAll - 1
 

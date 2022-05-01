@@ -1,6 +1,6 @@
 import datetime
 import matplotlib.pyplot as plt, _0_generic_utils as general_tool
-import numpy as np, matplotlib
+import numpy as np
 from itertools import cycle
 nbStates_candidates = [5,10,15]
 T_Sigma_candidates = [2e-1, 2, 5]
