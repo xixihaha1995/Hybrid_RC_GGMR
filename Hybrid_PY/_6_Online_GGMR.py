@@ -4,7 +4,7 @@ import numpy as np
 
 max_nbStates = 5
 L_rate = 5e-3
-L_rate_candidates = [1e-3, 3e-2, 6e-2]
+L_rate_candidates = [1e-3]
 training_length = 4032
 rc_warming_step = 15
 
@@ -13,7 +13,7 @@ All_Variables = All_Variables_obj.astype('float64')
 u_measured = u_measured_obj.astype('float64')
 total_length = All_Variables.shape[1]
 test_initial_time = training_length
-testing_length = 200
+testing_length = total_length - training_length
 # testing_length = 1000
 nbVarAll = All_Variables.shape[0]
 nbVarInput = nbVarAll - 1

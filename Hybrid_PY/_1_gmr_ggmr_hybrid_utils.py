@@ -428,35 +428,34 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
 
 
 def online_ggmr(Data_Test,max_nbStates, lrn_rate):
-    '''
-    BIC -> EM -> new_gmm
-    if not old_gmm:
-        old_gmm = new_gmm
-    else
-        merge new_gmm -> old_gmm to maintain the max_nb_states
-    '''
     Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
     _batch_size = 5
     old_prior, old_mu, old_sigma = None, None, None
-    expData = []
+    expData = np.array([])
     for t_stamp in range(0, Data_Test.shape[1], _batch_size):
         print(t_stamp)
-        _batch = Data_Test[:, t_stamp: t_stamp+_batch_size]
-        best_nbstate = fit_batch(_batch, max_nbStates)
+        if t_stamp < 500:
+            _batch = Data_Test[:, t_stamp: t_stamp+_batch_size]
+            best_nbstate = fit_batch(_batch, max_nbStates)
 
-        Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, False)
-        new_prior, new_mu, new_sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
+            Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, False)
+            new_prior, new_mu, new_sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
 
-        old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
-                                                        old_prior, old_mu, old_sigma,
-                                                        new_prior, new_mu, new_sigma)
-        this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
-                                                  _batch[:in_out_split,:], in_out_split)
-        # GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
-        expData.append(this_exp_y)
+            old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
+                                                            old_prior, old_mu, old_sigma,
+                                                            new_prior, new_mu, new_sigma)
+            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma,
+                                                      _batch[:in_out_split, :], in_out_split)
+            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
+        else:
+            _batch = Data_Test[:, t_stamp:]
+            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
+                                                      _batch[:in_out_split,:], in_out_split)
+            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
+            break
     return expData
 
 
