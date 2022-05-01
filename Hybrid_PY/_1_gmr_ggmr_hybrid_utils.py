@@ -368,17 +368,60 @@ def fit_batch(_batch, max_nbStates):
     best_nbstate = _all_nbStates[np.argmin(_all_bic)]
     return best_nbstate
 
-def merge_new_to_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
+def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
                      new_prior, new_mu, new_sigma):
     pass
-    if not old_prior:
+    if old_prior is None:
         old_prior, old_mu, old_sigma = new_prior, new_mu, new_sigma
         return old_prior, old_mu, old_sigma
-    '''update the old, new gmms'''
+    '''⬇️update the old, new gmms'''
+    for nb_com in range(new_prior.shape[1]):
+        new_prior[0, nb_com] = lrn_rate * new_prior[0, nb_com]
+    for nb_com in range(old_prior.shape[1]):
+        old_prior[0, nb_com] = (1 - lrn_rate) * old_prior[0, nb_com]
+    '''⬆️update the old, new gmms'''
+    all_skld = []
+    old_gmm_nb, new_gmm_nb = old_prior.shape[1], new_prior.shape[1]
+    for ind_i in range(old_gmm_nb):
+        this_old_skld = []
+        for ind_j in range(new_gmm_nb):
+            sig_A, sig_B = old_sigma[:, :, ind_i], new_sigma[:, :, ind_j]
+            mu_A, mu_B = old_mu[:, ind_i], new_mu[:, ind_j]
+            this_skld = skld_func(sig_A, sig_B, mu_A, mu_B)
+            this_old_skld.append(this_skld)
+        all_skld.append(this_old_skld)
+    all_skld_arr = np.array(all_skld).reshape(old_gmm_nb, new_gmm_nb)
+    '''⬇️maintain the maximum number of gaussians'''
     while (old_prior.shape[1] + new_prior.shape[1]) > max_nbStates:
         pass
         #most similar new gmm with old gmm will be merged
         #delete the new gmm
+        (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
+        all_skld_arr[ind_one, ind_two] = sys.float_info.min
+
+        tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
+        tau_merged = tau_one + tau_two
+        f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
+        mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
+        mu_merged = f_one * mu_one + f_two * mu_two
+        sig_one, sig_two = old_sigma[:, :, ind_one], new_sigma[:, :, ind_two]
+        sig_merged = f_one * sig_one + f_two * sig_two + \
+                     f_one * f_two * (mu_one - mu_two).reshape(-1,1) @ (mu_one - mu_two).reshape(-1,1).T
+
+        old_prior[0, ind_one] = copy.deepcopy(tau_merged)
+        old_mu[:, ind_one] = copy.deepcopy(mu_merged)
+        old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
+
+        new_prior = np.delete(new_prior, [ind_two], axis=1)
+        new_mu = np.delete(new_mu, [ind_two], axis=1)
+        # Assume ind_two belongs to axis 0.
+        new_sigma = np.delete(new_sigma.T, [ind_two], axis=0)
+        new_sigma = new_sigma.T
+
+    if new_prior.shape[1] > 0:
+        old_prior = np.hstack((old_prior, new_prior))
+        old_mu = np.hstack((old_mu, new_mu))
+        old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
 
     return old_prior, old_mu, old_sigma
 
@@ -405,7 +448,7 @@ def online_ggmr(Data_Test,max_nbStates, lrn_rate):
         Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, False)
         new_prior, new_mu, new_sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
 
-        old_prior, old_mu, old_sigma = merge_new_to_old(max_nbStates, lrn_rate,
+        old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
                                                         old_prior, old_mu, old_sigma,
                                                         new_prior, new_mu, new_sigma)
         this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
