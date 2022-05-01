@@ -1,5 +1,6 @@
-import sys, numpy as np, copy, math
+import sys, numpy as np, copy, math, _0_generic_utils as general_tools
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import normalize
 
 def gaussPDF_Func(Data_ori, Mu, Sigma):
     if Data_ori.ndim == 1:
@@ -343,7 +344,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 
     return Priors, Mu, Sigma,C_mat
 
-def _bic_func(_data_batch, nb_states, Priors_in, Mu_in, Sigma_in):
+def _bic_func(_data_batch, Priors_in, Mu_in, Sigma_in):
+    nb_states = Priors_in.shape[1]
     Post_pr_lst = []
     for m in range(Priors_in.shape[1]):
         this_post_pr = Priors_in[0, m].reshape(1) * gaussPDF_Func(_data_batch, Mu_in[:, m],
@@ -365,19 +367,32 @@ def fit_batch(_batch, max_nbStates):
         _all_nbStates.append(nb_states)
         Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, nb_states, True)
         em_Priors, em_Mu, em_Sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
-        this_bic = _bic_func(_batch,nb_states, em_Priors, em_Mu, em_Sigma )
+        this_bic = _bic_func(_batch,em_Priors, em_Mu, em_Sigma )
         _all_bic.append(this_bic)
     _all_bic = np.nan_to_num(_all_bic, nan=sys.float_info.max)
     best_nbstate = _all_nbStates[np.argmin(_all_bic)]
     return best_nbstate
 
-def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
+def sigmoid(x):
+  return 1 / (1 + math.exp(-x))
+
+def merge_new_into_old(_batch_prev_norm ,max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
                      new_prior, new_mu, new_sigma):
     '''⬇️update the old, new gmms'''
+
+    old_bic = _bic_func(_batch_prev_norm, old_prior, old_mu, old_sigma)
+    new_bic = _bic_func(_batch_prev_norm, new_prior, new_mu, new_sigma)
+    old_forget_rate, new_forget_rate = sigmoid(old_bic), sigmoid(new_bic)
+    # for nb_com in range(new_prior.shape[1]):
+    #     new_prior[0, nb_com] = (1- new_forget_rate) * new_prior[0, nb_com]
+    # for nb_com in range(old_prior.shape[1]):
+    #     old_prior[0, nb_com] = (1 - old_forget_rate) * old_prior[0, nb_com]
+
     for nb_com in range(new_prior.shape[1]):
         new_prior[0, nb_com] = lrn_rate * new_prior[0, nb_com]
     for nb_com in range(old_prior.shape[1]):
         old_prior[0, nb_com] = (1 - lrn_rate) * old_prior[0, nb_com]
+
     '''⬆️update the old, new gmms'''
     all_skld = []
     old_gmm_nb, new_gmm_nb = old_prior.shape[1], new_prior.shape[1]
@@ -431,16 +446,20 @@ def online_init(train_norm, max_nbStates):
     old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
     return old_prior, old_mu, old_sigma
 
-def online_update(Data_Test, t_stamp, _batch_size, max_nbStates,lrn_rate,
+def online_update(_batch_prev_norm, max_nbStates,lrn_rate,
                   old_prior, old_mu, old_sigma):
-    _batch = Data_Test[:, t_stamp - _batch_size: t_stamp]
-    best_nbstate = fit_batch(_batch, max_nbStates)
-    Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, True)
-    new_prior, new_mu, new_sigma = EM_Func(_batch, Priors_init, Mu_init, Sigma_init)
-    old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
+    best_nbstate = fit_batch(_batch_prev_norm, max_nbStates)
+    Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch_prev_norm, best_nbstate, True)
+    new_prior, new_mu, new_sigma = EM_Func(_batch_prev_norm, Priors_init, Mu_init, Sigma_init)
+    old_prior, old_mu, old_sigma = merge_new_into_old(_batch_prev_norm,max_nbStates, lrn_rate,
                                                       old_prior, old_mu, old_sigma,
                                                       new_prior, new_mu, new_sigma)
     return old_prior, old_mu, old_sigma
+
+def online_norm(_batch):
+    _batch_norm = normalize(_batch, axis = 1, norm='l1')
+    sum_y = np.sum(_batch[-1,:])
+    return _batch_norm, sum_y
 
 def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate):
     train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
@@ -450,18 +469,19 @@ def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate):
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
-    _batch_size = 5
+    _batch_size = 2
 
     expData = np.array([])
     for t_stamp in range(0, Data_Test.shape[1], _batch_size):
         print(t_stamp)
         if t_stamp % _batch_size == 0 and t_stamp != 0 :
-            old_prior, old_mu, old_sigma = online_update(Data_Test,t_stamp,_batch_size,max_nbStates,lrn_rate,
+            _batch_prev_norm = Data_Test[:, t_stamp - _batch_size: t_stamp]
+            old_prior, old_mu, old_sigma = online_update(_batch_prev_norm,max_nbStates,lrn_rate,
                                                          old_prior, old_mu, old_sigma)
-        _batch = Data_Test[:, t_stamp: t_stamp + _batch_size]
-        this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
-                                                  _batch[:in_out_split,:], in_out_split)
-        expData = np.concatenate((expData, this_exp_y.reshape(-1)))
+        _batch_norm = Data_Test[:, t_stamp: t_stamp + _batch_size]
+        this_exp_y_norm, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
+                                                  _batch_norm[:in_out_split,:], in_out_split)
+        expData = np.concatenate((expData, this_exp_y_norm.reshape(-1)))
     return expData
 
 
