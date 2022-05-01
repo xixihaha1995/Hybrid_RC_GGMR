@@ -2,8 +2,8 @@ import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_t
 import _2_all_models as all_predict
 import numpy as np
 
-max_nbStates = 3
-L_rate_candidates = [1e-1]
+max_nbStates = 6
+L_rate_candidates = [8.5e-1]
 training_length = 4032
 rc_warming_step = 15
 
