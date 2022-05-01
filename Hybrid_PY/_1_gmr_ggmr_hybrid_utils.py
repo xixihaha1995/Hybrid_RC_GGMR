@@ -392,12 +392,12 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
         all_skld.append(this_old_skld)
     all_skld_arr = np.array(all_skld).reshape(old_gmm_nb, new_gmm_nb)
     '''⬇️maintain the maximum number of gaussians'''
-    while (old_prior.shape[1] + new_prior.shape[1]) > max_nbStates:
+    while (old_gmm_nb + new_gmm_nb ) > max_nbStates:
         pass
         #most similar new gmm with old gmm will be merged
         #delete the new gmm
         (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
-        all_skld_arr[ind_one, ind_two] = sys.float_info.min
+        all_skld_arr[ind_one, ind_two] = sys.float_info.max
 
         tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
         tau_merged = tau_one + tau_two
@@ -412,11 +412,12 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
         old_mu[:, ind_one] = copy.deepcopy(mu_merged)
         old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
 
-        new_prior = np.delete(new_prior, [ind_two], axis=1)
-        new_mu = np.delete(new_mu, [ind_two], axis=1)
-        # Assume ind_two belongs to axis 0.
-        new_sigma = np.delete(new_sigma.T, [ind_two], axis=0)
-        new_sigma = new_sigma.T
+        new_gmm_nb -=1
+        # new_prior = np.delete(new_prior, [ind_two], axis=1)
+        # new_mu = np.delete(new_mu, [ind_two], axis=1)
+        # # Assume ind_two belongs to axis 0.
+        # new_sigma = np.delete(new_sigma.T, [ind_two], axis=0)
+        # new_sigma = new_sigma.T
 
     if new_prior.shape[1] > 0:
         old_prior = np.hstack((old_prior, new_prior))
@@ -442,6 +443,7 @@ def online_ggmr(Data_Test,max_nbStates, lrn_rate):
     old_prior, old_mu, old_sigma = None, None, None
     expData = []
     for t_stamp in range(0, Data_Test.shape[1], _batch_size):
+        print(t_stamp)
         _batch = Data_Test[:, t_stamp: t_stamp+_batch_size]
         best_nbstate = fit_batch(_batch, max_nbStates)
 
