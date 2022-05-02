@@ -1,10 +1,11 @@
+import pickle
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import os, json
 from datetime import datetime
 from csv import writer
-
 
 def append_list_as_row(file_name, list_of_elem):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
@@ -295,7 +296,10 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[1:, 7] = (t_slab[1:] - t_slab[0:-1]) / ts
 
 
-        y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+        y_arr_ori = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+
+        slab_sup_filter = (sulp_temp_c - t_slab) >= 0
+        y_arr = slab_sup_filter * abs(y_arr_ori)
 
     elif case_nbr == 6 or case_nbr == 7:
         pass
@@ -312,8 +316,25 @@ def assign_input_output(u_arr, y_arr, case_arr, ts, case_nbr=3):
         u_arr[:-1, 8] =  (u_arr[1:,3] - u_arr[:-1, 3] ) /ts
         u_arr[-1, 8] = 0
 
-        y_arr = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
+        y_arr_ori = c * rho * flow_volume_rate_gal_min * gal_permin_to_m3_persecond * (sulp_temp_c - return_temp_c)
 
+        slab_sup_filter = (sulp_temp_c - t_slab) >= 0
+        y_filter = y_arr_ori >= 0
+        y_filter = -(-1) ** (y_filter)
+        # ht_cl_filter = -(-1) ** (ht_cl_filter)
+        slab_sup_filter = -(-1) ** (slab_sup_filter)
+        comb_filter = 0**abs(y_filter - slab_sup_filter)
+        y_arr = comb_filter * y_arr_ori
+        # y_arr_valves_filter = ht_cl_filter  * abs(y_arr_ori)
+        # plt.plot(y_filter, label="y_filter", linewidth=3)
+        # plt.plot(slab_sup_filter, label="slab_sup_filter", linewidth=3)
+        # # plt.plot(y_arr_ori, label="y_arr_ori", linewidth = 3)
+        # # plt.plot(y_arr, label="y_arr_slab_filter", linewidth = 3)
+        # # plt.plot(y_arr_valves_filter, label="y_arr_valve_filter", linewidth=3)
+        # plt.legend(prop={'size': 30})
+        # plt.ylabel("Radiant Slab System load (W)", fontsize = 10)
+        # plt.xlabel("Time step, 5 mins interval", fontsize=10)
+        # plt.show()
     return u_arr, y_arr
 
 
@@ -609,7 +630,7 @@ def to_hourly(y_train, y_train_pred, y_test, y_test_pred, ts_sampling):
 
 def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
     ts_sampling = swarm_constants['ts_sampling']
-    y_train, y_train_pred, y_test, y_test_pred = to_hourly(y_train, y_train_pred, y_test, y_test_pred,ts_sampling)
+    # y_train, y_train_pred, y_test, y_test_pred = to_hourly(y_train, y_train_pred, y_test, y_test_pred,ts_sampling)
 
     fig, ax = plt.subplots(2)
     nl = '\n'
@@ -661,7 +682,12 @@ def swarm_plot(y_train, y_train_pred, y_test, y_test_pred, swarm_constants):
 
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
     result_pic_abs = os.path.join(script_dir, 'outputs',f'_{case_nbr}_swarm_performance.png')
+    result_pkl_abs = os.path.join(script_dir, 'outputs', f'_{case_nbr}_swarm_performance.pkl')
     plt.savefig(result_pic_abs, bbox_inches='tight')
+    with open(result_pkl_abs, 'wb') as fid:
+        pickle.dump(ax, fid)
+    # with open(result_pkl_abs, 'rb') as fid:
+    #     ax = pickle.load(fid)
     plt.show()
 
 

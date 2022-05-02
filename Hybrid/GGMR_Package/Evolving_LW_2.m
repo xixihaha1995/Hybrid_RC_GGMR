@@ -135,6 +135,9 @@ if (length(ind_upd)~= 0 & existFlag~=1) % Update the model parameters
     Rout=[];
     q=[];
     for i=1:length(ind_upd)
+        if length(ind_upd) > 1
+            disp("ind_upd more than on1")
+        end
         
         q = Post_pr(ind_upd(i))./sum(Post_pr);
         

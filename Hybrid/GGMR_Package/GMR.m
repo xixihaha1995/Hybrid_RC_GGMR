@@ -55,7 +55,6 @@ function [y, beta] = GMR(Priors, Mu, Sigma, x, in, out)
 %   pages="286--298",
 % }
 
-%nbData = length(x);
 
 [temp,nbData] = size(x);
 nbVar = size(Mu,1);

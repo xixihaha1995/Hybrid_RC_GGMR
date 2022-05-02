@@ -14,7 +14,7 @@ load_all_case_arr = False
 all_case_arr_arr =None
 
 def comparison_absolute_percentage_error():
-    random.seed(9)
+    random.seed(8)
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
     case_5_6_arr_abs = os.path.join(script_dir, 'outputs', 'case5_6_comparison.csv')
     case_5_6_arr = pd.read_csv(case_5_6_arr_abs).to_numpy()
@@ -71,20 +71,38 @@ def _statistical_distribution_best_warming_up():
            1.4087593540485726, 0.4659914186864218, 1.013398093721322, 1.7993314767358861]
 
     tim_start_arr = [random.randint(100, 14000) for i in range(100)]
-    segment_len = range(1, 41)
+    segment_len = range(2, 41)
 
     all_optimized_warming = []
+
+    all_start_model = []
+    all_start_measure = []
     for time_start in tim_start_arr:
         predicted_err = []
+        this_start_model = []
+        this_start_measure = []
         for segment in segment_len:
             cur_case_arr = different_warming_up(time_idx=time_start, seg_length=segment)
             (u_measured_arr, y_measured_arr) = warming_up_init_assign_u_y(cur_case_arr)
             y_measured_arr = y_measured_arr.to_numpy()
-            y_model_arr = warming_up_predict(pos, u_measured_arr)
+            y_model_arr = warming_up_predict(u_measured_arr, pos)
+            # _1_utils.cv_rmse(y_model_arr[-1], y_measured_arr[-1])
+            this_start_model.append(y_model_arr[-1])
+            this_start_measure.append(y_measured_arr[-1])
             predicted_err.append(abs(y_model_arr[-1] - y_measured_arr[-1]) / abs(y_measured_arr[-1]))
         all_optimized_warming.append(predicted_err)
-    plt.plot(np.mean(all_optimized_warming, axis=0))
-    plt.ylabel("Mean Absolute Percentage Error")
+        all_start_model.append(this_start_model)
+        all_start_measure.append(this_start_measure)
+    all_start_model_arr = np.array(all_start_model)
+    all_start_measure_arr = np.array(all_start_measure)
+    cvrmse_err =[]
+    for idx in range(all_start_measure_arr.shape[1]):
+        this_step_cvrmse = _1_utils.cv_rmse(all_start_measure_arr[:,idx], all_start_model_arr[:,idx])
+        cvrmse_err.append(this_step_cvrmse)
+    plt.plot(segment_len, cvrmse_err)
+    # plt.plot(np.mean(all_optimized_warming, axis=0))
+    # plt.ylabel("Mean Absolute Percentage Error")
+    plt.ylabel("CVRMSE (%)")
     plt.xlabel("Warming time steps (5 mins per step)")
     plt.show()
 
@@ -187,6 +205,13 @@ def obj_func(params, constants, train=True):
     else:
         u_arr, y_arr = u_test, y_test
     a, b, c, d = paras_to_ABCD_swarm(params, constants)
+
+    abcd = {}
+    abcd['a'] = a.tolist()
+    abcd['b'] = b.tolist()
+    abcd['c'] = c.tolist()
+    abcd['d'] = d.tolist()
+    _1_utils.saveJSON(abcd, "new_abcd")
     y_model = np.zeros_like(y_arr)
 
     if constants['case_nbr'] == -1:
