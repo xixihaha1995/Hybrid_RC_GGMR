@@ -475,12 +475,12 @@ def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_nex
                        old_prior, old_mu, old_sigma,
                        new_prior, new_mu, new_sigma):
 
-    # old_prior_one, old_mu_one, old_sigma_one = update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate,
-    #                                                              old_prior, old_mu, old_sigma,
-    #                                                              new_prior, new_mu, new_sigma)
+    old_prior_one, old_mu_one, old_sigma_one = update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate,
+                                                                 old_prior, old_mu, old_sigma,
+                                                                 new_prior, new_mu, new_sigma)
 
-    old_prior_two, old_mu_two, old_sigma_two= update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
-                     new_prior, new_mu, new_sigma, t_merge)
+    # old_prior_two, old_mu_two, old_sigma_two= update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
+    #                  new_prior, new_mu, new_sigma, t_merge)
 
     # in_out_split = _batch_next_norm.shape[0] - 1
     # this_exp_y_norm_one, dummy_Gaus_weights_one = GMR_Func(old_prior_one, old_mu_one, old_sigma_one,
@@ -488,16 +488,16 @@ def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_nex
     # this_exp_y_norm_two, dummy_Gaus_weights_two = GMR_Func(old_prior_two, old_mu_two, old_sigma_two,
     #                                                _batch_next_norm[:in_out_split, :], in_out_split)
 
-    return old_prior_two, old_mu_two, old_sigma_two
+    return  old_prior_one, old_mu_one, old_sigma_one
 
 def online_init(train_norm, max_nbStates):
     best_nbstate = fit_batch(train_norm, max_nbStates)
 
-    # Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
-    # old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
+    Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
+    old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
 
-    gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(train_norm.T)
-    old_prior, old_mu, old_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
+    # gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(train_norm.T)
+    # old_prior, old_mu, old_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
     return old_prior, old_mu, old_sigma
 
 def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_norm,
@@ -510,11 +510,11 @@ def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_nor
     gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(_batch_prev_norm.T)
     new_prior, new_mu, new_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
 
-    old_prior, old_mu, old_sigma = merge_new_into_old(old_sample_size, batch_size,_batch_prev_norm,_batch_next_norm,
-                                                      max_nbStates, lrn_rate,t_merge,
-                                                      old_prior, old_mu, old_sigma,
-                                                      new_prior, new_mu, new_sigma)
-    return old_prior, old_mu, old_sigma
+    # old_prior, old_mu, old_sigma = merge_new_into_old(old_sample_size, batch_size,_batch_prev_norm,_batch_next_norm,
+    #                                                   max_nbStates, lrn_rate,t_merge,
+    #                                                   old_prior, old_mu, old_sigma,
+    #                                                   new_prior, new_mu, new_sigma)
+    return new_prior, new_mu, new_sigma
 
 def online_norm(_batch):
     _batch_norm = normalize(_batch, axis = 1, norm='l1')

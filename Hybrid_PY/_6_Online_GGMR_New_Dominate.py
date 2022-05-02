@@ -1,16 +1,12 @@
-import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_tools
-import _2_all_models as all_predict
+import _0_generic_utils as general_tools, _1_1_ggmr_utils
 import numpy as np
 
 max_nbStates = 6
-_look_back_batch_size = 5
-_predict_size = 5
+_look_back_batch_size = 3
+_predict_size = 1
 _hybrid = False
-L_rate_candidates = [1e-3,8e-2, 1e-1]
-t_merge = 1e5
 
 training_length = 4032
-rc_warming_step = 15
 
 All_Variables_obj, u_measured_obj, abcd = general_tools.switch_case(2)
 All_Variables = All_Variables_obj.astype('float64')
@@ -36,21 +32,20 @@ updated_flow_res = general_tools.loadJSONFromOutputs("_flow_norm_results")
 hybrid_flow_norm = updated_flow_res['hybrid_flow_norm']
 test_norm[-3,:] = np.array(hybrid_flow_norm)[:testing_length]
 
-'''Hyper-parameters tunning'''
-results = {}
-for L_rate in L_rate_candidates:
-    '''GGMR'''
-    ggmr_norm = gaussian_tools.online_ggmr(train_norm,test_norm,max_nbStates,L_rate,
-                                           t_merge,_look_back_batch_size, _predict_size, _hybrid)
-    ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
-    cvrmse_ggmr = general_tools.cvrmse_cal(y_test, ggmr_predict, mean_measured)
-    results[f'ggmr_predict_{L_rate:.6f}'] = ggmr_predict.tolist()
-    results[f'cvrmse_ggmr_{L_rate:.6f}'] = cvrmse_ggmr
+'''GGMR'''
+ggmr_norm = _1_1_ggmr_utils.online_ggmr_new_dominate(train_norm, test_norm  ,max_nbStates,
+                _look_back_batch_size, _predict_size,_hybrid)
+ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
+cvrmse_ggmr = general_tools.cvrmse_cal(y_test, ggmr_predict, mean_measured)
+
 '''Save results'''
+results = {}
+results[f'ggmr_predict'] = ggmr_predict.tolist()
+results[f'cvrmse_ggmr'] = cvrmse_ggmr
 results['y_test'] = y_test.tolist()
 results['rc_y'] = rc_y.tolist()
 results['cvrmse_rc'] = cvrmse_rc
-general_tools.saveJSON(results, "_results_online_ggmr")
+general_tools.saveJSON(results, "_results_online_new_dominate")
 
 
 
