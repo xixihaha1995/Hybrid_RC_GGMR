@@ -2,11 +2,11 @@ import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_t
 import _2_all_models as all_predict
 import numpy as np
 
-max_nbStates = 10
+max_nbStates = 6
 _look_back_batch_size = 5
 _predict_size = 5
 _hybrid = False
-L_rate_candidates = [8e-2, 1e-1,1.2e-1]
+L_rate_candidates = [1e-3,8e-2, 1e-1]
 
 training_length = 4032
 rc_warming_step = 15

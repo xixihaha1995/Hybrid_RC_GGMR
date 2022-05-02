@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt, _0_generic_utils as general_tool
 import numpy as np
 from itertools import cycle
 
-L_rate_candidates = [8e-2, 1e-1,1.2e-1]
+L_rate_candidates = [1e-3,8e-2, 1e-1]
 '''Load'''
 results = general_tool.loadJSONFromOutputs("_results_online_ggmr")
 y_test = np.array(results['y_test']) /1000

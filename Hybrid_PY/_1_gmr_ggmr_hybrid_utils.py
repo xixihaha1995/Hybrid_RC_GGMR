@@ -424,8 +424,8 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
     return old_prior, old_mu, old_sigma
 
 def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
-                     new_prior, new_mu, new_sigma):
-    t_merge = 1e3
+                     new_prior, new_mu, new_sigma, _t_merge):
+    t_merge = _t_merge
     all_skld = []
     old_gmm_nb, new_gmm_nb = old_prior.shape[1], new_prior.shape[1]
     for ind_i in range(old_gmm_nb):
@@ -471,16 +471,16 @@ def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
     return old_prior, old_mu, old_sigma
 
 def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_next_norm,
-                       max_nbStates,lrn_rate,
+                       max_nbStates,lrn_rate,t_merge,
                        old_prior, old_mu, old_sigma,
                        new_prior, new_mu, new_sigma):
 
-    old_prior_one, old_mu_one, old_sigma_one = update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate,
-                                                                 old_prior, old_mu, old_sigma,
-                                                                 new_prior, new_mu, new_sigma)
+    # old_prior_one, old_mu_one, old_sigma_one = update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate,
+    #                                                              old_prior, old_mu, old_sigma,
+    #                                                              new_prior, new_mu, new_sigma)
 
-    # old_prior_two, old_mu_two, old_sigma_two= update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
-    #                  new_prior, new_mu, new_sigma)
+    old_prior_two, old_mu_two, old_sigma_two= update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
+                     new_prior, new_mu, new_sigma, t_merge)
 
     # in_out_split = _batch_next_norm.shape[0] - 1
     # this_exp_y_norm_one, dummy_Gaus_weights_one = GMR_Func(old_prior_one, old_mu_one, old_sigma_one,
@@ -488,7 +488,7 @@ def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_nex
     # this_exp_y_norm_two, dummy_Gaus_weights_two = GMR_Func(old_prior_two, old_mu_two, old_sigma_two,
     #                                                _batch_next_norm[:in_out_split, :], in_out_split)
 
-    return old_prior_one, old_mu_one, old_sigma_one
+    return old_prior_two, old_mu_two, old_sigma_two
 
 def online_init(train_norm, max_nbStates):
     best_nbstate = fit_batch(train_norm, max_nbStates)
@@ -501,7 +501,7 @@ def online_init(train_norm, max_nbStates):
     return old_prior, old_mu, old_sigma
 
 def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_norm,
-                  max_nbStates,lrn_rate,
+                  max_nbStates,lrn_rate,t_merge,
                   old_prior, old_mu, old_sigma):
     best_nbstate = fit_batch(_batch_prev_norm, batch_size)
     # Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch_prev_norm, best_nbstate, True)
@@ -511,7 +511,7 @@ def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_nor
     new_prior, new_mu, new_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
 
     old_prior, old_mu, old_sigma = merge_new_into_old(old_sample_size, batch_size,_batch_prev_norm,_batch_next_norm,
-                                                      max_nbStates, lrn_rate,
+                                                      max_nbStates, lrn_rate,t_merge,
                                                       old_prior, old_mu, old_sigma,
                                                       new_prior, new_mu, new_sigma)
     return old_prior, old_mu, old_sigma
@@ -521,13 +521,13 @@ def online_norm(_batch):
     sum_y = np.sum(_batch[-1,:])
     return _batch_norm, sum_y
 
-def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,
+def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,t_merge,
                 look_back_batch_size, predict_size,_hybrid):
     if not _hybrid:
         train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
         Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
 
-    old_prior, old_mu, old_sigma = online_init(train_norm, max_nbStates)
+    old_prior, old_mu, old_sigma = online_init(train_norm, look_back_batch_size)
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -539,8 +539,8 @@ def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,
         if t_stamp > _look_back_batch_size:
             _batch_prev_norm = Data_Test[:, t_stamp - _look_back_batch_size: t_stamp]
             _batch_next_norm = Data_Test[:, t_stamp: t_stamp + _predict_size]
-            old_prior, old_mu, old_sigma = online_update(t_stamp, _look_back_batch_size,_batch_prev_norm,_batch_next_norm,
-                                                         max_nbStates,lrn_rate,
+            old_prior, old_mu, old_sigma = online_update(t_stamp, look_back_batch_size,_batch_prev_norm,_batch_next_norm,
+                                                         max_nbStates,lrn_rate,t_merge,
                                                          old_prior, old_mu, old_sigma)
         _batch_norm = Data_Test[:, t_stamp: t_stamp + _predict_size]
         this_exp_y_norm, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
