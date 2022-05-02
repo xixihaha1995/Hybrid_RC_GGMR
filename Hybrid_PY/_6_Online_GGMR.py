@@ -2,8 +2,12 @@ import _0_generic_utils as general_tools, _1_gmr_ggmr_hybrid_utils as gaussian_t
 import _2_all_models as all_predict
 import numpy as np
 
-max_nbStates = 4
-L_rate_candidates = [1e-2]
+max_nbStates = 10
+_look_back_batch_size = 5
+_predict_size = 5
+_hybrid = False
+L_rate_candidates = [8e-2, 1e-1,1.2e-1]
+
 training_length = 4032
 rc_warming_step = 15
 
@@ -35,15 +39,16 @@ test_norm[-3,:] = np.array(hybrid_flow_norm)[:testing_length]
 results = {}
 for L_rate in L_rate_candidates:
     '''GGMR'''
-    ggmr_norm = gaussian_tools.online_ggmr(train_norm,test_norm,max_nbStates,L_rate)
+    ggmr_norm = gaussian_tools.online_ggmr(train_norm,test_norm,max_nbStates,L_rate,
+                                           _look_back_batch_size, _predict_size, _hybrid)
     ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
     cvrmse_ggmr = general_tools.cvrmse_cal(y_test, ggmr_predict, mean_measured)
+    results[f'ggmr_predict_{L_rate:.6f}'] = ggmr_predict.tolist()
+    results[f'cvrmse_ggmr_{L_rate:.6f}'] = cvrmse_ggmr
 '''Save results'''
 results['y_test'] = y_test.tolist()
 results['rc_y'] = rc_y.tolist()
 results['cvrmse_rc'] = cvrmse_rc
-results[f'ggmr_predict'] = ggmr_predict.tolist()
-results[f'cvrmse_ggmr'] = cvrmse_ggmr
 general_tools.saveJSON(results, "_results_online_ggmr")
 
 

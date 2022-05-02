@@ -1,6 +1,7 @@
 import sys, numpy as np, copy, math, _0_generic_utils as general_tools
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
+from sklearn.mixture import GaussianMixture
 
 def gaussPDF_Func(Data_ori, Mu, Sigma):
     if Data_ori.ndim == 1:
@@ -491,16 +492,24 @@ def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_nex
 
 def online_init(train_norm, max_nbStates):
     best_nbstate = fit_batch(train_norm, max_nbStates)
-    Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
-    old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
+
+    # Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
+    # old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
+
+    gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(train_norm.T)
+    old_prior, old_mu, old_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
     return old_prior, old_mu, old_sigma
 
 def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_norm,
                   max_nbStates,lrn_rate,
                   old_prior, old_mu, old_sigma):
     best_nbstate = fit_batch(_batch_prev_norm, batch_size)
-    Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch_prev_norm, best_nbstate, True)
-    new_prior, new_mu, new_sigma = EM_Func(_batch_prev_norm, Priors_init, Mu_init, Sigma_init)
+    # Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch_prev_norm, best_nbstate, True)
+    # new_prior, new_mu, new_sigma = EM_Func(_batch_prev_norm, Priors_init, Mu_init, Sigma_init)
+
+    gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(_batch_prev_norm.T)
+    new_prior, new_mu, new_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
+
     old_prior, old_mu, old_sigma = merge_new_into_old(old_sample_size, batch_size,_batch_prev_norm,_batch_next_norm,
                                                       max_nbStates, lrn_rate,
                                                       old_prior, old_mu, old_sigma,
@@ -512,16 +521,18 @@ def online_norm(_batch):
     sum_y = np.sum(_batch[-1,:])
     return _batch_norm, sum_y
 
-def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate):
-    train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
-    Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
+def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,
+                look_back_batch_size, predict_size,_hybrid):
+    if not _hybrid:
+        train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
+        Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
 
     old_prior, old_mu, old_sigma = online_init(train_norm, max_nbStates)
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
-    _look_back_batch_size = 5
-    _predict_size = 5
+    _look_back_batch_size = look_back_batch_size
+    _predict_size = predict_size
     expData = np.array([])
     for t_stamp in range(0, Data_Test.shape[1], _predict_size):
         print(t_stamp)
