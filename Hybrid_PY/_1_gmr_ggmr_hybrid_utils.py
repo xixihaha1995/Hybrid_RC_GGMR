@@ -1,5 +1,7 @@
-import sys, numpy as np, copy, math
+import sys, numpy as np, copy, math, _0_generic_utils as general_tools
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import normalize
+from sklearn.mixture import GaussianMixture
 
 def gaussPDF_Func(Data_ori, Mu, Sigma):
     if Data_ori.ndim == 1:
@@ -11,10 +13,10 @@ def gaussPDF_Func(Data_ori, Mu, Sigma):
     prob = np.exp(-0.5 * prob )/ np.sqrt((2 * np.pi) ** nbVar * (abs(np.linalg.det(Sigma)) + sys.float_info.min) )
     return prob
 
-def EM_Init_Func(Data, nbStates, online_=False):
+def EM_Init_Func(Data, nbStates, kmean_init_=False):
     Data_tran = Data.T
     nbVar = Data_tran.shape[1]
-    if not online_:
+    if not kmean_init_:
         minc = np.min(Data_tran, axis=0)
         maxc = np.max(Data_tran, axis=0)
         all_var_ran = []
@@ -65,11 +67,13 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
         # compute posterior probability p(i|x)
         Pix_tmp = np.tile(Priors,[nbData, 1]) * Pxi
-        Pix_nan = Pix_tmp / np.tile(np.sum(Pix_tmp, axis=1).reshape(-1,1),[1, nbStates])
+        denom = np.tile(np.sum(Pix_tmp, axis=1).reshape(-1, 1), [1, nbStates])
+        denom[denom == 0] = sys.float_info.min
+        Pix_nan = Pix_tmp /denom
 
         Pix = np.nan_to_num(Pix_nan, nan=0)
         # compute the cumulated posterior probability
-        E = np.sum(Pix, axis = 0).reshape(1,-1)
+        E = np.sum(Pix, axis = 0).reshape(1,-1) + sys.float_info.min
         '''M-step'''
         for i in range(nbStates):
             Priors[0,i] = E[0,i] / nbData
@@ -85,11 +89,12 @@ def EM_Func(Data, Priors0, Mu0, Sigma0):
         Pxi = np.array(Pxi_lst).reshape(-1, nbStates)
         F_nan = Pxi @ Priors.T
         F = np.nan_to_num(F_nan, nan=sys.float_info.min)
+        F[F==0] = sys.float_info.min
         loglik = np.log(F).mean()
         # print(abs((loglik/loglik_old)-1))
 
         if abs((loglik / loglik_old) - 1) < loglik_threshold\
-                or nbStep > 300:
+                or nbStep > 100:
             break
         loglik_old = loglik
         nbStep += 1
@@ -340,7 +345,8 @@ def merge_func(Priors, Mu, Sigma,C_mat,t_merge_fac, cannot_merge_link, largst_co
 
     return Priors, Mu, Sigma,C_mat
 
-def _bic_func(_data_batch, nb_states, Priors_in, Mu_in, Sigma_in):
+def _bic_func(_data_batch, Priors_in, Mu_in, Sigma_in):
+    nb_states = Priors_in.shape[1]
     Post_pr_lst = []
     for m in range(Priors_in.shape[1]):
         this_post_pr = Priors_in[0, m].reshape(1) * gaussPDF_Func(_data_batch, Mu_in[:, m],
@@ -360,26 +366,25 @@ def fit_batch(_batch, max_nbStates):
     _all_nbStates = []
     for nb_states in range(2, max_nbStates):
         _all_nbStates.append(nb_states)
-        Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, nb_states, False)
+        Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, nb_states, True)
         em_Priors, em_Mu, em_Sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
-        this_bic = _bic_func(_batch,nb_states, em_Priors, em_Mu, em_Sigma )
+        this_bic = _bic_func(_batch,em_Priors, em_Mu, em_Sigma )
         _all_bic.append(this_bic)
     _all_bic = np.nan_to_num(_all_bic, nan=sys.float_info.max)
     best_nbstate = _all_nbStates[np.argmin(_all_bic)]
     return best_nbstate
 
-def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
+def sigmoid(x):
+  return 1 / (1 + math.exp(-x))
+
+def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
                      new_prior, new_mu, new_sigma):
-    pass
-    if old_prior is None:
-        old_prior, old_mu, old_sigma = new_prior, new_mu, new_sigma
-        return old_prior, old_mu, old_sigma
-    '''⬇️update the old, new gmms'''
+
     for nb_com in range(new_prior.shape[1]):
         new_prior[0, nb_com] = lrn_rate * new_prior[0, nb_com]
     for nb_com in range(old_prior.shape[1]):
         old_prior[0, nb_com] = (1 - lrn_rate) * old_prior[0, nb_com]
-    '''⬆️update the old, new gmms'''
+
     all_skld = []
     old_gmm_nb, new_gmm_nb = old_prior.shape[1], new_prior.shape[1]
     for ind_i in range(old_gmm_nb):
@@ -394,14 +399,14 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
     '''⬇️maintain the maximum number of gaussians'''
     while (old_gmm_nb + new_gmm_nb ) > max_nbStates:
         pass
-        #most similar new gmm with old gmm will be merged
-        #delete the new gmm
         (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
         all_skld_arr[ind_one, ind_two] = sys.float_info.max
 
         tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
-        tau_merged = tau_one + tau_two
-        f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
+        tau_sum = tau_one + tau_two
+        f_one, f_two = tau_one / tau_sum, tau_two / tau_sum
+        tau_merged = f_one + f_two
+
         mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
         mu_merged = f_one * mu_one + f_two * mu_two
         sig_one, sig_two = old_sigma[:, :, ind_one], new_sigma[:, :, ind_two]
@@ -411,51 +416,136 @@ def merge_new_into_old(max_nbStates,lrn_rate, old_prior, old_mu, old_sigma,
         old_prior[0, ind_one] = copy.deepcopy(tau_merged)
         old_mu[:, ind_one] = copy.deepcopy(mu_merged)
         old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
-
         new_gmm_nb -=1
-        # new_prior = np.delete(new_prior, [ind_two], axis=1)
-        # new_mu = np.delete(new_mu, [ind_two], axis=1)
-        # # Assume ind_two belongs to axis 0.
-        # new_sigma = np.delete(new_sigma.T, [ind_two], axis=0)
-        # new_sigma = new_sigma.T
-
     if new_prior.shape[1] > 0:
         old_prior = np.hstack((old_prior, new_prior))
         old_mu = np.hstack((old_mu, new_mu))
         old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
-
     return old_prior, old_mu, old_sigma
 
+def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
+                     new_prior, new_mu, new_sigma, _t_merge):
+    t_merge = _t_merge
+    all_skld = []
+    old_gmm_nb, new_gmm_nb = old_prior.shape[1], new_prior.shape[1]
+    for ind_i in range(old_gmm_nb):
+        this_old_skld = []
+        for ind_j in range(new_gmm_nb):
+            sig_A, sig_B = old_sigma[:, :, ind_i], new_sigma[:, :, ind_j]
+            mu_A, mu_B = old_mu[:, ind_i], new_mu[:, ind_j]
+            this_skld = skld_func(sig_A, sig_B, mu_A, mu_B)
+            this_old_skld.append(this_skld)
+        all_skld.append(this_old_skld)
+    all_skld_arr = np.array(all_skld).reshape(old_gmm_nb, new_gmm_nb)
+    '''⬇️maintain the maximum number of gaussians'''
+    while all_skld_arr.min()  < t_merge:
+        pass
+        (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
+        all_skld_arr[ind_one, ind_two] = sys.float_info.max
 
-def online_ggmr(Data_Test,max_nbStates, lrn_rate):
-    Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
+        mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
+        tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
+        mu_merged = (old_sample_nb_N * tau_one* mu_one + batch_size * tau_two * mu_two) \
+                    / (old_sample_nb_N * tau_one + batch_size * tau_two )
+        tau_merged =(old_sample_nb_N * tau_one + batch_size * tau_two ) / (old_sample_nb_N + batch_size)
+
+        sig_one, sig_two = old_sigma[:, :, ind_one], new_sigma[:, :, ind_two]
+
+        mu_one_square = (mu_one).reshape(-1,1) @ (mu_one).reshape(-1,1).T
+        mu_two_square = (mu_two).reshape(-1, 1) @ (mu_two).reshape(-1, 1).T
+
+        sig_merged = (old_sample_nb_N * tau_one * sig_one + batch_size * tau_two * sig_two) \
+                     / (old_sample_nb_N * tau_one + batch_size * tau_two ) + \
+                     (old_sample_nb_N * tau_one* mu_one_square + batch_size * tau_two * mu_two_square) \
+                     /(old_sample_nb_N * tau_one + batch_size * tau_two ) \
+                     - (mu_merged).reshape(-1,1) @ (mu_merged).reshape(-1,1).T
+
+        old_prior[0, ind_one] = copy.deepcopy(tau_merged)
+        old_mu[:, ind_one] = copy.deepcopy(mu_merged)
+        old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
+        new_gmm_nb -=1
+    if new_prior.shape[1] > 0:
+        old_prior = np.hstack((old_prior, new_prior))
+        old_mu = np.hstack((old_mu, new_mu))
+        old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
+    return old_prior, old_mu, old_sigma
+
+def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_next_norm,
+                       max_nbStates,lrn_rate,t_merge,
+                       old_prior, old_mu, old_sigma,
+                       new_prior, new_mu, new_sigma):
+
+    # old_prior_one, old_mu_one, old_sigma_one = update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate,
+    #                                                              old_prior, old_mu, old_sigma,
+    #                                                              new_prior, new_mu, new_sigma)
+
+    old_prior_two, old_mu_two, old_sigma_two= update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
+                     new_prior, new_mu, new_sigma, t_merge)
+
+    # in_out_split = _batch_next_norm.shape[0] - 1
+    # this_exp_y_norm_one, dummy_Gaus_weights_one = GMR_Func(old_prior_one, old_mu_one, old_sigma_one,
+    #                                                _batch_next_norm[:in_out_split, :], in_out_split)
+    # this_exp_y_norm_two, dummy_Gaus_weights_two = GMR_Func(old_prior_two, old_mu_two, old_sigma_two,
+    #                                                _batch_next_norm[:in_out_split, :], in_out_split)
+
+    return old_prior_two, old_mu_two, old_sigma_two
+
+def online_init(train_norm, max_nbStates):
+    best_nbstate = fit_batch(train_norm, max_nbStates)
+
+    # Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, best_nbstate, False)
+    # old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
+
+    gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(train_norm.T)
+    old_prior, old_mu, old_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
+    return old_prior, old_mu, old_sigma
+
+def online_update(old_sample_size, batch_size, _batch_prev_norm, _batch_next_norm,
+                  max_nbStates,lrn_rate,t_merge,
+                  old_prior, old_mu, old_sigma):
+    best_nbstate = fit_batch(_batch_prev_norm, batch_size)
+    # Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch_prev_norm, best_nbstate, True)
+    # new_prior, new_mu, new_sigma = EM_Func(_batch_prev_norm, Priors_init, Mu_init, Sigma_init)
+
+    gm = GaussianMixture(n_components=best_nbstate, random_state=0).fit(_batch_prev_norm.T)
+    new_prior, new_mu, new_sigma = gm.weights_.T.reshape(1,-1), gm.means_.T, gm.covariances_.T
+
+    old_prior, old_mu, old_sigma = merge_new_into_old(old_sample_size, batch_size,_batch_prev_norm,_batch_next_norm,
+                                                      max_nbStates, lrn_rate,t_merge,
+                                                      old_prior, old_mu, old_sigma,
+                                                      new_prior, new_mu, new_sigma)
+    return old_prior, old_mu, old_sigma
+
+def online_norm(_batch):
+    _batch_norm = normalize(_batch, axis = 1, norm='l1')
+    sum_y = np.sum(_batch[-1,:])
+    return _batch_norm, sum_y
+
+def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,t_merge,
+                look_back_batch_size, predict_size,_hybrid):
+    if not _hybrid:
+        train_norm = np.delete(train_norm, -2, axis=0) # delete rc_y information
+        Data_Test = np.delete(Data_Test, -2, axis=0)  # delete rc_y information
+
+    old_prior, old_mu, old_sigma = online_init(train_norm, look_back_batch_size)
 
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
-    _batch_size = 5
-    old_prior, old_mu, old_sigma = None, None, None
+    _look_back_batch_size = look_back_batch_size
+    _predict_size = predict_size
     expData = np.array([])
-    for t_stamp in range(0, Data_Test.shape[1], _batch_size):
+    for t_stamp in range(0, Data_Test.shape[1], _predict_size):
         print(t_stamp)
-        if t_stamp < 500:
-            _batch = Data_Test[:, t_stamp: t_stamp+_batch_size]
-            best_nbstate = fit_batch(_batch, max_nbStates)
-
-            Priors_init, Mu_init, Sigma_init = EM_Init_Func(_batch, best_nbstate, False)
-            new_prior, new_mu, new_sigma = EM_Func(_batch,Priors_init, Mu_init, Sigma_init)
-
-            old_prior, old_mu, old_sigma = merge_new_into_old(max_nbStates, lrn_rate,
-                                                            old_prior, old_mu, old_sigma,
-                                                            new_prior, new_mu, new_sigma)
-            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma,
-                                                      _batch[:in_out_split, :], in_out_split)
-            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
-        else:
-            _batch = Data_Test[:, t_stamp:]
-            this_exp_y, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
-                                                      _batch[:in_out_split,:], in_out_split)
-            expData = np.concatenate((expData, this_exp_y.reshape(-1)))
-            break
+        if t_stamp > _look_back_batch_size:
+            _batch_prev_norm = Data_Test[:, t_stamp - _look_back_batch_size: t_stamp]
+            _batch_next_norm = Data_Test[:, t_stamp: t_stamp + _predict_size]
+            old_prior, old_mu, old_sigma = online_update(t_stamp, look_back_batch_size,_batch_prev_norm,_batch_next_norm,
+                                                         max_nbStates,lrn_rate,t_merge,
+                                                         old_prior, old_mu, old_sigma)
+        _batch_norm = Data_Test[:, t_stamp: t_stamp + _predict_size]
+        this_exp_y_norm, dummy_Gaus_weights = GMR_Func(old_prior, old_mu, old_sigma ,
+                                                  _batch_norm[:in_out_split,:], in_out_split)
+        expData = np.concatenate((expData, this_exp_y_norm.reshape(-1)))
     return expData
 
 
