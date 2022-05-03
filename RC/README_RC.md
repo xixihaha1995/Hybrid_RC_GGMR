@@ -37,11 +37,11 @@ if __name__ == '__main__':
     freeze_support()
     
     ...
-    #The above codes is to show the expected input array for RC prediction
+    #The above codes is to show the expected data array for RC prediction
     target_time_idx = 782
     warming_up_steps = 15
     u_measured = RC_utils.warming_input_demo(time_idx = target_time_idx, seg_length= warming_up_steps)
-    #The above codes is to show the expected input array for RC prediction
+    #The above codes is to show the expected data array for RC prediction
 
     print(f'u_measured shape:{u_measured.shape}')
     # print(f'u_measured:{u_measured}')
