@@ -403,9 +403,9 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
         all_skld_arr[ind_one, ind_two] = sys.float_info.max
 
         tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
-        tau_sum = tau_one + tau_two
-        f_one, f_two = tau_one / tau_sum, tau_two / tau_sum
-        tau_merged = f_one + f_two
+        tau_merged = tau_one + tau_two
+        f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
+        tau_merged = 1
 
         mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
         mu_merged = f_one * mu_one + f_two * mu_two
@@ -487,10 +487,10 @@ def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_nex
                      new_prior, new_mu, new_sigma, t_merge)
         return old_prior_two, old_mu_two, old_sigma_two
 
-def online_init(train_norm, max_nbStates):
+def online_init(train_norm, init_nb_com):
     # best_nbstate = fit_batch(train_norm, max_nbStates)
 
-    Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, 4, False)
+    Priors_init, Mu_init, Sigma_init = EM_Init_Func(train_norm, init_nb_com, False)
     old_prior, old_mu, old_sigma = EM_Func(train_norm, Priors_init, Mu_init, Sigma_init)
 
     return old_prior, old_mu, old_sigma

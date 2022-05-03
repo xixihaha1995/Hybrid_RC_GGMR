@@ -1,12 +1,12 @@
 import _0_generic_utils as general_tools, _1_1_ggmr_utils
 import numpy as np
 
-plonum = 1
+plonum = 0
 max_nbStates = 8
-_look_back_batch_size = 2
+_look_back_batch_size = 1
 _predict_size = 1
-_hybrid = True
-std_bool = False
+_hybrid = False
+std_bool = True
 
 L_rate_candidates = [1e-3,8e-2, 1e-1]
 
@@ -39,9 +39,11 @@ test_norm[-3,:] = np.array(hybrid_flow_norm)[:testing_length]
 results = {}
 for lrn_rate in L_rate_candidates:
     '''GGMR'''
-    gmr_norm = _1_1_ggmr_utils.online_ggmr_new_dominate(train_norm, test_norm, max_nbStates, lrn_rate,
+    ggmr_predict = _1_1_ggmr_utils.online_ggmr_new_dominate(train_norm, test_norm, train, test,
+                                                        max_nbStates, lrn_rate,
                                                         _look_back_batch_size, _predict_size, _hybrid, std_bool, plonum)
-    ggmr_predict = general_tools.de_norm(gmr_norm, scale_y, center_y)
+    if not std_bool:
+        ggmr_predict = general_tools.de_norm(ggmr_predict, scale_y, center_y)
     cvrmse_ggmr = general_tools.cvrmse_cal(y_test, ggmr_predict, mean_measured)
     results[f'ggmr_predict_{lrn_rate:.12f}'] = ggmr_predict.tolist()
     results[f'cvrmse_ggmr_{lrn_rate:.12f}'] = cvrmse_ggmr
