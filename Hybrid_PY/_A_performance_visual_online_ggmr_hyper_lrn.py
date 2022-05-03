@@ -5,7 +5,7 @@ from itertools import cycle
 
 L_rate_candidates = [1e-3,8e-2, 1e-1]
 '''Load'''
-results = general_tool.loadJSONFromOutputs("_results_online_ggmr")
+results = general_tool.loadJSONFromOutputs("_results_online_new_dominate")
 y_test = np.array(results['y_test']) /1000
 rc_y = np.array(results['rc_y']) /1000
 cvrmse_rc = results['cvrmse_rc']
