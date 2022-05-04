@@ -39,13 +39,15 @@ def switch_case(case_nb):
     t_out = (case_arr[:, 0] - 32) * 5 / 9
     t_slab = ((case_arr[:, 5] + case_arr[:, 6] + case_arr[:, 7] + case_arr[:, 8] + case_arr[:, 9]+ case_arr[:, 10]
                + case_arr[:, 11] + case_arr[:, 12] + case_arr[:, 13] + case_arr[:,14]) / 10- 32) * 5 / 9
+    vfr_water = case_arr[:, 27]
     t_cav = (case_arr[:, 49] - 32) * 5 / 9
     valve_ht = case_arr[:,82]
     valve_cl = case_arr[:,83]
+
     rc_y = measured_modeled_arr[:, 1]
     y = measured_modeled_arr[:, 0]
 
-    vfr_water =case_arr[:, 27]
+
 
     if case_nb == 0:
         All_Variables = np.array([t_out, t_slab, t_cav,valve_ht,valve_cl, rc_y, y])
