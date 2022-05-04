@@ -16,8 +16,13 @@ from sklearn.preprocessing import MinMaxScaler
 
 '''Define data root directory'''
 data_dir = "data/"
-test_frac = 0.1
+test_portion = 10855
+drop_rc_y = False
 
+lookback = 5
+_hidden_dim=3
+_epoch =1
+batch_size = 1024
 
 '''The scaler objects will be stored in this dictionary so that our output test data from 
 the model can be re-scaled during evaluation
@@ -37,11 +42,13 @@ for file in os.listdir(data_dir):
     # Store csv file in a Pandas DataFrame
     df = pd.read_csv('{}/{}'.format(data_dir, file), parse_dates=[0])
     # Processing the time data into suitable input formats
-    df['hour'] = df.apply(lambda x: x['Datetime'].hour, axis=1)
-    df['dayofweek'] = df.apply(lambda x: x['Datetime'].dayofweek, axis=1)
-    df['month'] = df.apply(lambda x: x['Datetime'].month, axis=1)
-    df['dayofyear'] = df.apply(lambda x: x['Datetime'].dayofyear, axis=1)
-    df = df.sort_values("Datetime").drop("Datetime", axis=1)
+    # df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y %H:%MM')
+
+    df.Timestamp = pd.to_datetime(df.Timestamp)
+    df['minute'] = df.apply(lambda x: x['Timestamp'].minute, axis=1)
+    df['hour'] = df.apply(lambda x: x['Timestamp'].hour, axis=1)
+    df['dayofweek'] = df.apply(lambda x: x['Timestamp'].dayofweek, axis=1)
+    df = df.sort_values("Timestamp").drop("Timestamp", axis=1)
 
     # Scaling the input data
     sc = MinMaxScaler()
@@ -52,7 +59,6 @@ for file in os.listdir(data_dir):
     label_scalers[file] = label_sc
 
     # Define lookback period and split inputs/labels
-    lookback = 90
     inputs = np.zeros((len(data) - lookback, lookback, df.shape[1]))
     labels = np.zeros(len(data) - lookback)
 
@@ -63,7 +69,7 @@ for file in os.listdir(data_dir):
     labels = labels.reshape(-1, 1)
 
     # Split data into train/test portions and combining all data from different files into a single array
-    test_portion = int(test_frac * len(inputs))
+    # test_portion = int(test_frac * len(inputs))
     if len(train_x) == 0:
         train_x = inputs[:-test_portion]
         train_y = labels[:-test_portion]
@@ -73,7 +79,6 @@ for file in os.listdir(data_dir):
     test_x[file] = (inputs[-test_portion:])
     test_y[file] = (labels[-test_portion:])
 
-batch_size = 1024
 train_data = TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
 train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
@@ -101,7 +106,7 @@ class GRUNet(nn.Module):
         return hidden
 
 
-def train(train_loader, learn_rate, hidden_dim=20, EPOCHS=1, model_type="GRU"):
+def train(train_loader, learn_rate, hidden_dim=_hidden_dim, EPOCHS=_epoch, model_type="GRU"):
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
     output_dim = 1
