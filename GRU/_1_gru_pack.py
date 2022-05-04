@@ -2,7 +2,6 @@ import os
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
@@ -10,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 
-def preprocess(data_dir,lookback, test_portion, batch_size, drop_rc):
+def preprocess(data_dir,lookback, test_portion, batch_size, drop_rc, drop_water):
     '''
     The scaler objects will be stored in this dictionary so that our output test data from
     the model can be re-scaled during evaluation
@@ -29,6 +28,9 @@ def preprocess(data_dir,lookback, test_portion, batch_size, drop_rc):
         df = pd.read_csv('{}/{}'.format(data_dir, file), parse_dates=[0])
         # Processing the time data into suitable input formats
         # df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y %H:%MM')
+        if drop_water:
+            df = df.drop("vfr_water", axis=1)
+
         if drop_rc:
             df = df.drop("rc_y", axis=1)
         df.Timestamp = pd.to_datetime(df.Timestamp)
