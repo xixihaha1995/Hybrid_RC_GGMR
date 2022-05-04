@@ -1,21 +1,21 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
+import numpy as np, torch
 import _1_gru_pack as gru_tools, _0_tools as general_tool
 '''Configurations'''
 data_dir = "data/"
 test_length = 10860
 drop_rc_y = False
+bidirectional = False
 
 lookback = 5
-_hidden_dim=200 #200
+_hidden_dim=256 #200
 _epoch =500 # 50
 lr =  1e-3 #1e-3
+drop_out_prob = 0.2
 batch_size = 1024
 device = torch.device("cpu")
 '''Preprocessing'''
 label_scalers, train_data, train_loader, test_x, test_y = gru_tools.preprocess(data_dir, lookback,
-                                                                               test_length, batch_size)
+                                                                               test_length, batch_size, drop_rc_y)
 '''Train and evaluate'''
 gru_model = gru_tools.train(train_loader, lr,batch_size, _hidden_dim,_epoch,device, model_type="GRU")
 gru_outputs, targets, gru_sMAPE = gru_tools.evaluate(gru_model, test_x, test_y, label_scalers, device)

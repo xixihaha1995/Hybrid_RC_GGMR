@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 
-def preprocess(data_dir,lookback, test_portion, batch_size):
+def preprocess(data_dir,lookback, test_portion, batch_size, drop_rc):
     '''
     The scaler objects will be stored in this dictionary so that our output test data from
     the model can be re-scaled during evaluation
@@ -29,7 +29,8 @@ def preprocess(data_dir,lookback, test_portion, batch_size):
         df = pd.read_csv('{}/{}'.format(data_dir, file), parse_dates=[0])
         # Processing the time data into suitable input formats
         # df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%d/%m/%Y %H:%MM')
-
+        if drop_rc:
+            df = df.drop("rc_y", axis=1)
         df.Timestamp = pd.to_datetime(df.Timestamp)
         df['minute'] = df.apply(lambda x: x['Timestamp'].minute, axis=1)
         df['hour'] = df.apply(lambda x: x['Timestamp'].hour, axis=1)
