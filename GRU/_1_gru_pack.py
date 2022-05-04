@@ -130,8 +130,13 @@ def evaluate(model, test_x, test_y, label_scalers, device):
     for i in test_x.keys():
         inp = torch.from_numpy(np.array(test_x[i]))
         labs = torch.from_numpy(np.array(test_y[i]))
-        h = model.init_hidden(inp.shape[0], device)
-        out, h = model(inp.to(device).float(), h)
+        h_0 = model.init_hidden(inp.shape[0], device)
+        '''
+        The above h_0 is only for GRU? 
+        Yes. All the layers' parameters/variables is not required. 
+        Actually, GRU doesn't require h_) either. If h_0 is not required, default as zeros.
+        '''
+        out, h = model(inp.to(device).float(), h_0)
         outputs.append(label_scalers[i].inverse_transform(out.cpu().detach().numpy()).reshape(-1))
         targets.append(label_scalers[i].inverse_transform(labs.numpy()).reshape(-1))
     print("Evaluation Time: {}".format(str(time.perf_counter() - start_time)))
@@ -149,15 +154,22 @@ class GRUNet(nn.Module):
         self.n_layers = n_layers
 
         self.gru = nn.GRU(input_dim, hidden_dim, n_layers, batch_first=True, dropout=drop_prob)
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        self.fc = nn.Linear(hidden_dim, output_dim) #fully connected layer
         self.relu = nn.ReLU()
 
-    def forward(self, x, h):
-        out, h = self.gru(x, h)
+    def forward(self, x, h_0):
+        '''Define the layer structure of the network'''
+        out, h_n = self.gru(x, h_0)
         out = self.fc(self.relu(out[:, -1]))
-        return out, h
+        return out, h_n
 
     def init_hidden(self, batch_size, device):
+        '''
+        self.parameters() include all "parameters of the network"
+        in this case, it includes GRU layer, Linear layer.
+        And it doesn't include ReLU variables, since ReLu don't have variables
+        next(something) = something[0]
+        '''
         weight = next(self.parameters()).data
         hidden = weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(device)
         return hidden

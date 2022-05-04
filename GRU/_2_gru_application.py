@@ -10,10 +10,11 @@ bidirectional = False
 
 lookback = 5
 _hidden_dim=256 #200
-_epoch =500 # 50
-lr =  1e-2 #1e-3
+_hidden_layer = 2
+_epoch =500 # 500
+lr =  1e-23 #1e-3
 drop_out_prob = 0.2
-batch_size = 1024
+batch_size = 256 #1024
 device = torch.device("cpu")
 '''Preprocessing'''
 label_scalers, train_data, train_loader, test_x, test_y = gru_tools.preprocess(data_dir, lookback,
@@ -37,4 +38,4 @@ results['cvrmse_rc'] = cvrmse_rc
 results['gru_outputs'] = gru_outputs.reshape(-1).tolist()
 results['cvrmse_gru'] = cvrmse_gru
 
-general_tool.saveJSON(results, "_results_gru_no_water_no_rc")
+general_tool.saveJSON(results, "_results_gru_learning")
