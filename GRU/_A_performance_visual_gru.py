@@ -6,7 +6,7 @@ nbStates_candidates = [5,10,15]
 T_Sigma_candidates = [2e-1, 2, 5]
 L_rate_candidates = [1e-3, 3e-2, 6e-2]
 '''Load'''
-results = general_tool.loadJSONFromOutputs("_results_gru_no_water_no_rc")
+results = general_tool.loadJSONFromOutputs("_results_gru_no_water")
 y_test = np.array(results['y_test']) /1000
 rc_y = np.array(results['rc_y']) /1000
 ggmr_predict = np.array(results['gru_outputs']) /1000
