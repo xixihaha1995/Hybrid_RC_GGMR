@@ -3,7 +3,7 @@ import numpy as np
 
 
 '''GGMR'''
-def GGMR_prediction(train_norm, test_norm, nbStates, T_sigma):
+def GGMR_prediction(train_norm, test_norm, nbStates, T_sigma, L_rate = 5e-3):
     train_norm_ggmr = np.delete(train_norm, -2, axis=0) #delete rc_y information
     test_norm_ggmr = np.delete(test_norm, -2, axis=0) #delete rc_y information
     nbVarAll_ggmr = train_norm_ggmr.shape[0]
@@ -15,7 +15,7 @@ def GGMR_prediction(train_norm, test_norm, nbStates, T_sigma):
     unused_ggmr_method_gmr_data, ggmr_beta = gaussian_tools.GMR_Func(
         em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr, test_norm_ggmr[:nbVarInput_ggmr,:], nbVarInput_ggmr)
     sum_beta_rs_ggmr=sum(ggmr_beta,1).reshape(1,-1)
-    L_rate = 5e-3
+
 
     ggmr_norm = gaussian_tools.ggmr_func(em_Priors_ggmr, em_Mu_ggmr, em_Sigma_ggmr,
                                          test_norm_ggmr,sum_beta_rs_ggmr,L_rate,T_sigma)

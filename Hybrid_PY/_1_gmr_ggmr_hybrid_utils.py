@@ -555,8 +555,8 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
-        Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
-        Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
+        # Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
+        # Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
         Priors = Priors / np.sum(Priors)
 
     return expData
