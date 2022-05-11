@@ -5,7 +5,7 @@ import numpy as np
 training_length = 4032
 testing_length = 5000
 nbStates = 8
-L_rate = 1e-4
+L_rate = 1e-2
 T_Sigma = 6
 '''Preprocessing (fit_transform based on training data, saved scaler)'''
 label_sc, train_scaled, test_scaled, train_ori, test_ori = \
