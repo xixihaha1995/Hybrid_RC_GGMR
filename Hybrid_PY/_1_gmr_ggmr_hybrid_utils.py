@@ -153,6 +153,8 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
     eps_thres_best_priors = 1e-2
     tau_min_thres = 0.09
     existFlag_sig = 0
+    Prior_init = L_rate
+    C_mat_init = 1
     k_o_init_sigma = 300
 
     m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
@@ -172,13 +174,20 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         print("create new")
         for nb_com in range(Priors.shape[1]):
             Priors[0, nb_com] = (1- L_rate) * Priors[0, nb_com]
-        # _least_contr_gau = np.argmin(Priors)
+        _least_contr_gau = np.argmin(Priors)
 
-        Priors = np.hstack((Priors, np.array([[L_rate]])))
-        C_mat = np.vstack((C_mat, 1))
-        Mu = np.hstack((Mu, Data_Test[:, t].reshape(-1,1)))
-        Sigma = np.vstack((Sigma.T, k_o_init_sigma*np.identity(Sigma.shape[0])[None]))
-        Sigma = Sigma.T
+        Priors[0, _least_contr_gau] = copy.deepcopy(Prior_init)
+        Mu[:, _least_contr_gau] = copy.deepcopy(Data_Test[:, t].reshape(-1))
+        Sigma[:, :, _least_contr_gau] = copy.deepcopy(k_o_init_sigma*np.identity(Sigma.shape[0]))
+        C_mat[_least_contr_gau, 0] = C_mat_init
+
+
+        # Priors = np.hstack((Priors, np.array([[Prior_init]])))
+        # C_mat = np.vstack((C_mat, C_mat_init))
+        # Mu = np.hstack((Mu, Data_Test[:, t].reshape(-1,1)))
+        # Sigma = np.vstack((Sigma.T, k_o_init_sigma*np.identity(Sigma.shape[0])[None]))
+        # Sigma = Sigma.T
+
 
 
     if existFlag_sig == 1:

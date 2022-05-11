@@ -3,9 +3,9 @@ import _2_all_models as all_predict
 import numpy as np
 '''Configuration/Hyper-parameters'''
 training_length = 4032
-testing_length = 500
+testing_length = 5000
 nbStates = 5
-L_rate = 5e-3
+L_rate = 2e-1
 T_Sigma = 5
 '''Preprocessing (fit_transform based on training data, saved scaler)'''
 label_sc, train_scaled, test_scaled, train_ori, test_ori = \
