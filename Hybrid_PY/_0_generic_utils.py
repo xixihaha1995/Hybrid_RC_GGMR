@@ -91,7 +91,7 @@ def de_norm(norm, scale_y, center_y):
     predict = predict_temp.reshape(-1)
     return predict
 
-def ggmr_load_all_var(test_length):
+def ggmr_load_all_var(training_length,testing_length):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
     case_arr_abs = os.path.join(script_dir, 'inputs', 'ggmr_all_in_one.csv')
     df  =  pd.read_csv(case_arr_abs)
@@ -103,8 +103,8 @@ def ggmr_load_all_var(test_length):
     new_cols = ['dayofweek','hour','minute','t_out','t_slab1',
                 't_cav','valve_ht','valve_cl','vfr_water','rc_y','y']
     df = df[new_cols]
-    train_df = df.iloc[:-test_length,:]
-    test_df = df.iloc[-test_length:, :]
+    train_df = df.iloc[:training_length,:]
+    test_df = df.iloc[training_length:training_length +testing_length, :]
 
     train_ori = train_df.values
     test_ori = test_df.values

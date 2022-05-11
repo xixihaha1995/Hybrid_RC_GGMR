@@ -123,7 +123,7 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
     for j in range(nbStates):
         this_y_tmp = np.tile(Mu[in_out_split:, j], [1, nbData]) + Sigma[in_out_split:,:in_out_split, j] \
                      @ np.linalg.inv(Sigma[:in_out_split,:in_out_split, j]) @ \
-                     (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
+                     (input_x.reshape(nbVarInput,-1) - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
         y_temp_lst.append(np.array(this_y_tmp).T.reshape(-1))
 
     y_tmp = np.array(y_temp_lst).T.reshape(-1,nbData,nbStates)

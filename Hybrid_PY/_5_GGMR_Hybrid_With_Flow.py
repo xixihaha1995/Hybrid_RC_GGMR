@@ -16,8 +16,8 @@ All_Variables = All_Variables_obj.astype('float64')
 u_measured = u_measured_obj.astype('float64')
 total_length = All_Variables.shape[1]
 test_initial_time = training_length
-testing_length = total_length - training_length
-# testing_length = 1000
+# testing_length = total_length - training_length
+testing_length = 200
 nbVarAll = All_Variables.shape[0]
 nbVarInput = nbVarAll - 1
 
@@ -31,9 +31,9 @@ mean_measured = abs(y_test).mean()
 center_y, scale_y = train[-1,:].mean(), train[-1,:].std()
 cvrmse_rc = general_tools.cvrmse_cal(y_test,rc_y,mean_measured)
 '''Update flow info in test_norm with minor Hybrid approach'''
-updated_flow_res = general_tools.loadJSONFromOutputs("_flow_norm_results")
-hybrid_flow_norm = updated_flow_res['hybrid_flow_norm']
-test_norm[-3,:] = np.array(hybrid_flow_norm)
+# updated_flow_res = general_tools.loadJSONFromOutputs("_flow_norm_results")
+# hybrid_flow_norm = updated_flow_res['hybrid_flow_norm']
+# test_norm[-3,:] = np.array(hybrid_flow_norm)
 '''GGMR'''
 ggmr_norm = all_predict.GGMR_prediction(train_norm, test_norm, nbStates, T_Sigma)
 ggmr_predict = general_tools.de_norm(ggmr_norm, scale_y, center_y)
