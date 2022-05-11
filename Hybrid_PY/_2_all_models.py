@@ -4,8 +4,13 @@ import numpy as np
 
 '''GGMR'''
 def GGMR_prediction(train_norm, test_norm, nbStates, T_sigma, L_rate = 5e-3):
-    train_norm_ggmr = np.delete(train_norm, -2, axis=0) #delete rc_y information
-    test_norm_ggmr = np.delete(test_norm, -2, axis=0) #delete rc_y information
+    hybrid = True
+    if not hybrid:
+        train_norm_ggmr = np.delete(train_norm, -2, axis=0) #delete rc_y information
+        test_norm_ggmr = np.delete(test_norm, -2, axis=0) #delete rc_y information
+    else:
+        train_norm_ggmr = train_norm
+        test_norm_ggmr = test_norm
     nbVarAll_ggmr = train_norm_ggmr.shape[0]
     nbVarInput_ggmr = nbVarAll_ggmr - 1
 

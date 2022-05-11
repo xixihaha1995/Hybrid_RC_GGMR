@@ -110,10 +110,17 @@ def ggmr_load_all_var(training_length,testing_length):
     test_ori = test_df.values
 
     feature_sc = MinMaxScaler()
-    feature_sc.fit(train_ori)
-    train_scaled = feature_sc.transform(train_ori)
-    test_scaled = feature_sc.transform(test_ori)
-
     label_sc = MinMaxScaler()
+
+    scale_both = True
+    if not scale_both:
+        feature_sc.fit(train_ori)
+        train_scaled = feature_sc.transform(train_ori)
+        test_scaled = feature_sc.transform(test_ori)
+    else:
+        feature_sc.fit(df.values)
+        train_scaled = feature_sc.transform(train_ori)
+        test_scaled = feature_sc.transform(test_ori)
+
     label_sc.fit(train_df.iloc[:, -1].values.reshape(-1, 1))
     return label_sc, train_scaled, test_scaled, train_ori, test_ori
