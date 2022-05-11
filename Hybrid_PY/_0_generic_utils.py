@@ -112,7 +112,7 @@ def ggmr_load_all_var(training_length,testing_length):
     feature_sc = MinMaxScaler()
     label_sc = MinMaxScaler()
 
-    scale_both = True
+    scale_both = False
     if not scale_both:
         feature_sc.fit(train_ori)
         train_scaled = feature_sc.transform(train_ori)
