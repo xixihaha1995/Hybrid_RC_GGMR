@@ -153,8 +153,8 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
     eps_thres_best_priors = 1e-2
     tau_min_thres = 0.09
     existFlag_sig = 0
-    # Prior_init = L_rate
-    Prior_init = 0.3
+    Prior_init = L_rate
+    # Prior_init = 0.3
     C_mat_init = 1
     k_o_init_sigma = 300
 
@@ -166,8 +166,8 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         com_MD_lst.append(this_com_MD)
     com_MD = np.array(com_MD_lst).reshape(-1, 1)
 
-    Post_pr[com_MD > com_MD.mean()] = 0
-
+    # Post_pr[com_MD > com_MD.mean()] = 0
+    Post_pr[Post_pr < Post_pr.mean()] = 0
     if not np.all(Post_pr == 0):
         existFlag_sig = 1
     # if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
@@ -182,7 +182,7 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
 
         _least_contr_gau = np.argmin(Priors)
 
-        if Priors[0, _least_contr_gau] < 2:
+        if Priors[0, _least_contr_gau] < 2e-2:
             Priors[0, _least_contr_gau] = copy.deepcopy(Prior_init)
             Mu[:, _least_contr_gau] = copy.deepcopy(Data_Test[:, t].reshape(-1))
             Sigma[:, :, _least_contr_gau] = copy.deepcopy(k_o_init_sigma*np.identity(Sigma.shape[0]))
@@ -567,7 +567,7 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         # print(t_stamp)
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
-        [Priors, Mu, Sigma, C_mat] = ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
+        # [Priors, Mu, Sigma, C_mat] = ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
         # Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
         # Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
         Priors = Priors / np.sum(Priors)
