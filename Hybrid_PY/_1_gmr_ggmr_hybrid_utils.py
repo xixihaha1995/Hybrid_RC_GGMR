@@ -166,7 +166,8 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         com_MD_lst.append(this_com_MD)
     com_MD = np.array(com_MD_lst).reshape(-1, 1)
 
-    Post_pr[com_MD > com_MD.mean()] = 0
+    Post_pr[com_MD > T_sigma] = 0
+    # Post_pr[com_MD > com_MD.mean()] = 0
     # Post_pr[Post_pr < Post_pr.mean()] = 0
     if not np.all(Post_pr == 0):
         existFlag_sig = 1
@@ -182,7 +183,7 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
 
         _least_contr_gau = np.argmin(Priors)
 
-        if Priors[0, _least_contr_gau] < 2e-2:
+        if Priors[0, _least_contr_gau] < 2:
             Priors[0, _least_contr_gau] = copy.deepcopy(Prior_init)
             Mu[:, _least_contr_gau] = copy.deepcopy(Data_Test[:, t].reshape(-1))
             Sigma[:, :, _least_contr_gau] = copy.deepcopy(k_o_init_sigma*np.identity(Sigma.shape[0]))
@@ -202,15 +203,19 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         for nb_com in range(Post_pr.shape[0]):
             q_j = Post_pr[nb_com, 0] / np.sum(Post_pr, axis= 0 )
             C_mat[nb_com, 0] += q_j
-            tau_j =( (1 - L_rate) * Priors[0,nb_com] + L_rate * q_j)[0]
+            this_lr_rate = q_j* L_rate
+            # this_lr_rate = L_rate
+            tau_j =( (1 - this_lr_rate) * Priors[0,nb_com] + this_lr_rate * q_j)[0]
             Priors[0,nb_com] = min(tau_j, tau_min_thres)
-            eta_j = q_j * ((1 - L_rate) / C_mat[nb_com, 0] + L_rate)
-            eta_j = np.nan_to_num(eta_j, nan= L_rate)
+            # Priors[0, nb_com] = tau_j
+            eta_j = q_j * ((1 - this_lr_rate) / C_mat[nb_com, 0] + this_lr_rate)
+            eta_j = np.nan_to_num(eta_j, nan= this_lr_rate)
             eta_j = eta_j[0]
-            Mu[:, nb_com] = (1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t]
+            # Mu[:, nb_com] = copy.deepcopy((1 - eta_j) * Mu[:, nb_com] + eta_j * Data_Test[:,t])
+            Mu[-1, nb_com] = copy.deepcopy((1 - eta_j) * Mu[-1, nb_com] + eta_j * Data_Test[-1, t])
             x_min_mu = (Data_Test[:, t] - Mu[:, nb_com]).reshape(-1, 1)
             update_sigma = (1 - eta_j) * Sigma[:,:,nb_com] + eta_j * x_min_mu @ x_min_mu.T
-            Sigma[:,:,nb_com] = update_sigma
+            Sigma[:,:,nb_com] = copy.deepcopy(update_sigma)
 
     return [Priors, Mu, Sigma, C_mat]
 
@@ -418,7 +423,7 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
         tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
         tau_merged = tau_one + tau_two
         f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
-        tau_merged = 1
+        # tau_merged = 1
 
         mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
         mu_merged = f_one * mu_one + f_two * mu_two
@@ -430,7 +435,7 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
         old_mu[:, ind_one] = copy.deepcopy(mu_merged)
         old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
         new_gmm_nb -=1
-    if new_prior.shape[1] > 0:
+    if new_gmm_nb > 0:
         old_prior = np.hstack((old_prior, new_prior))
         old_mu = np.hstack((old_mu, new_mu))
         old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
@@ -451,7 +456,10 @@ def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
         all_skld.append(this_old_skld)
     all_skld_arr = np.array(all_skld).reshape(old_gmm_nb, new_gmm_nb)
     '''⬇️maintain the maximum number of gaussians'''
-    while all_skld_arr.min()  < t_merge:
+    # while all_skld_arr.min()  < t_merge:
+    new_t_merge = all_skld_arr.mean()
+    while all_skld_arr.min() < new_t_merge:
+
         pass
         (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
         all_skld_arr[ind_one, ind_two] = sys.float_info.max
@@ -483,7 +491,7 @@ def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
         old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
     return old_prior, old_mu, old_sigma
 
-def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_next_norm,
+def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm,
                        max_nbStates,
                        old_prior, old_mu, old_sigma,
                        new_prior, new_mu, new_sigma, policy_num = 0,lrn_rate = None,t_merge = None):
