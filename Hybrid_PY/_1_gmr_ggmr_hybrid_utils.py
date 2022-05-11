@@ -456,7 +456,10 @@ def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
         all_skld.append(this_old_skld)
     all_skld_arr = np.array(all_skld).reshape(old_gmm_nb, new_gmm_nb)
     '''⬇️maintain the maximum number of gaussians'''
-    while all_skld_arr.min()  < t_merge:
+    # while all_skld_arr.min()  < t_merge:
+    new_t_merge = all_skld_arr.mean()
+    while all_skld_arr.min() < new_t_merge:
+
         pass
         (ind_one, ind_two) = np.unravel_index(np.argmin(all_skld_arr, axis=None), all_skld_arr.shape)
         all_skld_arr[ind_one, ind_two] = sys.float_info.max

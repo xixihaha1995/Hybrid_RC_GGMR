@@ -5,12 +5,12 @@ import numpy as np
 training_length = 4032
 testing_length = 200
 nbStates = 8
-L_rate = 6e-1
-T_Sigma = 6
+L_rate = 1e-1 #policy one
+T_merge = 1e4 #policy two
 
 look_back_batch_size, predict_size = 2, 1
-_hybrid = False
-plonum = 1
+_hybrid = True
+plonum = 2
 '''Preprocessing (fit_transform based on training data, saved scaler)'''
 label_sc, train_scaled, test_scaled, train_ori, test_ori = \
     general_tools.ggmr_load_all_var(training_length,testing_length)
@@ -21,7 +21,7 @@ train_ori_trans, test_ori_trans = train_ori.T, test_ori.T
 ggmr_norm = _1_1_ggmr_utils.online_ggmr_new_dominate(train_scaled_trans, test_scaled_trans,
                                                        train_ori_trans, test_ori_trans ,
                                                        nbStates, L_rate,
-                look_back_batch_size, predict_size,_hybrid, plonum)
+                look_back_batch_size, predict_size,_hybrid, T_merge, plonum)
 
 # ggmr_norm = all_predict.GGMR_prediction(train_scaled_trans, test_scaled_trans, nbStates, T_Sigma, L_rate)
 ggmr_predict = label_sc.inverse_transform(np.array(ggmr_norm).reshape(-1, 1))
