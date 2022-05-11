@@ -1,4 +1,5 @@
 import os, json, pandas as pd, numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 def loadJSON(name):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
@@ -89,3 +90,40 @@ def de_norm(norm, scale_y, center_y):
     predict_temp = norm_tmp * scale_y + center_y
     predict = predict_temp.reshape(-1)
     return predict
+
+def ggmr_load_all_var(training_length,testing_length):
+    script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    case_arr_abs = os.path.join(script_dir, 'inputs', 'ggmr_all_in_one.csv')
+    df  =  pd.read_csv(case_arr_abs)
+    df.Timestamp = pd.to_datetime(df.Timestamp)
+    df['minute'] = df.apply(lambda x: x['Timestamp'].minute, axis=1)
+    df['hour'] = df.apply(lambda x: x['Timestamp'].hour, axis=1)
+    df['dayofweek'] = df.apply(lambda x: x['Timestamp'].dayofweek, axis=1)
+    new_cols = ['dayofweek','hour','minute','t_out','t_slab1',
+                't_cav','valve_ht','valve_cl','vfr_water','rc_y','y']
+
+    df = df.sort_values("Timestamp").drop("Timestamp", axis=1)
+    # new_cols = ['t_out','t_slab1','t_cav','valve_ht',
+    #             'valve_cl','vfr_water','rc_y','y']
+    df = df[new_cols]
+    train_df = df.iloc[:training_length,:]
+    test_df = df.iloc[training_length:training_length +testing_length, :]
+
+    train_ori = train_df.values
+    test_ori = test_df.values
+
+    feature_sc = MinMaxScaler()
+    label_sc = MinMaxScaler()
+
+    scale_both = False
+    if not scale_both:
+        feature_sc.fit(train_ori)
+        train_scaled = feature_sc.transform(train_ori)
+        test_scaled = feature_sc.transform(test_ori)
+    else:
+        feature_sc.fit(df.values)
+        train_scaled = feature_sc.transform(train_ori)
+        test_scaled = feature_sc.transform(test_ori)
+
+    label_sc.fit(train_df.iloc[:, -1].values.reshape(-1, 1))
+    return label_sc, train_scaled, test_scaled, train_ori, test_ori

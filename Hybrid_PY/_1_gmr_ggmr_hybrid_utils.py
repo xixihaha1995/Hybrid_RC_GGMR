@@ -123,7 +123,7 @@ def GMR_Func(Priors, Mu, Sigma, input_x, in_out_split):
     for j in range(nbStates):
         this_y_tmp = np.tile(Mu[in_out_split:, j], [1, nbData]) + Sigma[in_out_split:,:in_out_split, j] \
                      @ np.linalg.inv(Sigma[:in_out_split,:in_out_split, j]) @ \
-                     (input_x - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
+                     (input_x.reshape(nbVarInput,-1) - np.tile(Mu[:in_out_split, j].reshape(-1,1),[1, nbData]))
         y_temp_lst.append(np.array(this_y_tmp).T.reshape(-1))
 
     y_tmp = np.array(y_temp_lst).T.reshape(-1,nbData,nbStates)
@@ -153,6 +153,9 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
     eps_thres_best_priors = 1e-2
     tau_min_thres = 0.09
     existFlag_sig = 0
+    Prior_init = L_rate
+    # Prior_init = 0.3
+    C_mat_init = 1
     k_o_init_sigma = 300
 
     m_best, Post_pr = BMC_Func(Data_Test[:, t], Priors, Mu, Sigma)
@@ -163,8 +166,12 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         com_MD_lst.append(this_com_MD)
     com_MD = np.array(com_MD_lst).reshape(-1, 1)
 
-    if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
+    Post_pr[com_MD > com_MD.mean()] = 0
+    # Post_pr[Post_pr < Post_pr.mean()] = 0
+    if not np.all(Post_pr == 0):
         existFlag_sig = 1
+    # if (com_MD[m_best, 0] < T_sigma) and (Post_pr[m_best, 0] > eps_thres_best_priors):
+    #     existFlag_sig = 1
 
     if existFlag_sig == 0:
         '''create new gaussian'''
@@ -172,14 +179,20 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         print("create new")
         for nb_com in range(Priors.shape[1]):
             Priors[0, nb_com] = (1- L_rate) * Priors[0, nb_com]
-        # _least_contr_gau = np.argmin(Priors)
 
-        Priors = np.hstack((Priors, np.array([[L_rate]])))
-        C_mat = np.vstack((C_mat, 1))
-        Mu = np.hstack((Mu, Data_Test[:, t].reshape(-1,1)))
-        Sigma = np.vstack((Sigma.T, k_o_init_sigma*np.identity(Sigma.shape[0])[None]))
-        Sigma = Sigma.T
+        _least_contr_gau = np.argmin(Priors)
 
+        if Priors[0, _least_contr_gau] < 2e-2:
+            Priors[0, _least_contr_gau] = copy.deepcopy(Prior_init)
+            Mu[:, _least_contr_gau] = copy.deepcopy(Data_Test[:, t].reshape(-1))
+            Sigma[:, :, _least_contr_gau] = copy.deepcopy(k_o_init_sigma*np.identity(Sigma.shape[0]))
+            C_mat[_least_contr_gau, 0] = C_mat_init
+        else:
+            Priors = np.hstack((Priors, np.array([[Prior_init]])))
+            C_mat = np.vstack((C_mat, C_mat_init))
+            Mu = np.hstack((Mu, Data_Test[:, t].reshape(-1,1)))
+            Sigma = np.vstack((Sigma.T, k_o_init_sigma*np.identity(Sigma.shape[0])[None]))
+            Sigma = Sigma.T
 
     if existFlag_sig == 1:
         '''
@@ -544,8 +557,8 @@ def online_ggmr(train_norm, Data_Test ,max_nbStates, lrn_rate,t_merge,
 def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
     nbStates = Priors.shape[1]
     max_nbStates = nbStates + 2
-    t_split_fac = 2e10
-    t_merge_fac = 4e-1
+    t_split_fac = 2
+    t_merge_fac = 4
     C_mat = SumPosterior.T
     nbVar = Data_Test.shape[0]
     in_out_split = nbVar - 1
@@ -555,8 +568,8 @@ def ggmr_func(Priors, Mu, Sigma, Data_Test,SumPosterior, L_rate, T_sigma):
         this_exp_y, dummy_Gaus_weights = GMR_Func(Priors, Mu, Sigma, Data_Test[:in_out_split, t_stamp], in_out_split)
         expData.append(this_exp_y)
         [Priors, Mu, Sigma, C_mat] = ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t_stamp, C_mat, L_rate, T_sigma)
-        Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
-        Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
+        # Priors, Mu, Sigma, C_mat, cannot_merge_link, largst_volume_ind = split_func(Priors, Mu, Sigma,C_mat,t_split_fac, t_stamp, max_nbStates)
+        # Priors, Mu, Sigma, C_mat = merge_func(Priors, Mu, Sigma,C_mat, t_merge_fac, cannot_merge_link, largst_volume_ind)
         Priors = Priors / np.sum(Priors)
 
     return expData
