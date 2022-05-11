@@ -166,7 +166,8 @@ def ggmr_create_update_gaussian(Data_Test,Priors, Mu, Sigma, t, C_mat, L_rate, T
         com_MD_lst.append(this_com_MD)
     com_MD = np.array(com_MD_lst).reshape(-1, 1)
 
-    Post_pr[com_MD > com_MD.mean()] = 0
+    Post_pr[com_MD > T_sigma] = 0
+    # Post_pr[com_MD > com_MD.mean()] = 0
     # Post_pr[Post_pr < Post_pr.mean()] = 0
     if not np.all(Post_pr == 0):
         existFlag_sig = 1
