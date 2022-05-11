@@ -423,7 +423,7 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
         tau_one, tau_two = old_prior[0, ind_one], new_prior[0, ind_two]
         tau_merged = tau_one + tau_two
         f_one, f_two = tau_one / tau_merged, tau_two / tau_merged
-        tau_merged = 1
+        # tau_merged = 1
 
         mu_one, mu_two = old_mu[:, ind_one], new_mu[:, ind_two]
         mu_merged = f_one * mu_one + f_two * mu_two
@@ -435,7 +435,7 @@ def update_policy_one(_batch_prev_norm, max_nbStates,lrn_rate, old_prior, old_mu
         old_mu[:, ind_one] = copy.deepcopy(mu_merged)
         old_sigma[:, :, ind_one] = copy.deepcopy(sig_merged)
         new_gmm_nb -=1
-    if new_prior.shape[1] > 0:
+    if new_gmm_nb > 0:
         old_prior = np.hstack((old_prior, new_prior))
         old_mu = np.hstack((old_mu, new_mu))
         old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
@@ -488,7 +488,7 @@ def update_policy_two(old_sample_nb_N, batch_size, old_prior, old_mu, old_sigma,
         old_sigma = np.concatenate((old_sigma, new_sigma), axis=2)
     return old_prior, old_mu, old_sigma
 
-def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm ,_batch_next_norm,
+def merge_new_into_old(old_sample_nb_N, batch_size, _batch_prev_norm,
                        max_nbStates,
                        old_prior, old_mu, old_sigma,
                        new_prior, new_mu, new_sigma, policy_num = 0,lrn_rate = None,t_merge = None):
