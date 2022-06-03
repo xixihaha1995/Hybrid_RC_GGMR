@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt, _0_generic_utils as general_tool
 import numpy as np, matplotlib
 from itertools import cycle
 '''Load'''
-results = general_tool.loadJSONFromOutputs("_results_scale_policy")
+results = general_tool.loadJSONFromOutputs("_results_initial_ggmr_boucha_best")
 y_test = np.array(results['y_test']) /1000
 rc_y = np.array(results['rc_y']) /1000
 ggmr_predict = np.array(results['ggmr_predict']) /1000
