@@ -248,7 +248,9 @@ mae_ggmr = sum(abs(y_test - rs_expData_ggmr)) / length(y_test);
 mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
-    
+
+save('data/hybrid_save.mat','y_test','rs_expData_ggmr');
+
 % title({"Left: GMR; Right: GGMR ",...
 %     "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
 %     "CVRMSE is " + cvrmse_gmr + "%, "+ cvrmse_ggmr + "%",...
