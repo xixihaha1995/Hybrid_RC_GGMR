@@ -249,7 +249,12 @@ mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
 
-save('data/hybrid_save.mat','y_test','rs_expData_ggmr');
+switch(input_case)
+    case 3
+        save('data/ggmr_save.mat','y_test','rs_expData_ggmr');
+    case 4
+        save('data/hybrid_save.mat','y_test','rs_expData_ggmr');
+end
 
 % title({"Left: GMR; Right: GGMR ",...
 %     "NRMSE is " + nrmse_gmr + "%,  "+ nrmse_ggmr + "%",...
