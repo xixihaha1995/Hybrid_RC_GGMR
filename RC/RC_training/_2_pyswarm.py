@@ -138,13 +138,10 @@ def warming_up_predict(pos = None, u_arr = None, _case_nbr=6, _ts=300, _state_nu
     a, b, c, d = paras_to_ABCD_swarm(pos, constants)
 
     y_model = np.zeros((u_arr.shape[1],))
-
     x_discrete = np.array([[0], [10],[22],[21],[23],[21]])
-
     for i in range(u_arr.shape[1]):
         y_model[i] = (c @ x_discrete + d @ u_arr[:, i])[0,0]
         x_discrete = a @ x_discrete + (b @ u_arr[:, i]).reshape((_state_num, 1))
-
     return y_model
 
 def plot_state_variables_dynamis(x_all):
