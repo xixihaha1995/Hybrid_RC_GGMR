@@ -8,7 +8,14 @@ rcm3_hourly_all = general_tool.to_hourly(abs(rcm3))
 rcm2_hourly_all = general_tool.to_hourly(abs(rcm2))
 rcm1_hourly_all = general_tool.to_hourly(abs(rcm1))
 
+# measure_hourly_all = general_tool.to_hourly(measure)
+# hybrid_hourly_all = general_tool.to_hourly(hybrid)
+# ggmr_hourly_all = general_tool.to_hourly(ggmr)
+# rcm3_hourly_all = general_tool.to_hourly(rcm3)
+# rcm2_hourly_all = general_tool.to_hourly(rcm2)
+# rcm1_hourly_all = general_tool.to_hourly(rcm1)
+
 df = pd.DataFrame({"measure" : measure_hourly_all, "hybrid" : hybrid_hourly_all,
                    "ggmr":ggmr_hourly_all, "rc3":rcm3_hourly_all,
                    "rc2":rcm2_hourly_all,"rc1":rcm1_hourly_all})
-df.to_csv(".csv", index=False)
+df.to_csv("all_models_save_hourly_abs.csv", index=False)
