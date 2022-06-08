@@ -20,9 +20,13 @@ def load_predicted_measure(filename):
     _measured_modeled_abs = os.path.join(script_dir, filename)
     _measured_modeled = pd.read_csv(_measured_modeled_abs)
     measured_modeled_arr = _measured_modeled.to_numpy()
-    predict = measured_modeled_arr[:, 1]
     measure = measured_modeled_arr[:, 0]
-    return predict, measure
+    hybrid = measured_modeled_arr[:, 1]
+    ggmr = measured_modeled_arr[:, 2]
+    rcm3 = measured_modeled_arr[:, 3]
+    rcm2 = measured_modeled_arr[:, 4]
+    rcm1 = measured_modeled_arr[:, 5]
+    return measure, hybrid, ggmr, rcm3, rcm2,rcm1
 
 def nrmse(measure, model):
     nom = (sum((measure - model) ** 2) / len(measure)) ** (1 / 2)
@@ -90,8 +94,6 @@ def to_hourly(_5_min_model):
     ts_sampling = 5 * 60
     train_interval_steps = int(_5_min_model.shape[0] // (60*60 / ts_sampling))
     model = _5_min_model[:]
-
-
     model = model[:train_interval_steps * int(60 * 60 / ts_sampling) ]
     model = model.reshape((train_interval_steps, int(60 * 60 / ts_sampling)))
     hourly_predicted = np.sum(model, axis=1)
