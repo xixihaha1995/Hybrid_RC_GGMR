@@ -214,8 +214,9 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 
 %% Plot
 y_test = test(nbVarAll,:);
-
-%%⬇️To hourly
+y_test = abs(y_test);
+rs_expData_ggmr = abs(rs_expData_ggmr);
+%⬇️To hourly
 test_hours = fix(size(y_test,2) / 12);
 y_test = reshape(y_test, 12, test_hours );
 y_test = sum(y_test);
@@ -225,7 +226,7 @@ rs_expData_gmr = sum(rs_expData_gmr);
 
 rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
 rs_expData_ggmr = sum(rs_expData_ggmr);
-%%⬆️To hourly
+%⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -249,11 +250,14 @@ mape_ratio_ggmr = abs(y_test - rs_expData_ggmr) ./ abs(y_test);
 mape_ratio_ggmr(isinf(mape_ratio_ggmr)) = 0;
 mape_ggmr = sum(mape_ratio_ggmr)*100 / length(y_test);
 
+A = [y_test', rs_expData_ggmr'];
 switch(input_case)
     case 3
-        save('data/ggmr_save.mat','y_test','rs_expData_ggmr');
+        writematrix(A,'data/ggmr_save_5min.csv');
+        save('data/ggmr_save_5min.mat','y_test','rs_expData_ggmr');
     case 4
-        save('data/hybrid_save.mat','y_test','rs_expData_ggmr');
+        writematrix(A, 'data/hybrid_save_5min.csv');
+        save('data/hybrid_save_5min.mat','y_test','rs_expData_ggmr');
 end
 
 % title({"Left: GMR; Right: GGMR ",...
