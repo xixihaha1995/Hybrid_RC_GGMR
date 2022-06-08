@@ -1,4 +1,4 @@
-import numpy as np, os, pandas as pd, statistics
+import numpy as np, os, pandas as pd, statistics, matplotlib.pyplot as plt
 from scipy.stats import gmean
 
 def load_all(filename):
@@ -55,6 +55,15 @@ def mae(measure, model):
 
 def mean_absolute_percentage_error(measure, model):
     nom = abs(measure - model) / abs(measure)
+    fig, ax = plt.subplots()
+    axTwn = ax.twinx()
+    ax.plot(measure, label = "Measured")
+    ax.plot(model, label = "Predicted")
+    axTwn.plot(nom, label = "error dist")
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = axTwn.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2)
+    plt.show()
     nom[nom == float('inf')] = 0
     new_nom = []
     for num in nom:
