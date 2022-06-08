@@ -214,19 +214,19 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 
 %% Plot
 y_test = test(nbVarAll,:);
-y_test = abs(y_test);
-rs_expData_ggmr = abs(rs_expData_ggmr);
-%⬇️To hourly
-test_hours = fix(size(y_test,2) / 12);
-y_test = reshape(y_test, 12, test_hours );
-y_test = sum(y_test);
-
-rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-rs_expData_gmr = sum(rs_expData_gmr);
-
-rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
-rs_expData_ggmr = sum(rs_expData_ggmr);
-%⬆️To hourly
+% y_test = abs(y_test);
+% rs_expData_ggmr = abs(rs_expData_ggmr);
+% %⬇️To hourly
+% test_hours = fix(size(y_test,2) / 12);
+% y_test = reshape(y_test, 12, test_hours );
+% y_test = sum(y_test);
+% 
+% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+% rs_expData_gmr = sum(rs_expData_gmr);
+% 
+% rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
+% rs_expData_ggmr = sum(rs_expData_ggmr);
+% %⬆️To hourly
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
