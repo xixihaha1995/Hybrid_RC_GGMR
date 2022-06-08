@@ -7,7 +7,7 @@ linecycler = cycle(lines)
 newline = '\n'
 
 '''Load'''
-measure,hybrid, ggmr, rc_model3, rc_model2,rc_model1 = general_tool.load_all("hybrid_save.csv")
+measure,hybrid, ggmr, rc_model3, rc_model2,rc_model1 = general_tool.load_all("all_models_save_hourly.csv")
 '''
 Plot
 Test start time, Jan 29 0:00AM, 2022
