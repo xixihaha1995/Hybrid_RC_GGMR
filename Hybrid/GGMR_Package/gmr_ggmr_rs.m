@@ -109,7 +109,9 @@ switch (input_case)
          All_Variables = [t_out; t_slabs;t_cav;...
            valve_ht;valve_cl;vfr_water;rc_y; y];
      case 5 
-        All_Variables = [t_out; t_slabs;t_cav;y];
+        talk_to_rc  = 1;
+        All_Variables = [t_out; t_slabs;t_cav;...
+           valve_ht;valve_cl;rc_y; y];
      case 6 
         All_Variables = [t_out; t_slabs;t_cav; ...
             valve_ht;valve_cl; y];
@@ -214,26 +216,26 @@ rs_expData_ggmr= rs_expData_ggmr_norm*std(train(nbVarAll,:))+mean(train(nbVarAll
 
 %% Plot
 y_test = test(nbVarAll,:);
-y_test = abs(y_test);
-rs_expData_gmr = abs(rs_expData_gmr);
-rs_expData_ggmr = abs(rs_expData_ggmr);
-%⬇️To hourly
-test_hours = fix(size(y_test,2) / 12);
-y_test = reshape(y_test, 12, test_hours );
-y_test = sum(y_test);
-
-rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
-rs_expData_gmr = sum(rs_expData_gmr);
-
-rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
-rs_expData_ggmr = sum(rs_expData_ggmr);
-%⬆️To hourly
-
-%⬇️To 37 Days
-y_test = y_test(1:37*24);
-rs_expData_gmr = rs_expData_gmr(1:37*24);
-rs_expData_ggmr = rs_expData_ggmr(1:37*24);
-%⬆️To 37 Days
+% y_test = abs(y_test);
+% rs_expData_gmr = abs(rs_expData_gmr);
+% rs_expData_ggmr = abs(rs_expData_ggmr);
+% %⬇️To hourly
+% test_hours = fix(size(y_test,2) / 12);
+% y_test = reshape(y_test, 12, test_hours );
+% y_test = sum(y_test);
+% 
+% rs_expData_gmr = reshape(rs_expData_gmr, 12, test_hours );
+% rs_expData_gmr = sum(rs_expData_gmr);
+% 
+% rs_expData_ggmr = reshape(rs_expData_ggmr, 12, test_hours );
+% rs_expData_ggmr = sum(rs_expData_ggmr);
+% %⬆️To hourly
+% 
+% %⬇️To 37 Days
+% y_test = y_test(1:37*24);
+% rs_expData_gmr = rs_expData_gmr(1:37*24);
+% rs_expData_ggmr = rs_expData_ggmr(1:37*24);
+% %⬆️To 37 Days
 
 rmse_gmr = (sum((rs_expData_gmr - y_test).^2) / length(y_test)).^ (0.5); 
 mean_model_gmr = mean(abs(rs_expData_gmr));
@@ -265,6 +267,16 @@ switch(input_case)
     case 4
         writematrix(A, 'data/hybrid_save_5min.csv');
         save('data/hybrid_save_5min.mat','y_test','rs_expData_ggmr');
+    case 6
+        writematrix(A, 'data/ggmr1_save_5min.csv');
+        save('data/ggmr1_save_5min.mat','y_test','rs_expData_ggmr');
+    case 1
+        writematrix(A, 'data/ggmr2_save_5min.csv');
+        save('data/ggmr2_save_5min.mat','y_test','rs_expData_ggmr');
+    case 5
+        writematrix(A, 'data/hybrid1_save_5min.csv');
+        save('data/hybrid1_save_5min.mat','y_test','rs_expData_ggmr');
+
 end
 
 % title({"Left: GMR; Right: GGMR ",...

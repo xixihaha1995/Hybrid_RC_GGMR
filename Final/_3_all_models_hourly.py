@@ -7,7 +7,7 @@ linecycler = cycle(lines)
 newline = '\n'
 
 '''Load'''
-measure,hybrid, ggmr, rc_model3, rc_model2,rc_model1 = general_tool.load_all("all_models_save_hourly_abs.csv")
+measure, hybrid, hybrid1, ggmr,ggmr2, ggmr1, rcm3, rcm2,rcm1 =general_tool.load_all("all_models_save_hourly_abs.csv")
 '''
 Plot
 Test start time, Jan 29 0:00AM, 2022
@@ -17,10 +17,13 @@ Time step = hourly
 measure = measure[:37*24]
 all_predictions = {}
 all_predictions['hybrid'] = hybrid
+all_predictions['hybrid1'] = hybrid1
 all_predictions['ggmr'] = ggmr
-all_predictions['rc_model3'] = rc_model3
-all_predictions['rc_model2'] = rc_model2
-all_predictions['rc_model1'] = rc_model1
+all_predictions['ggmr2'] = ggmr2
+all_predictions['ggmr1'] = ggmr1
+all_predictions['rc_model3'] = rcm3
+all_predictions['rc_model2'] = rcm2
+all_predictions['rc_model1'] = rcm1
 
 for model_name, predict in all_predictions.items():
     predict = predict[:37*24]

@@ -8,12 +8,15 @@ def load_all(filename):
     measured_modeled_arr = _measured_modeled.to_numpy()
     measure = measured_modeled_arr[:, 0]
     hybrid = measured_modeled_arr[:, 1]
-    ggmr = measured_modeled_arr[:, 2]
-    rc_model3 = measured_modeled_arr[:, 3]
-    rc_model2 = measured_modeled_arr[:, 4]
-    rc_model1 = measured_modeled_arr[:, 5]
+    hybrid1 = measured_modeled_arr[:, 2]
+    ggmr = measured_modeled_arr[:, 3]
+    ggmr2 = measured_modeled_arr[:, 4]
+    ggmr1 = measured_modeled_arr[:, 5]
+    rcm3 = measured_modeled_arr[:, 6]
+    rcm2 = measured_modeled_arr[:, 7]
+    rcm1 = measured_modeled_arr[:, 8]
 
-    return measure,hybrid, ggmr, rc_model3, rc_model2,rc_model1
+    return measure, hybrid,hybrid1, ggmr,ggmr2, ggmr1, rcm3, rcm2,rcm1
 
 def load_predicted_measure(filename):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
@@ -22,11 +25,14 @@ def load_predicted_measure(filename):
     measured_modeled_arr = _measured_modeled.to_numpy()
     measure = measured_modeled_arr[:, 0]
     hybrid = measured_modeled_arr[:, 1]
-    ggmr = measured_modeled_arr[:, 2]
-    rcm3 = measured_modeled_arr[:, 3]
-    rcm2 = measured_modeled_arr[:, 4]
-    rcm1 = measured_modeled_arr[:, 5]
-    return measure, hybrid, ggmr, rcm3, rcm2,rcm1
+    hybrid1 = measured_modeled_arr[:, 2]
+    ggmr = measured_modeled_arr[:, 3]
+    ggmr2 = measured_modeled_arr[:, 4]
+    ggmr1 = measured_modeled_arr[:, 5]
+    rcm3 = measured_modeled_arr[:, 6]
+    rcm2 = measured_modeled_arr[:, 7]
+    rcm1 = measured_modeled_arr[:, 8]
+    return measure, hybrid,hybrid1, ggmr,ggmr2, ggmr1, rcm3, rcm2,rcm1
 
 def nrmse(measure, model):
     nom = (sum((measure - model) ** 2) / len(measure)) ** (1 / 2)
