@@ -3,7 +3,7 @@ potential_nbstates = [2,5,10,15];
 % Case 3 is GGMR
 % Case 4 is Hybrid
 
-input_case = 4;
+input_case = 6;
 potential_L_rate = [5e-3, 8e-3];
 
 
