@@ -15,8 +15,18 @@ def load_all(filename):
     rcm3 = measured_modeled_arr[:, 6]
     rcm2 = measured_modeled_arr[:, 7]
     rcm1 = measured_modeled_arr[:, 8]
+    abs_measure = measured_modeled_arr[:, 9]
+    abs_hybrid = measured_modeled_arr[:, 10]
+    abs_hybrid1 = measured_modeled_arr[:, 11]
+    abs_ggmr = measured_modeled_arr[:, 12]
+    abs_ggmr2 = measured_modeled_arr[:, 13]
+    abs_ggmr1 = measured_modeled_arr[:, 14]
+    abs_rcm3 = measured_modeled_arr[:, 15]
+    abs_rcm2 = measured_modeled_arr[:, 16]
+    abs_rcm1 = measured_modeled_arr[:, 17]
 
-    return measure, hybrid,hybrid1, ggmr,ggmr2, ggmr1, rcm3, rcm2,rcm1
+    return measure, hybrid, hybrid1, ggmr,ggmr2, ggmr1, rcm3, rcm2,rcm1,\
+           abs_measure, abs_hybrid, abs_hybrid1, abs_ggmr, abs_ggmr2, abs_ggmr1, abs_rcm3, abs_rcm2, abs_rcm1
 
 def load_predicted_measure(filename):
     script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
@@ -43,6 +53,15 @@ def nrmse(measure, model):
     denom = (sum((measure - mean) ** 2) / len(measure)) ** (1 / 2)
     return nom *100 / denom
 
+def nrmse_final(measure, model, abs_measure):
+    nom = (sum((measure - model) ** 2) / len(measure)) ** (1 / 2)
+    if not isinstance(nom, float):
+        nom = nom[0,0]
+    # denom = max(model) - min(model)
+    mean = abs_measure.mean()
+    denom = (sum((abs_measure - mean) ** 2) / len(measure)) ** (1 / 2)
+    return nom *100 / denom
+
 def cv_rmse(measure, model):
     new_model = []
     for num in model:
@@ -54,6 +73,10 @@ def cv_rmse(measure, model):
     mean_measured = abs(measure).mean()
     return rmse * 100 / mean_measured
 
+def cv_rmse_final(measure, model, abs_measure):
+    rmse = (sum((measure - model) ** 2) / len(measure)) ** (1 / 2)
+    mean_measured = abs_measure.mean()
+    return rmse * 100 / mean_measured
 
 def mae(measure, model):
     new_model = []
@@ -75,6 +98,17 @@ def mean_absolute_percentage_error(measure, model):
     # h2, l2 = axTwn.get_legend_handles_labels()
     # ax.legend(h1 + h2, l1 + l2)
     # plt.show()
+    nom[nom == float('inf')] = 0
+    new_nom = []
+    for num in nom:
+        if (np.isnan(num)):
+            new_nom.append(0)
+        else:
+            new_nom.append(num)
+    return sum(new_nom)*100 / len(measure)
+
+def mean_absolute_percentage_error_final(measure, model, abs_measure):
+    nom = abs(measure - model) / abs_measure
     nom[nom == float('inf')] = 0
     new_nom = []
     for num in nom:
