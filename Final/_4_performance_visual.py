@@ -1,6 +1,7 @@
 import _0_utils as general_tool, datetime, matplotlib.pyplot as plt, numpy as np,statistics
 from itertools import cycle
 large_font = 15
+small_legend_font = 10
 line_width = 2
 lines = ["-","--","-.",":"]
 linecycler = cycle(lines)
@@ -38,15 +39,15 @@ ax[0].plot(x_date, rcm3/1000, next(linecycler),label = "RC Prediction", linewidt
 ax[0].plot(x_date, ggmr/1000, next(linecycler),label = "GGMR Prediction", linewidth = line_width)
 ax[0].plot(x_date, hybrid/1000, next(linecycler),label = "Hybrid Prediction", linewidth = line_width)
 ax[0].set_ylabel('Load Power (kW)', fontsize=large_font)
-ax[0].legend(prop={'size': large_font})
+ax[0].legend(prop={'size': small_legend_font})
 ax[0].set_title("Prediction Performance (hourly)")
 
 ax[1].plot(x_date_5min, measure_5min/1000, next(linecycler), label = "Measured", linewidth = line_width)
-# ax[1].plot(x_date_5min, rcm3_5min/1000, next(linecycler),label = "RC Prediction", linewidth = line_width)
-# ax[1].plot(x_date_5min, ggmr_5min/1000, next(linecycler),label = "GGMR Prediction", linewidth = line_width)
-# ax[1].plot(x_date_5min, hybrid_5min/1000, next(linecycler),label = "Hybrid Prediction", linewidth = line_width)
+ax[1].plot(x_date_5min, rcm3_5min/1000, next(linecycler),label = "RC Prediction", linewidth = line_width)
+ax[1].plot(x_date_5min, ggmr_5min/1000, next(linecycler),label = "GGMR Prediction", linewidth = line_width)
+ax[1].plot(x_date_5min, hybrid_5min/1000, next(linecycler),label = "Hybrid Prediction", linewidth = line_width)
 ax[1].set_ylabel('Heating Load Power (kW)', fontsize=large_font)
-ax[1].legend(prop={'size': large_font})
+ax[1].legend(prop={'size': small_legend_font})
 ax[1].set_title("Prediction Performance (5 mins per step)")
 # ax[0].set_title(
 #     f'Hybrid approach performance:{newline}'
